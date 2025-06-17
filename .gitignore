@@ -6,6 +6,7 @@ __pycache__/
 # CSV files
 *.csv
 prices*/
+logs/
 
 # C extensions
 *.so
