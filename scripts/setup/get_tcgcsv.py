@@ -4,6 +4,7 @@ from pathlib import Path
 from db_connect import connect_psql
 import pandas as pd
 import requests
+from sqlalchemy import types
 
 """
 Step 1:
@@ -20,6 +21,9 @@ Updating the database:
     History table is updated with existing row data from Bounty table
     Bounty table is updated IFF csv's price is different than existing price
 """
+# Connect to Database
+database = connect_psql()
+
 # Setup project root directory
 project_root = Path(__file__).resolve().parent.parent.parent
 
@@ -34,8 +38,12 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-# Retrieve list of Set IDs from database
-def get_set_ids():
+# Retrieve list of Set IDs from dataframe
+def get_set_ids(df):
+    """
+    Input: DataFrame - data from one_piece_sets table
+    Output: List - IDs contained in dataframe
+    """
     set_ids = []
     for i in df['id']:
         set_ids.append(i)
@@ -43,23 +51,23 @@ def get_set_ids():
     return set_ids
 
 # Download CSVs from tcgcsv.com if we don't have the CSV already
-def get_csvs():
+def get_csvs(set_list):
     """
-        Retrieve a list of Set IDs from our database
+    Input: list of Set IDs from our database
         For each ID, check if we have the CSV.
             If yes, skip this step (log skipped CSV)
             If no, download the appropriate CSV
+        Log all success/failure
 
-        If there is any failure, log missing CSVs
+    Output: prices directory
     """
     curr_date = datetime.today().strftime("%Y-%m-%d")
     prices_dir = project_root / "prices" / f"{curr_date}"
     # data_dir = Path(f"prices_{curr_date}")
     prices_dir.mkdir(parents=True, exist_ok=True)
-    op_sets = get_set_ids()
 
     logging.info(f"----------- Begin Download: {curr_date} -----------")
-    for id in op_sets:
+    for id in set_list:
         file_path = prices_dir / f"group_{id}.csv"
         csv_url = f"https://tcgcsv.com/tcgplayer/68/{id}/ProductsAndPrices.csv"
 
@@ -80,10 +88,68 @@ def get_csvs():
             logging.error(f"Failed to download CSV for {id}")
     logging.info("----------- Finish Download -----------")
 
+    return prices_dir
+
+def load_and_clean_csvs(csv_dir: Path):
+    # df_csv = pd.read_csv(csv_dir)
+    dtype_map = {
+        'id': types.INTEGER(),
+        'name': types.String(),
+        'image_url': types.String(),
+        'tcgplayer_url': types.String(),
+        'market_price': types.DECIMAL(),
+        'rarity': types.String(),
+        'card_id': types.String(),
+        'description': types.String(),
+        'color': types.String(),
+        'card_type': types.String(),
+        'life': types.INTEGER(),
+        'power': types.INTEGER(),
+        'subtype': types.String(),
+        'attribute': types.String(),
+        'cost': types.INTEGER(),
+        'counter': types.INTEGER()
+    }
+
+    for file in csv_dir.iterdir():
+        df_csv = pd.read_csv(file)
+
+        df_csv = df_csv[['productId','cleanName','imageUrl','url','marketPrice',
+                         'extRarity','extNumber','extDescription','extColor',
+                         'extCardType','extLife','extPower','extSubtypes',
+                         'extAttribute','extCost','extCounterplus']]
+        
+        df_csv = df_csv.rename(columns={
+            'productId': 'id',
+            'cleanName': 'name',
+            'imageUrl': 'image_url',
+            'url': 'tcgplayer_url',
+            'marketPrice': 'market_price',
+            'extRarity': 'rarity',
+            'extNumber': 'card_id',
+            'extDescription': 'description',
+            'extColor': 'color',
+            'extCardType': 'card_type',
+            'extLife': 'life',
+            'extPower': 'power',
+            'extSubtypes': 'subtype',
+            'extAttribute': 'attribute',
+            'extCost': 'cost',
+            'extCounterplus': 'counter'
+        })
+
+        df_csv.to_sql('one_piece_bounty', database, if_exists='replace', dtype=dtype_map)
+
+
+def save_to_db(df_csv, table_name):
+    df_csv.to_sql(table_name, database, if_exists="replace", index=False)
+
 
 if __name__ == "__main__":
-    database = connect_psql()
-    df = pd.read_sql('one_piece_sets', con=database)
+    df_set_list = pd.read_sql('one_piece_sets', con=database)
 
-    get_csvs()
+    op_sets = get_set_ids(df_set_list)
 
+    csv_dir = get_csvs(op_sets)
+    
+    load_and_clean_csvs(csv_dir)
