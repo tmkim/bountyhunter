@@ -2,18 +2,7 @@ import requests
 import os
 import pandas as pd
 from pathlib import Path
-from dotenv import load_dotenv
-from sqlalchemy import create_engine
-
-load_dotenv()
-
-def get_db_url():
-    user = os.getenv("DB_USER")
-    password = os.getenv("DB_PASSWORD")
-    name = os.getenv("DB_NAME")
-    host = os.getenv("DB_HOST", "localhost")
-    port = os.getenv("DB_PORT", "5432")
-    return f"postgresql://{user}:{password}@{host}:{port}/{name}"
+from db_connect import connect_psql
 
 def download_csv(file_path: Path):
 
@@ -28,11 +17,6 @@ def download_csv(file_path: Path):
         return None 
     
     return file_path
-
-def preview_csv(file_path):
-    df = pd.read_csv(file_path)
-    print(df.head())
-    print(df.columns)
 
 def load_and_clean_csv(file_path: Path) -> pd.DataFrame:
     # Load CSV
@@ -60,17 +44,16 @@ def load_and_clean_csv(file_path: Path) -> pd.DataFrame:
     return df
 
 def save_to_db(df, table_name):
-    engine = create_engine(get_db_url())
+    engine = connect_psql()
     df.to_sql(table_name, engine, if_exists="replace", index=False)
 
 if __name__ == "__main__":
     file_path = "one_piece_groups.csv"
     path = file_path if os.path.exists(file_path) else download_csv(file_path)
 
-    if path:
-        # clean_df = load_and_clean_csv(path)
-        print(get_db_url())
-        # save_to_db(clean_df, "one_piece_sets")
-    else:
-        print("No CSV available")
-        # maybe make this a try-catch later
+    try:
+        clean_df = load_and_clean_csv(path)
+        save_to_db(clean_df, "one_piece_sets")
+
+    except Exception as e:
+        print(f"Error: {e}")

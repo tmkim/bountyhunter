@@ -124,7 +124,9 @@ def csv_etl(csv_dir: Path):
         'counter': types.INTEGER()
     }
 
+    df_csv_list = []
     csv_list = list(csv_dir.iterdir())
+
     for count, file in enumerate(csv_list):
         filename = "/".join(str(file).split('/')[-2:])
         print(f"\rETL on CSV: {filename} ({count+1}/{len(csv_list)})", end='', flush=True)
@@ -158,10 +160,27 @@ def csv_etl(csv_dir: Path):
             'extCounterplus': 'counter'
         })
 
-        # Load data to database
-        df_csv.to_sql('one_piece_bounty', database, if_exists='append', dtype=dtype_map)
+        # Build list of dataframes
+        df_csv_list.append(df_csv)
     # Ensure new line at the end of progress
     print()
+
+    # Make sure all dataframes are aligned with expected columns
+    aligned_df_list = []
+    for df in df_csv_list:
+        for col in EXPECTED_COLUMNS:
+            if col not in df.columns:
+                df[col] = pd.NA
+        df = df[EXPECTED_COLUMNS]  # enforce column order
+        aligned_df_list.append(df)
+
+    # Concatenate list of dataframes into a single dataframe before loading into database
+    master_df_csv = pd.concat(aligned_df_list, ignore_index=True)
+
+    print("Loading dataframe into database...")
+    master_df_csv.to_sql('one_piece_bounty', database, if_exists='replace', dtype=dtype_map)
+
+    print("ETL Complete!")
 
 
 if __name__ == "__main__":
