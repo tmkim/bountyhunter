@@ -4,7 +4,7 @@ from pathlib import Path
 from db_connect import connect_psql
 import pandas as pd
 import requests
-from sqlalchemy import types
+from sqlalchemy import types, text
 
 # Connect to Database
 database = connect_psql()
@@ -92,14 +92,14 @@ def csv_etl(csv_dir: Path):
 
     # Set up expected column headers
     EXPECTED_INPUT = ['productId','cleanName','imageUrl','url','marketPrice',
-                         'extRarity','extNumber','extDescription','extColor',
+                         'subTypeName','extRarity','extNumber','extDescription','extColor',
                          'extCardType','extLife','extPower','extSubtypes',
                          'extAttribute','extCost','extCounterplus']
     
     EXPECTED_COLUMNS = ['id','name','image_url','tcgplayer_url','market_price',
-                        'rarity','card_id','description','color',
+                        'foil_type','rarity','card_id','description','color',
                         'card_type','life','power','subtype',
-                        'attribute','cost','counter', 'date']
+                        'attribute','cost','counter', 'date', 'filename']
 
     # Set up data type mapping to ensure proper values
     dtype_map = {
@@ -108,6 +108,7 @@ def csv_etl(csv_dir: Path):
         'image_url': types.String(),
         'tcgplayer_url': types.String(),
         'market_price': types.DECIMAL(),
+        'foil_type': types.String(),
         'rarity': types.String(),
         'card_id': types.String(),
         'description': types.String(),
@@ -123,8 +124,8 @@ def csv_etl(csv_dir: Path):
 
     int_cols = ['id', 'life', 'power', 'cost', 'counter']
     float_cols = ['market_price']
-    str_cols = ['name', 'image_url', 'tcgplayer_url', 'rarity', 'card_id', 'description',
-                'color', 'card_type', 'subtype', 'attribute']
+    str_cols = ['name', 'image_url', 'tcgplayer_url', 'foil_type', 'rarity', 'card_id', 
+                'description', 'color', 'card_type', 'subtype', 'attribute']
 
     # Build a list of dataframes from CSV files, 
     # concatenate into a single dataframe, then update database
@@ -150,6 +151,7 @@ def csv_etl(csv_dir: Path):
             'imageUrl': 'image_url',
             'url': 'tcgplayer_url',
             'marketPrice': 'market_price',
+            'subTypeName': 'foil_type',
             'extRarity': 'rarity',
             'extNumber': 'card_id',
             'extDescription': 'description',
@@ -176,6 +178,7 @@ def csv_etl(csv_dir: Path):
         # Add run date to dataframe
         curr_date = datetime.today().strftime("%Y-%m-%d")
         df_csv['date'] = curr_date
+        df_csv['filename'] = filename
 
         # Ensure proper order for dataframe
         df_csv = df_csv[EXPECTED_COLUMNS]
@@ -191,6 +194,7 @@ def csv_etl(csv_dir: Path):
 
     # Update history and bounty tables
     print("Loading dataframe into database...")
+    
     save_df_to_db(master_df_csv, dtype_map)
 
     print("ETL Complete!")
@@ -213,8 +217,32 @@ def save_df_to_db(df: pd.DataFrame, dtype_map):
     # Append data to History table
     df_curr_bounty.to_sql('one_piece_bounty_history', database, if_exists='replace', dtype=dtype_map)
 
-    # Update Bounty data
-    df.to_sql('one_piece_bounty', database, if_exists='replace', dtype=dtype_map)
+    # Compare bounty data to find all prices that have changed since previous day
+    merged = df.merge(
+        df_curr_bounty[['id', 'name', 'foil_type', 'market_price']],
+        on=['id', 'foil_type'],
+        how='left',
+        suffixes=('','_old')
+    )
+    changed_rows = merged[merged['market_price'] != merged['market_price_old']].copy()
+    # changed_rows = changed_rows.drop(columns=['market_price_old'])
+    changed_rows.to_csv("changes.csv")
+    print(f'{len(changed_rows)} rows changed')
+    # Update all table rows where the market price has changed
+    with database.connect() as conn:
+        for _, row in changed_rows.iterrows():
+            stmt = text("""
+                    UPDATE one_piece_bounty
+                    SET market_price = :market_price
+                    WHERE id = :id
+                """)
+            conn.execute(stmt, {
+                'market_price': row['market_price'],
+                'id': row['id']
+            })
+
+        conn.commit()
+    # df.to_sql('one_piece_bounty', database, if_exists='replace', dtype=dtype_map)
 
 if __name__ == "__main__":
     df_set_list = pd.read_sql('one_piece_sets', con=database)
