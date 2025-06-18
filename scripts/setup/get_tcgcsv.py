@@ -6,21 +6,6 @@ import pandas as pd
 import requests
 from sqlalchemy import types
 
-"""
-Step 1:
-    Download all CSVs
-    > log any failures
-
-Step 2: Perform ETL one CSV at a time
-        > read the csv
-        > clean the data
-        > update our database
-        > log success/failure
-
-Updating the database:
-    History table is updated with existing row data from Bounty table
-    Bounty table is updated IFF csv's price is different than existing price
-"""
 # Connect to Database
 database = connect_psql()
 
@@ -97,14 +82,26 @@ def get_csvs(set_list):
     return prices_dir
 
 def csv_etl(csv_dir: Path):
+    """
+    Input: directory where CSVs are held
+    Output: None
+    -- Extract dataframes from CSVs
+    -- Clean data and build a master dataframe
+    -- Update bounty table and history table
+    """
 
     # Set up expected column headers
-    EXPECTED_COLUMNS = ['productId','cleanName','imageUrl','url','marketPrice',
+    EXPECTED_INPUT = ['productId','cleanName','imageUrl','url','marketPrice',
                          'extRarity','extNumber','extDescription','extColor',
                          'extCardType','extLife','extPower','extSubtypes',
                          'extAttribute','extCost','extCounterplus']
+    
+    EXPECTED_COLUMNS = ['id','name','image_url','tcgplayer_url','market_price',
+                        'rarity','card_id','description','color',
+                        'card_type','life','power','subtype',
+                        'attribute','cost','counter', 'date']
 
-    # Set up data type mapping to ensure safe values
+    # Set up data type mapping to ensure proper values
     dtype_map = {
         'id': types.INTEGER(),
         'name': types.String(),
@@ -124,23 +121,29 @@ def csv_etl(csv_dir: Path):
         'counter': types.INTEGER()
     }
 
+    int_cols = ['id', 'life', 'power', 'cost', 'counter']
+    float_cols = ['market_price']
+    str_cols = ['name', 'image_url', 'tcgplayer_url', 'rarity', 'card_id', 'description',
+                'color', 'card_type', 'subtype', 'attribute']
+
+    # Build a list of dataframes from CSV files, 
+    # concatenate into a single dataframe, then update database
     df_csv_list = []
     csv_list = list(csv_dir.iterdir())
-
     for count, file in enumerate(csv_list):
         filename = "/".join(str(file).split('/')[-2:])
         print(f"\rETL on CSV: {filename} ({count+1}/{len(csv_list)})", end='', flush=True)
 
         # Extract data from CSV
         df_csv = pd.read_csv(file)
-
-        for col in EXPECTED_COLUMNS:
+        
+        # Transform data in dataframe
+        for col in EXPECTED_INPUT:
             if col not in df_csv.columns:
                 df_csv[col] = pd.NA
 
-        df_csv = df_csv[EXPECTED_COLUMNS]
-        
-        # Transform data in dataframe
+        df_csv = df_csv[EXPECTED_INPUT]
+
         df_csv = df_csv.rename(columns={
             'productId': 'id',
             'cleanName': 'name',
@@ -160,34 +163,61 @@ def csv_etl(csv_dir: Path):
             'extCounterplus': 'counter'
         })
 
-        # Build list of dataframes
+        # Ensure all null values are safe
+        for col in int_cols:
+            df_csv[col] = df_csv[col].astype('Int64')
+
+        for col in float_cols:
+            df_csv[col] = df_csv[col].astype('Float64')
+
+        for col in str_cols:
+            df_csv[col] = df_csv[col].astype('string')
+            
+        # Add run date to dataframe
+        curr_date = datetime.today().strftime("%Y-%m-%d")
+        df_csv['date'] = curr_date
+
+        # Ensure proper order for dataframe
+        df_csv = df_csv[EXPECTED_COLUMNS]
+
+        # Append to list of dataframes
         df_csv_list.append(df_csv)
+
     # Ensure new line at the end of progress
     print()
 
-    # Make sure all dataframes are aligned with expected columns
-    aligned_df_list = []
-    for df in df_csv_list:
-        for col in EXPECTED_COLUMNS:
-            if col not in df.columns:
-                df[col] = pd.NA
-        df = df[EXPECTED_COLUMNS]  # enforce column order
-        aligned_df_list.append(df)
-
     # Concatenate list of dataframes into a single dataframe before loading into database
-    master_df_csv = pd.concat(aligned_df_list, ignore_index=True)
+    master_df_csv = pd.concat(df_csv_list, ignore_index=True)
 
+    # Update history and bounty tables
     print("Loading dataframe into database...")
-    master_df_csv.to_sql('one_piece_bounty', database, if_exists='replace', dtype=dtype_map)
+    save_df_to_db(master_df_csv, dtype_map)
 
     print("ETL Complete!")
 
+def save_df_to_db(df: pd.DataFrame, dtype_map):
+    """
+    Input: dataframe with CSV data to be entered into Database
+           data type mapping
+    Output: Pass/Fail(?) - database is updated with new data
+
+    Step 1: Append current Bounty table into History table
+    Step 2: Update current Bounty table with new Bounty table
+        ++ Realistically only need to change market_price
+        ++ check whether market_price has changed -- if not, no update
+        ++ if there are any new cards, they need to be appended
+    """
+    # Retrieve current Bounty data
+    df_curr_bounty = pd.read_sql('one_piece_bounty', con=database)
+
+    # Append data to History table
+    df_curr_bounty.to_sql('one_piece_bounty_history', database, if_exists='replace', dtype=dtype_map)
+
+    # Update Bounty data
+    df.to_sql('one_piece_bounty', database, if_exists='replace', dtype=dtype_map)
 
 if __name__ == "__main__":
     df_set_list = pd.read_sql('one_piece_sets', con=database)
-
     op_sets = get_set_ids(df_set_list)
-
     csv_dir = get_csvs(op_sets)
-    
     csv_etl(csv_dir)
