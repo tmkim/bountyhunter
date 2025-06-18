@@ -1,7 +1,7 @@
 * Set up and populate database
-    - ETL pipeline for card prices
         + history updates
-    - Script for building decks (use sim syntax?)
+    - Script for building decks
+        > use sim syntax?
 
 Once I have my database kinda populated..
 - Price summaries
@@ -20,3 +20,4 @@ Once I have my database kinda populated..
 
 Complete : 
 * Set up and populate database
+    - ETL pipeline for card prices
