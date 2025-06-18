@@ -67,12 +67,14 @@ def get_csvs(set_list):
     prices_dir.mkdir(parents=True, exist_ok=True)
 
     logging.info(f"----------- Begin Download: {curr_date} -----------")
-    for id in set_list:
+    for count, id in enumerate(set_list):
+        print(f"\rDownloading CSV: {id}.csv ({count+1}/{len(set_list)})", end='', flush=True)
+
         file_path = prices_dir / f"group_{id}.csv"
         csv_url = f"https://tcgcsv.com/tcgplayer/68/{id}/ProductsAndPrices.csv"
 
         if file_path.exists():
-            logging.warning(f"CSV {file_path} already exists. Skipping.")
+            logging.warning(f"CSV {curr_date}/group_{id}.csv already exists. Skipping.")
             continue
 
         try:
@@ -82,16 +84,27 @@ def get_csvs(set_list):
             with open(file_path, "wb") as f:
                 f.write(response.content)
 
-            logging.info(f"Downloaded CSV: {file_path}")
+            logging.info(f"Downloaded CSV: {curr_date}/group_{id}.csv")
 
         except Exception as e:
             logging.error(f"Failed to download CSV for {id}")
+            logging.error(f"Error: {e}")
     logging.info("----------- Finish Download -----------")
+
+    # Ensure new line at the end of progress
+    print()
 
     return prices_dir
 
-def load_and_clean_csvs(csv_dir: Path):
-    # df_csv = pd.read_csv(csv_dir)
+def csv_etl(csv_dir: Path):
+
+    # Set up expected column headers
+    EXPECTED_COLUMNS = ['productId','cleanName','imageUrl','url','marketPrice',
+                         'extRarity','extNumber','extDescription','extColor',
+                         'extCardType','extLife','extPower','extSubtypes',
+                         'extAttribute','extCost','extCounterplus']
+
+    # Set up data type mapping to ensure safe values
     dtype_map = {
         'id': types.INTEGER(),
         'name': types.String(),
@@ -111,14 +124,21 @@ def load_and_clean_csvs(csv_dir: Path):
         'counter': types.INTEGER()
     }
 
-    for file in csv_dir.iterdir():
+    csv_list = list(csv_dir.iterdir())
+    for count, file in enumerate(csv_list):
+        filename = "/".join(str(file).split('/')[-2:])
+        print(f"\rETL on CSV: {filename} ({count+1}/{len(csv_list)})", end='', flush=True)
+
+        # Extract data from CSV
         df_csv = pd.read_csv(file)
 
-        df_csv = df_csv[['productId','cleanName','imageUrl','url','marketPrice',
-                         'extRarity','extNumber','extDescription','extColor',
-                         'extCardType','extLife','extPower','extSubtypes',
-                         'extAttribute','extCost','extCounterplus']]
+        for col in EXPECTED_COLUMNS:
+            if col not in df_csv.columns:
+                df_csv[col] = pd.NA
+
+        df_csv = df_csv[EXPECTED_COLUMNS]
         
+        # Transform data in dataframe
         df_csv = df_csv.rename(columns={
             'productId': 'id',
             'cleanName': 'name',
@@ -138,11 +158,10 @@ def load_and_clean_csvs(csv_dir: Path):
             'extCounterplus': 'counter'
         })
 
-        df_csv.to_sql('one_piece_bounty', database, if_exists='replace', dtype=dtype_map)
-
-
-def save_to_db(df_csv, table_name):
-    df_csv.to_sql(table_name, database, if_exists="replace", index=False)
+        # Load data to database
+        df_csv.to_sql('one_piece_bounty', database, if_exists='append', dtype=dtype_map)
+    # Ensure new line at the end of progress
+    print()
 
 
 if __name__ == "__main__":
@@ -152,4 +171,4 @@ if __name__ == "__main__":
 
     csv_dir = get_csvs(op_sets)
     
-    load_and_clean_csvs(csv_dir)
+    csv_etl(csv_dir)

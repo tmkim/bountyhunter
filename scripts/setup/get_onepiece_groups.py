@@ -68,9 +68,9 @@ if __name__ == "__main__":
     path = file_path if os.path.exists(file_path) else download_csv(file_path)
 
     if path:
-        clean_df = load_and_clean_csv(path)
+        # clean_df = load_and_clean_csv(path)
         print(get_db_url())
-        save_to_db(clean_df, "one_piece_sets")
+        # save_to_db(clean_df, "one_piece_sets")
     else:
         print("No CSV available")
         # maybe make this a try-catch later
