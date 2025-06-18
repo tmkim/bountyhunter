@@ -50,7 +50,6 @@ def get_csvs(set_list):
     # curr_date = "2025-06-17"
 
     prices_dir = project_root / "prices" / f"{curr_date}"
-    # data_dir = Path(f"prices_{curr_date}")
     prices_dir.mkdir(parents=True, exist_ok=True)
 
     logging.info(f"----------- Begin Download: {curr_date} -----------")
@@ -133,68 +132,77 @@ def csv_etl(csv_dir: Path):
     # concatenate into a single dataframe, then update database
     df_csv_list = []
     csv_list = list(csv_dir.iterdir())
+
+    logging.info("--- Start loading CSVs ---")
     for count, file in enumerate(csv_list):
         filename = "/".join(str(file).split('/')[-2:])
         print(f"\rLoading CSV: {filename} ({count+1}/{len(csv_list)})", end='', flush=True)
+        logging.info(f"Loading CSV: {filename}")
 
-        # Extract data from CSV
-        df_csv = pd.read_csv(file)
-        
-        # Transform data in dataframe
-        for col in EXPECTED_INPUT:
-            if col not in df_csv.columns:
-                df_csv[col] = pd.NA
-
-        df_csv = df_csv[EXPECTED_INPUT]
-
-        df_csv = df_csv.rename(columns={
-            'productId': 'id',
-            'cleanName': 'name',
-            'imageUrl': 'image_url',
-            'url': 'tcgplayer_url',
-            'marketPrice': 'market_price',
-            'subTypeName': 'foil_type',
-            'extRarity': 'rarity',
-            'extNumber': 'card_id',
-            'extDescription': 'description',
-            'extColor': 'color',
-            'extCardType': 'card_type',
-            'extLife': 'life',
-            'extPower': 'power',
-            'extSubtypes': 'subtype',
-            'extAttribute': 'attribute',
-            'extCost': 'cost',
-            'extCounterplus': 'counter'
-        })
-
-        # Ensure all null values are safe
-        for col in int_cols:
-            df_csv[col] = df_csv[col].astype('Int64')
-
-        for col in float_cols:
-            df_csv[col] = df_csv[col].astype('Float64')
-
-        for col in str_cols:
-            df_csv[col] = df_csv[col].astype('string')
+        try:
+            # Extract data from CSV
+            df_csv = pd.read_csv(file)
             
-        # Add run date to dataframe
-        # curr_date = datetime.today().strftime("%Y-%m-%d")
-        # curr_date = "2025-06-17"
-        # df_csv['date'] = curr_date
-        # df_csv['filename'] = filename
-        df_csv['last_update'] = pd.Timestamp.now()
+            # Transform data in dataframe
+            for col in EXPECTED_INPUT:
+                if col not in df_csv.columns:
+                    df_csv[col] = pd.NA
 
-        # Ensure proper order for dataframe
-        df_csv = df_csv[EXPECTED_COLUMNS]
+            df_csv = df_csv[EXPECTED_INPUT]
 
-        # Append to list of dataframes
-        df_csv_list.append(df_csv)
+            df_csv = df_csv.rename(columns={
+                'productId': 'id',
+                'cleanName': 'name',
+                'imageUrl': 'image_url',
+                'url': 'tcgplayer_url',
+                'marketPrice': 'market_price',
+                'subTypeName': 'foil_type',
+                'extRarity': 'rarity',
+                'extNumber': 'card_id',
+                'extDescription': 'description',
+                'extColor': 'color',
+                'extCardType': 'card_type',
+                'extLife': 'life',
+                'extPower': 'power',
+                'extSubtypes': 'subtype',
+                'extAttribute': 'attribute',
+                'extCost': 'cost',
+                'extCounterplus': 'counter'
+            })
+
+            # Ensure all null values are safe
+            for col in int_cols:
+                df_csv[col] = df_csv[col].astype('Int64')
+
+            for col in float_cols:
+                df_csv[col] = df_csv[col].astype('Float64')
+
+            for col in str_cols:
+                df_csv[col] = df_csv[col].astype('string')
+                
+            df_csv['last_update'] = pd.Timestamp.now()
+
+            # Ensure proper order for dataframe
+            df_csv = df_csv[EXPECTED_COLUMNS]
+
+            # Append to list of dataframes
+            df_csv_list.append(df_csv)
+
+        except Exception as e:
+            logging.error(f"Error loading CSVs: {e}")
+            print(f"Error loading CSVs: {e}")
+
 
     # Ensure new line at the end of progress
     print()
+    logging.info("--- Finish loading CSVs ---")
 
     # Concatenate list of dataframes into a single dataframe before loading into database
-    master_df_csv = pd.concat(df_csv_list, ignore_index=True)
+    try:
+        master_df_csv = pd.concat(df_csv_list, ignore_index=True)
+    except Exception as e:
+        logging.error(f"Error concatenating dataframes: {e}")
+        print(f"Error concatenating dataframes: {e}")
 
     # Update history and bounty tables
     print("Loading dataframe into database...")
@@ -245,13 +253,17 @@ def save_df_to_db(df: pd.DataFrame, dtype_map):
         ++ check whether market_price has changed -- if not, no update
         ++ if there are any new cards, they need to be appended
     """
-    # !--- Choose one of the below, don't need both ---!
-    # update_partial(df)
-    df.to_sql('one_piece_bounty', database, if_exists='replace', dtype=dtype_map)
-    
-    # Append data to History table
-    df['date'] = datetime.today().strftime('%Y-%m-%d')
-    df.to_sql('one_piece_bounty_history', database, if_exists='append', dtype=dtype_map)
+    try:
+        # Update current Bounty table
+        # Optional : update_partial(df) -- won't update timestamp for all rows
+        df.to_sql('one_piece_bounty', database, if_exists='replace', dtype=dtype_map)
+        
+        # Append data to History table
+        df['date'] = datetime.today().strftime('%Y-%m-%d')
+        df.to_sql('one_piece_bounty_history', database, if_exists='append', dtype=dtype_map)
+    except Exception as e:
+        logging.error(f"Error saving to database: {e}")
+        print(f"Error saving to database: {e}")
 
 if __name__ == "__main__":
     df_set_list = pd.read_sql('one_piece_sets', con=database)
