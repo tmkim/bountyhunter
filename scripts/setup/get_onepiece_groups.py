@@ -46,6 +46,7 @@ def load_and_clean_csv(file_path: Path) -> pd.DataFrame:
 def save_to_db(df, table_name):
     engine = connect_psql()
     df.to_sql(table_name, engine, if_exists="replace", index=False)
+    engine.close()
 
 if __name__ == "__main__":
     file_path = "one_piece_groups.csv"
