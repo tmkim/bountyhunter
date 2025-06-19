@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
     try:
         clean_df = load_and_clean_csv(path)
-        save_to_db(clean_df, "one_piece_sets")
+        save_to_db(clean_df, "one_piece_card_set")
 
     except Exception as e:
         print(f"Error: {e}")

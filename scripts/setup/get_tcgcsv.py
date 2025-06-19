@@ -1,13 +1,10 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from pathlib import Path
 from db_connect import connect_psql
 import pandas as pd
 import requests
-from sqlalchemy import types, text
-
-# Connect to Database
-database = connect_psql()
+from sqlalchemy import Engine, types, text
 
 # Setup project root directory
 project_root = Path(__file__).resolve().parent.parent.parent
@@ -24,19 +21,21 @@ logging.basicConfig(
 )
 
 # Retrieve list of Set IDs from dataframe
-def get_set_ids(df):
+def get_set_ids(db: Engine):
     """
     Input: DataFrame - data from one_piece_sets table
     Output: List - IDs contained in dataframe
     """
+    df_set_list = pd.read_sql('one_piece_sets', con=db)
+
     set_ids = []
-    for i in df['id']:
+    for i in df_set_list['id']:
         set_ids.append(i)
     
     return set_ids
 
 # Download CSVs from tcgcsv.com if we don't have the CSV already
-def get_csvs(set_list):
+def get_csvs(set_list: list):
     """
     Input: list of Set IDs from our database
         For each ID, check if we have the CSV.
@@ -82,7 +81,7 @@ def get_csvs(set_list):
 
     return prices_dir
 
-def csv_etl(csv_dir: Path):
+def csv_etl(db: Engine, csv_dir: Path):
     """
     Input: directory where CSVs are held
     Output: None
@@ -207,13 +206,13 @@ def csv_etl(csv_dir: Path):
     # Update history and bounty tables
     print("Loading dataframe into database...")
     
-    save_df_to_db(master_df_csv, dtype_map)
+    save_df_to_db(db, master_df_csv, dtype_map)
 
     print("ETL Complete!")
 
-def update_partial(df):
+def update_partial(db, df):
     # Retrieve current Bounty data
-    df_curr_bounty = pd.read_sql('one_piece_bounty', con=database)
+    df_curr_bounty = pd.read_sql('one_piece_bounty', con=db)
 
     # Compare bounty data to find all prices that have changed since previous day
     merged = df.merge(
@@ -241,7 +240,7 @@ def update_partial(df):
 
         conn.commit()
 
-def save_df_to_db(df: pd.DataFrame, dtype_map):
+def save_df_to_db(db: Engine, df: pd.DataFrame, dtype_map: dict[str, any]):
     """
     Input: dataframe with CSV data to be entered into Database
            data type mapping
@@ -256,17 +255,28 @@ def save_df_to_db(df: pd.DataFrame, dtype_map):
     try:
         # Update current Bounty table
         # Optional : update_partial(df) -- won't update timestamp for all rows
-        df.to_sql('one_piece_bounty', database, if_exists='replace', dtype=dtype_map)
+        df.to_sql('one_piece_bounty', db, if_exists='replace', dtype=dtype_map)
         
         # Append data to History table
-        df['date'] = datetime.today().strftime('%Y-%m-%d')
-        df.to_sql('one_piece_bounty_history', database, if_exists='append', dtype=dtype_map)
+        df = df.rename(columns={
+            'last_update': 'history_date'
+        })
+        df.to_sql('one_piece_bounty_history', db, if_exists='append', dtype=dtype_map)
     except Exception as e:
         logging.error(f"Error saving to database: {e}")
         print(f"Error saving to database: {e}")
 
 if __name__ == "__main__":
-    df_set_list = pd.read_sql('one_piece_sets', con=database)
-    op_sets = get_set_ids(df_set_list)
-    csv_dir = get_csvs(op_sets)
-    csv_etl(csv_dir)
+    database = connect_psql()
+
+    try:
+        # Read database to get list of card sets
+        op_sets = get_set_ids(database)
+
+        # Download card set CSVs from tcgcsv.com
+        csv_dir = get_csvs(op_sets)
+
+        # Perform ETL operations on card set CSVs
+        csv_etl(database, csv_dir)
+    finally:
+        database.close()

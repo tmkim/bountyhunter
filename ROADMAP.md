@@ -1,7 +1,8 @@
 * Set up and populate database
-
     - Script for building decks
         > use sim syntax?
+
+    - Script for initializing database
 
 Once I have my database kinda populated..
 - Price summaries
