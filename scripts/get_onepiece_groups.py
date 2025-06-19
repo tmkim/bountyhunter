@@ -2,7 +2,7 @@ import requests
 import os
 import pandas as pd
 from pathlib import Path
-from db_connect import connect_psql
+from setup.db_connect import connect_psql
 
 def download_csv(file_path: Path):
 

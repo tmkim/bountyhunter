@@ -1,5 +1,6 @@
-from sqlalchemy import Column, DateTime, String, Text, Integer, Float, ForeignKey
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy import Column, DateTime, ForeignKeyConstraint, PrimaryKeyConstraint, String, Text, Integer, Float, ForeignKey
+from sqlalchemy.ext.declarative  import declarative_base
+from sqlalchemy.orm import relationship
 import pandas as pd
 
 Base = declarative_base()
@@ -7,14 +8,14 @@ Base = declarative_base()
 class OnePieceSet(Base):
     __tablename__ = "one_piece_card_set"
 
-    id = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     description = Column(Text)
 
 class OnePieceCard(Base):
     __tablename__ = "one_piece_card"
 
-    id = Column(String, primary_key = True)
+    id = Column(String, primary_key=True, nullable=False)
     name = Column(String, nullable = False)
     image_url = Column(String)
     tcgplayer_url = Column(String)
@@ -31,14 +32,15 @@ class OnePieceCard(Base):
     attribute = Column(String)
     cost = Column(Integer)
     counter = Column(Integer)
-    last_update = Column(DateTime, default=pd.Tiemstamp.now)
+    last_update = Column(DateTime, default=pd.Timestamp.now)
 
     decks = relationship("OnePieceDeckCard", back_populates="card")
 
 class OnePieceCardHistory(Base):
     __tablename__ = "one_piece_card_history"
 
-    id = Column(String, primary_key = True)
+    index = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(String, nullable = False)
     name = Column(String, nullable = False)
     image_url = Column(String)
     tcgplayer_url = Column(String)
@@ -69,9 +71,8 @@ class OnePieceDeck(Base):
 class OnePieceDeckCard(Base):
     __tablename__ = "one_piece_deck_card"
 
-    id = Column(Integer, primary_key=True)
-    deck_id = Column(Integer, ForeignKey("decks.id"), primary_key=True)
-    card_id = Column(Integer, ForeignKey("card.id"), primary_key=True)
+    deck_id = Column(String, ForeignKey('one_piece_deck.id'), primary_key=True, nullable=False)
+    card_id = Column(String, ForeignKey('one_piece_card.id'), primary_key=True, nullable=False)
     quantity = Column(Integer, nullable=False, default=1)
 
     deck = relationship("OnePieceDeck", back_populates="cards")

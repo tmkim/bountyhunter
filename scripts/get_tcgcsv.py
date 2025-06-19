@@ -1,13 +1,13 @@
 from datetime import datetime
 import logging
 from pathlib import Path
-from db_connect import connect_psql
+from setup.db_connect import connect_psql
 import pandas as pd
 import requests
 from sqlalchemy import Engine, types, text
 
 # Setup project root directory
-project_root = Path(__file__).resolve().parent.parent.parent
+project_root = Path(__file__).resolve().parent.parent
 
 # Setup log file
 log_dir = project_root / "logs"
@@ -87,7 +87,7 @@ def csv_etl(db: Engine, csv_dir: Path):
     Output: None
     -- Extract dataframes from CSVs
     -- Clean data and build a master dataframe
-    -- Update bounty table and history table
+    -- Update card table and history table
     """
 
     # Set up expected column headers
@@ -203,7 +203,7 @@ def csv_etl(db: Engine, csv_dir: Path):
         logging.error(f"Error concatenating dataframes: {e}")
         print(f"Error concatenating dataframes: {e}")
 
-    # Update history and bounty tables
+    # Update history and card tables
     print("Loading dataframe into database...")
     
     save_df_to_db(db, master_df_csv, dtype_map)
@@ -211,12 +211,12 @@ def csv_etl(db: Engine, csv_dir: Path):
     print("ETL Complete!")
 
 def update_partial(db, df):
-    # Retrieve current Bounty data
-    df_curr_bounty = pd.read_sql('one_piece_bounty', con=db)
+    # Retrieve current Card data
+    df_curr_card = pd.read_sql('one_piece_card', con=db)
 
-    # Compare bounty data to find all prices that have changed since previous day
+    # Compare card data to find all prices that have changed since previous day
     merged = df.merge(
-        df_curr_bounty[['id', 'name', 'foil_type', 'market_price']],
+        df_curr_card[['id', 'name', 'foil_type', 'market_price']],
         on=['id', 'foil_type'],
         how='left',
         suffixes=('','_old')
@@ -229,7 +229,7 @@ def update_partial(db, df):
     with database.connect() as conn:
         for _, row in changed_rows.iterrows():
             stmt = text("""
-                    UPDATE one_piece_bounty
+                    UPDATE one_piece_card
                     SET market_price = :market_price
                     WHERE id = :id
                 """)
@@ -246,22 +246,22 @@ def save_df_to_db(db: Engine, df: pd.DataFrame, dtype_map: dict[str, any]):
            data type mapping
     Output: Pass/Fail(?) - database is updated with new data
 
-    Step 1: Append current Bounty table into History table
-    Step 2: Update current Bounty table with new Bounty table
+    Step 1: Append current Card table into History table
+    Step 2: Update current Card table with new Card table
         ++ Realistically only need to change market_price
         ++ check whether market_price has changed -- if not, no update
         ++ if there are any new cards, they need to be appended
     """
     try:
-        # Update current Bounty table
+        # Update current Card table
         # Optional : update_partial(df) -- won't update timestamp for all rows
-        df.to_sql('one_piece_bounty', db, if_exists='replace', dtype=dtype_map)
+        df.to_sql('one_piece_card', db, if_exists='replace', dtype=dtype_map)
         
         # Append data to History table
         df = df.rename(columns={
             'last_update': 'history_date'
         })
-        df.to_sql('one_piece_bounty_history', db, if_exists='append', dtype=dtype_map)
+        df.to_sql('one_piece_card_history', db, if_exists='append', dtype=dtype_map)
     except Exception as e:
         logging.error(f"Error saving to database: {e}")
         print(f"Error saving to database: {e}")
@@ -278,5 +278,5 @@ if __name__ == "__main__":
 
         # Perform ETL operations on card set CSVs
         csv_etl(database, csv_dir)
-    finally:
-        database.close()
+    except Exception as e:
+        print(f"Error: {e}")
