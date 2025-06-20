@@ -26,7 +26,7 @@ def get_set_ids(db: Engine):
     Input: DataFrame - data from one_piece_sets table
     Output: List - IDs contained in dataframe
     """
-    df_set_list = pd.read_sql('one_piece_sets', con=db)
+    df_set_list = pd.read_sql('one_piece_card_set', con=db)
 
     set_ids = []
     for i in df_set_list['id']:
@@ -103,7 +103,7 @@ def csv_etl(db: Engine, csv_dir: Path):
 
     # Set up data type mapping to ensure proper values
     dtype_map = {
-        'id': types.INTEGER(),
+        'id': types.String(),
         'name': types.String(),
         'image_url': types.String(),
         'tcgplayer_url': types.String(),
@@ -122,9 +122,9 @@ def csv_etl(db: Engine, csv_dir: Path):
         'counter': types.INTEGER()
     }
 
-    int_cols = ['id', 'life', 'power', 'cost', 'counter']
+    int_cols = ['life', 'power', 'cost', 'counter']
     float_cols = ['market_price']
-    str_cols = ['name', 'image_url', 'tcgplayer_url', 'foil_type', 'rarity', 'card_id', 
+    str_cols = ['id', 'name', 'image_url', 'tcgplayer_url', 'foil_type', 'rarity', 'card_id', 
                 'description', 'color', 'card_type', 'subtype', 'attribute']
 
     # Build a list of dataframes from CSV files, 
@@ -183,6 +183,10 @@ def csv_etl(db: Engine, csv_dir: Path):
 
             # Ensure proper order for dataframe
             df_csv = df_csv[EXPECTED_COLUMNS]
+
+            # Identify duplicate card_ids, then update the id for foil rows in those duplicates
+            duplicate_ids = df_csv['id'][df_csv.duplicated('id', keep=False)]
+            df_csv.loc[df_csv['id'].isin(duplicate_ids) & (df_csv['foil_type'] == 'Foil'), 'id'] += 'f'
 
             # Append to list of dataframes
             df_csv_list.append(df_csv)
@@ -255,13 +259,17 @@ def save_df_to_db(db: Engine, df: pd.DataFrame, dtype_map: dict[str, any]):
     try:
         # Update current Card table
         # Optional : update_partial(df) -- won't update timestamp for all rows
-        df.to_sql('one_piece_card', db, if_exists='replace', dtype=dtype_map)
+        # Populate card table
+        with db.begin() as conn:
+            conn.execute(text("DELETE FROM one_piece_card"))
+
+        df.to_sql('one_piece_card', db, if_exists='append', dtype=dtype_map, index=False)
         
         # Append data to History table
         df = df.rename(columns={
             'last_update': 'history_date'
         })
-        df.to_sql('one_piece_card_history', db, if_exists='append', dtype=dtype_map)
+        df.to_sql('one_piece_card_history', db, if_exists='append', dtype=dtype_map, index=False)
     except Exception as e:
         logging.error(f"Error saving to database: {e}")
         print(f"Error saving to database: {e}")
