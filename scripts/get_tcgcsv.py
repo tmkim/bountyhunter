@@ -5,6 +5,7 @@ from setup.db_connect import connect_psql
 import pandas as pd
 import requests
 from sqlalchemy import Engine, types, text
+import io
 
 # Setup project root directory
 project_root = Path(__file__).resolve().parent.parent
@@ -25,14 +26,60 @@ def get_set_ids(db: Engine):
     """
     Input: DataFrame - data from one_piece_sets table
     Output: List - IDs contained in dataframe
-    """
-    df_set_list = pd.read_sql('one_piece_card_set', con=db)
-
-    set_ids = []
-    for i in df_set_list['id']:
-        set_ids.append(i)
     
-    return set_ids
+    Step 1 - Download one piece set list
+    Step 2 - Compare today's set list with existing
+    Step 3 - Update database if necessary
+    Step 4 - Return list of sets 
+    """
+    try:
+        print("Checking set list...")
+        logging.info("Download new set list")
+
+        csv_url = 'https://tcgcsv.com/tcgplayer/68/Groups.csv'
+        response = requests.get(csv_url)
+        response.raise_for_status()
+
+        df = pd.read_csv(io.StringIO(response.text))
+        df_set_list = pd.read_sql('one_piece_card_set', con=db)
+
+        # If the lists are different, update database with new dataframe
+        if len(df_set_list) != len(df):
+            print("New set(s) found! Updating database...")
+            logging.info("Updating one_piece_card_set")
+            # Set desired columns
+            df = df[['groupId', 'name', 'abbreviation']]
+
+            # Clean data
+            df['abbreviation'] = df['abbreviation'].str.replace(" ", "_")
+
+            # Rename headers
+            df = df.rename(columns={
+                "groupId": "id",
+                "name": "tmp_description",
+                "abbreviation": "tmp_name"
+            }).rename(columns={
+                "tmp_description": "description",
+                "tmp_name": "name"
+            })
+
+            # Reorder columns for consistency
+            df = df[['id', 'name', 'description']]
+
+            df.to_sql('one_piece_card_set', db, if_exists="replace", index=False)
+
+            df_set_list = df
+            logging.info("Update complete")
+
+        set_ids = []
+        for i in df_set_list['id']:
+            set_ids.append(i)
+
+        return set_ids
+
+    except Exception as e:
+        logging.error(f"Error getting set list: {e}")
+
 
 # Download CSVs from tcgcsv.com if we don't have the CSV already
 def get_csvs(set_list: list):
