@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, ForeignKeyConstraint, PrimaryKeyConstraint, String, Text, Integer, Float, ForeignKey
+from sqlalchemy import Column, DateTime, ForeignKeyConstraint, Index, PrimaryKeyConstraint, String, Text, Integer, Float, ForeignKey
 from sqlalchemy.ext.declarative  import declarative_base
 from sqlalchemy.orm import relationship
 import pandas as pd
@@ -36,6 +36,15 @@ class OnePieceCard(Base):
 
     decks = relationship("OnePieceDeckCard", back_populates="card")
 
+    __table_args__ = (
+        Index('ix_card_cardid_foil', 'card_id', 'foil_type'),
+        Index('ix_card_color', 'color'),
+        Index('ix_card_card_type', 'card_type'),
+        Index('ix_card_cost', 'cost'),
+        Index('ix_card_power', 'power'),
+        Index('ix_card_counter', 'counter'),
+    )
+
 class OnePieceCardHistory(Base):
     __tablename__ = "one_piece_card_history"
 
@@ -59,7 +68,10 @@ class OnePieceCardHistory(Base):
     counter = Column(Integer)
     history_date = Column(DateTime)
 
-    cards = relationship("OnePieceDeckCard", back_populates="deck")
+    __tableargs__ = (
+        Index('ix_card_history_id', 'id'),
+        Index('ix_card_history_card_id', 'card_id')
+    )
 
 class OnePieceDeck(Base):
     __tablename__ = "one_piece_deck"
@@ -67,6 +79,13 @@ class OnePieceDeck(Base):
     id = Column(String, primary_key = True)
     name = Column(String, nullable = False)
     user = Column(String, nullable = False)
+
+    cards = relationship("OnePieceDeckCard", back_populates="deck")
+
+    __tableargs__ = (
+        Index('ix_deck_user', 'user'),
+    )
+
 
 class OnePieceDeckCard(Base):
     __tablename__ = "one_piece_deck_card"

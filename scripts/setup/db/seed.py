@@ -138,7 +138,7 @@ def seed_card_and_history(db: Engine):
                 for col in str_cols:
                     df_csv[col] = df_csv[col].astype('string')
                     
-                df_csv['last_update'] = pd.Timestamp.now()
+                df_csv['last_update'] = str(daily_dir).split('/')[-1]
 
                 # Ensure proper order for dataframe
                 df_csv = df_csv[EXPECTED_COLUMNS]
@@ -158,7 +158,6 @@ def seed_card_and_history(db: Engine):
 
         # Concatenate master DF
         master_df_csv = pd.concat(df_csv_list, ignore_index=True)
-        print(master_df_csv.head)
 
         # Populate card table
         with db.begin() as conn:

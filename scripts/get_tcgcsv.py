@@ -226,8 +226,9 @@ def csv_etl(db: Engine, csv_dir: Path):
             for col in str_cols:
                 df_csv[col] = df_csv[col].astype('string')
                 
-            df_csv['last_update'] = pd.Timestamp.now()
-
+            curr_date = datetime.today().strftime("%Y-%m-%d")
+            df_csv['last_update'] = curr_date
+            
             # Ensure proper order for dataframe
             df_csv = df_csv[EXPECTED_COLUMNS]
 
