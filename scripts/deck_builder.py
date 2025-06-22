@@ -17,6 +17,8 @@ import logging
 from pathlib import Path
 from setup.db_connect import connect_psql
 import pandas as pd
+from sqlalchemy import select, and_, or_, join, tuple_
+from setup.db.models import OnePieceCard
 
 # Setup project root directory
 project_root = Path(__file__).resolve().parent.parent
@@ -43,8 +45,6 @@ def build_deck_list(deck_list: list) -> pd.DataFrame:
     Input: List of cards using CARD_IDxQUANTITY format
     Output: Dataframe with relevant info for every card in the list
     """
-    # Connect to Database
-    database = connect_psql()
 
     deck = []
 
@@ -53,19 +53,39 @@ def build_deck_list(deck_list: list) -> pd.DataFrame:
         card_id = info[0]
         quantity = int(info[1])
 
-        # !!!!!!!!!!!!!!! Update query to be more specific !!!!!!!!!!!!!!!!!
-        query = "SELECT card_id, name, market_price FROM one_piece_card WHERE card_id = %s LIMIT 1"
+        deck.append({
+            "card_id": card_id,
+            "foil_type": "Normal",
+            "quantity": quantity
+            })
 
-        df = pd.read_sql_query(query, database, params=(card_id,))
-        df['quantity'] = quantity 
+    lookup_keys = [(entry["card_id"], entry["foil_type"]) for entry in deck]
 
-        deck.append(df)
+    # Query full card info
+    stmt = select(OnePieceCard).where(
+        tuple_(OnePieceCard.card_id, OnePieceCard.foil_type).in_(lookup_keys)
+    )
 
-    return pd.concat(deck, ignore_index=True)
+    # Connect to Database
+    database = connect_psql()
+    df_cards = pd.read_sql_query(stmt, database)
+    df_deck = pd.DataFrame(deck)
+
+    df_merged = df_cards.merge(df_deck, on=["card_id","foil_type"])
+
+    return df_merged
 
 if __name__ == "__main__":
-    deck_input = input("Enter deck list: ")
+    # ST04-001x04,ST03-002x02,ST04-003x01,ST04-004x02,ST03-005x01,ST03-006x04,ST04-007x04,ST01-008x01,ST01-009x01,ST03-001x03,ST02-002x03,ST02-003x04,ST02-004x02,ST06-005x02,ST02-006x02,ST02-007x01,ST05-008x01,ST02-009x01,ST02-001x02,ST01-002x04,ST05-003x01,ST01-004x02,ST01-005x03,ST02-006x01,ST01-007x03,ST05-008x02,ST03-009x03
+    # deck_input = input("Enter deck list: ")
+    deck_input = 'ST04-001x04,ST03-002x02,ST04-003x01,ST04-004x02,ST03-005x01,ST03-006x04,ST04-007x04,ST01-008x01,ST01-009x01,ST03-001x03,ST02-002x03,ST02-003x04,ST02-004x02,ST06-005x02,ST02-006x02,ST02-007x01,ST05-008x01,ST02-009x01,ST02-001x02,ST01-002x04,ST05-003x01,ST01-004x02,ST01-005x03,ST02-006x01,ST01-007x03,ST05-008x02,ST03-009x03'
     deck_list = [card.strip() for card in deck_input.split(',')]
 
-    df_deck = build_deck_list([deck_list])
-    print(df_deck)
+
+    df_deck = build_deck_list(deck_list)
+    
+    print(f"Total Price: ${round((df_deck['market_price'] * df_deck['quantity']).sum(),2)}")
+    
+    df_deck['card_price'] = round(df_deck['market_price'] * df_deck['quantity'], 2)
+    df_summ = df_deck[['card_id', 'name', 'foil_type', 'market_price', 'quantity', 'card_price']].sort_values('card_id')
+    print(df_summ.head)
