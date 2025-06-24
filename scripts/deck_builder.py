@@ -15,6 +15,9 @@ Functions:
 from datetime import datetime
 import logging
 from pathlib import Path
+import uuid
+
+import sqlalchemy
 from setup.db_connect import connect_psql
 import pandas as pd
 from sqlalchemy import select, and_, or_, join, tuple_
@@ -40,7 +43,7 @@ We can match using card_id which follows "ST02-014" and "x##" for quantity
 ex: ST02-014x04, st04-014x02, etc...
 """
 
-def build_deck_list(deck_list: list) -> pd.DataFrame:
+def build_deck_list(deck_list: list, database: sqlalchemy.Engine) -> pd.DataFrame:
     """
     Input: List of cards using CARD_IDxQUANTITY format
     Output: Dataframe with relevant info for every card in the list
@@ -67,7 +70,6 @@ def build_deck_list(deck_list: list) -> pd.DataFrame:
     )
 
     # Connect to Database
-    database = connect_psql()
     df_cards = pd.read_sql_query(stmt, database)
     df_deck = pd.DataFrame(deck)
 
@@ -79,19 +81,65 @@ def build_deck_list(deck_list: list) -> pd.DataFrame:
 
     return df_merged
 
+def save_deck_to_db(deck_df: pd.DataFrame, user, name, database: sqlalchemy.Engine):
+    deck_id = str(uuid.uuid4())
+    
+    # Set up dataframes for Deck and Deck_Cards
+    df_deck = pd.DataFrame([{
+        'id': deck_id,
+        'name': name,
+        'user': user
+    } ])
+
+    df_deck_cards = deck_df[['id', 'quantity']].copy()
+    df_deck_cards['deck_id'] = deck_id
+    df_deck_cards.rename(
+        columns={
+            'id': 'card_id'
+        },
+        inplace=True
+    )
+    df_deck_cards = df_deck_cards[['deck_id', 'card_id', 'quantity']]
+
+    try:
+        df_deck.to_sql('one_piece_deck', database, if_exists='append', index=False)
+        df_deck_cards.to_sql('one_piece_deck_card', database, if_exists='append', index=False)
+    except Exception as e:
+        print(f"Failed to save deck {name}: {e}")
+
+def deck_summ(df_deck):
+    df_deck['card_price'] = round(df_deck['market_price'] * df_deck['quantity'], 2)
+    df_summ = df_deck[['card_id', 'name', 'foil_type', 'market_price', 'quantity', 'card_price']].sort_values('card_id')
+
+    print(f"Total Price: ${round((df_deck['market_price'] * df_deck['quantity']).sum(),2)}")
+    print(df_summ.head)
+    # df_deck.to_csv('decklist.csv')
+
 if __name__ == "__main__":
     # ST04-001x04,ST03-002x02,ST04-003x01,ST04-004x02,ST03-005x01,ST03-006x04,ST04-007x04,ST01-008x01,ST01-009x01,ST03-001x03,ST02-002x03,ST02-003x04,ST02-004x02,ST06-005x02,ST02-006x02,ST02-007x01,ST05-008x01,ST02-009x01,ST02-001x02,ST01-002x04,ST05-003x01,ST01-004x02,ST01-005x03,ST02-006x01,ST01-007x03,ST05-008x02,ST03-009x03
     # deck_input = input("Enter deck list: ")
     deck_input = 'ST04-001x04,ST03-002x02,ST04-003x01,ST04-004x02,ST03-005x01,ST03-006x04,ST04-007x04,ST01-008x01,ST01-009x01,ST03-001x03,ST02-002x03,ST02-003x04,ST02-004x02,ST06-005x02,ST02-006x02,ST02-007x01,ST05-018x01,ST02-009x01,ST02-001x02,ST01-002x04,ST05-003x01,ST01-004x02,ST01-005x03,ST02-013x01,ST01-007x03,ST05-008x02,ST03-009x03'
     deck_list = [card.strip() for card in deck_input.split(',')]
 
+    database = connect_psql()
+    df_deck = build_deck_list(deck_list, database)
 
-    df_deck = build_deck_list(deck_list)
-    
-    print(f"Total Price: ${round((df_deck['market_price'] * df_deck['quantity']).sum(),2)}")
-    
-    df_deck['card_price'] = round(df_deck['market_price'] * df_deck['quantity'], 2)
-    df_summ = df_deck[['card_id', 'name', 'foil_type', 'market_price', 'quantity', 'card_price']].sort_values('card_id')
-    print(df_summ.head)
+    deck_summ(df_deck)
 
-    df_deck.to_csv('decklist.csv')
+    ask_save = True 
+    save_deck = True
+    while ask_save:
+        save_input  = input("Save deck? (Y/N): ")
+        if save_input == 'Y':
+            ask_save = False
+            save_deck = True
+        elif save_input == 'N':
+            ask_save = False
+            save_deck = False
+        else:
+            print("Invalid input. Please input 'Y' or 'N'")
+
+    if save_deck:
+        user = input("Enter User: ")
+        name = input("Enter Deck Name: ")
+        save_deck_to_db(df_deck, user, name, database)

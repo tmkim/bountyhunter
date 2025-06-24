@@ -1,3 +1,5 @@
+import uuid
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Column, DateTime, ForeignKeyConstraint, Index, PrimaryKeyConstraint, String, Text, Integer, Float, ForeignKey
 from sqlalchemy.ext.declarative  import declarative_base
 from sqlalchemy.orm import relationship
@@ -76,11 +78,11 @@ class OnePieceCardHistory(Base):
 class OnePieceDeck(Base):
     __tablename__ = "one_piece_deck"
 
-    id = Column(String, primary_key = True)
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String, nullable = False)
     user = Column(String, nullable = False)
 
-    cards = relationship("OnePieceDeckCard", back_populates="deck")
+    cards = relationship("OnePieceDeckCard", back_populates="deck", cascade="all, delete-orphan")
 
     __tableargs__ = (
         Index('ix_deck_user', 'user'),
