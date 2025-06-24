@@ -16,6 +16,7 @@ from datetime import datetime
 import logging
 from pathlib import Path
 import uuid
+import questionary
 
 import sqlalchemy
 from setup.db_connect import connect_psql
@@ -45,7 +46,7 @@ ex: ST02-014x04, st04-014x02, etc...
 
 def build_deck_list(deck_list: list, database: sqlalchemy.Engine) -> pd.DataFrame:
     """
-    Input: List of cards using CARD_IDxQUANTITY format
+    Input: List of cards using QUANTITYxCARD_ID format
     Output: Dataframe with relevant info for every card in the list
     """
 
@@ -53,31 +54,36 @@ def build_deck_list(deck_list: list, database: sqlalchemy.Engine) -> pd.DataFram
 
     for card in deck_list:
         info = card.split('x')
-        card_id = info[0]
-        quantity = int(info[1])
+        quantity = int(info[0])
+        card_id = info[1]
 
         deck.append({
             "card_id": card_id,
-            "foil_type": "Normal",
             "quantity": quantity
             })
 
-    lookup_keys = [(entry["card_id"], entry["foil_type"]) for entry in deck]
+    lookup_keys = [(entry["card_id"]) for entry in deck]
 
     # Query full card info
     stmt = select(OnePieceCard).where(
-        tuple_(OnePieceCard.card_id, OnePieceCard.foil_type).in_(lookup_keys)
+        OnePieceCard.card_id.in_(lookup_keys)
     )
 
-    # Connect to Database
+    # Select cards from databae
     df_cards = pd.read_sql_query(stmt, database)
     df_deck = pd.DataFrame(deck)
 
+    # Keep the base version of the card (eliminate "alternate art" etc)
     df_cards["name_length"] = df_cards["name"].str.len()
     df_cards = df_cards.loc[df_cards.groupby("card_id")["name_length"].idxmin()]
     df_cards = df_cards.drop(columns=["name_length"])
 
-    df_merged = df_cards.merge(df_deck, on=["card_id","foil_type"])
+    # If there are both normal and foil versions, keep normal
+    df_cards_sorted = df_cards.sort_values(by='foil_type', key=lambda col:col != 'normal')
+    df_cards_final = df_cards_sorted.drop_duplicates(subset=['card_id','name'], keep='first')
+
+    # Merge cleaned up card list with input to save quantities
+    df_merged = df_cards_final.merge(df_deck, on=["card_id"])
 
     return df_merged
 
@@ -109,17 +115,37 @@ def save_deck_to_db(deck_df: pd.DataFrame, user, name, database: sqlalchemy.Engi
 
 def deck_summ(df_deck):
     df_deck['card_price'] = round(df_deck['market_price'] * df_deck['quantity'], 2)
-    df_summ = df_deck[['card_id', 'name', 'foil_type', 'market_price', 'quantity', 'card_price']].sort_values('card_id')
+    df_summ = df_deck[['card_id', 'name', 'market_price', 'quantity', 'card_price']].sort_values('card_id')
 
     print(f"Total Price: ${round((df_deck['market_price'] * df_deck['quantity']).sum(),2)}")
-    print(df_summ.head)
+    print(df_summ)
     # df_deck.to_csv('decklist.csv')
 
 if __name__ == "__main__":
     # ST04-001x04,ST03-002x02,ST04-003x01,ST04-004x02,ST03-005x01,ST03-006x04,ST04-007x04,ST01-008x01,ST01-009x01,ST03-001x03,ST02-002x03,ST02-003x04,ST02-004x02,ST06-005x02,ST02-006x02,ST02-007x01,ST05-008x01,ST02-009x01,ST02-001x02,ST01-002x04,ST05-003x01,ST01-004x02,ST01-005x03,ST02-006x01,ST01-007x03,ST05-008x02,ST03-009x03
     # deck_input = input("Enter deck list: ")
-    deck_input = 'ST04-001x04,ST03-002x02,ST04-003x01,ST04-004x02,ST03-005x01,ST03-006x04,ST04-007x04,ST01-008x01,ST01-009x01,ST03-001x03,ST02-002x03,ST02-003x04,ST02-004x02,ST06-005x02,ST02-006x02,ST02-007x01,ST05-018x01,ST02-009x01,ST02-001x02,ST01-002x04,ST05-003x01,ST01-004x02,ST01-005x03,ST02-013x01,ST01-007x03,ST05-008x02,ST03-009x03'
-    deck_list = [card.strip() for card in deck_input.split(',')]
+    # deck_input = 'ST04-001x04,ST03-002x02,ST04-003x01,ST04-004x02,ST03-005x01,ST03-006x04,ST04-007x04,ST01-008x01,ST01-009x01,ST03-001x03,ST02-002x03,ST02-003x04,ST02-004x02,ST06-005x02,ST02-006x02,ST02-007x01,ST05-018x01,ST02-009x01,ST02-001x02,ST01-002x04,ST05-003x01,ST01-004x02,ST01-005x03,ST02-013x01,ST01-007x03,ST05-008x02,ST03-009x03'
+    # deck_list = [card.strip() for card in deck_input.split(',')]
+
+    deck_list = [
+    '1xOP09-001',
+    '4xOP01-006',
+    '4xOP09-002',
+    '4xOP09-011',
+    '2xOP09-014',
+    '4xOP09-015',
+    '4xOP10-011',
+    '4xOP09-013',
+    '2xST15-005',
+    '4xOP09-009',
+    '2xST15-002',
+    '3xOP07-015',
+    '4xOP08-118',
+    '1xOP06-007',
+    '3xOP09-004',
+    '3xOP10-019',
+    '2xOP09-021'
+    ]
 
     database = connect_psql()
     df_deck = build_deck_list(deck_list, database)

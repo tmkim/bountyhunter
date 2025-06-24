@@ -138,7 +138,7 @@ def csv_etl(db: Engine, csv_dir: Path):
     """
 
     # Set up expected column headers
-    EXPECTED_INPUT = ['productId','cleanName','imageUrl','url','marketPrice',
+    EXPECTED_INPUT = ['productId','name','imageUrl','url','marketPrice',
                          'subTypeName','extRarity','extNumber','extDescription','extColor',
                          'extCardType','extLife','extPower','extSubtypes',
                          'extAttribute','extCost','extCounterplus']
@@ -198,7 +198,7 @@ def csv_etl(db: Engine, csv_dir: Path):
 
             df_csv = df_csv.rename(columns={
                 'productId': 'id',
-                'cleanName': 'name',
+                'name': 'name',
                 'imageUrl': 'image_url',
                 'url': 'tcgplayer_url',
                 'marketPrice': 'market_price',
@@ -226,7 +226,7 @@ def csv_etl(db: Engine, csv_dir: Path):
             for col in str_cols:
                 df_csv[col] = df_csv[col].astype('string')
                 
-            curr_date = datetime.today().strftime("%Y-%m-%d")
+            curr_date = datetime.today()
             df_csv['last_update'] = curr_date
             
             # Ensure proper order for dataframe
@@ -292,6 +292,16 @@ def update_partial(db, df):
 
         conn.commit()
 
+def sanitize(val):
+    if pd.isna(val):
+        return "NULL"
+    elif isinstance(val, (float, int)):
+        return float(val)
+    elif isinstance(val, (datetime, pd.Timestamp)):
+        return pd.to_datetime(f"'{val.strftime('%Y-%m-%d %H:%M:%S')}'")
+    else:
+        return f"'{str(val)}'"
+
 def save_df_to_db(db: Engine, df: pd.DataFrame, dtype_map: dict[str, any]):
     """
     Input: dataframe with CSV data to be entered into Database
@@ -307,20 +317,49 @@ def save_df_to_db(db: Engine, df: pd.DataFrame, dtype_map: dict[str, any]):
     try:
         # Update current Card table
         # Optional : update_partial(df) -- won't update timestamp for all rows
-        # Populate card table
-        with db.begin() as conn:
-            conn.execute(text("DELETE FROM one_piece_card"))
+        # Update card table
+        defaults = {
+            'foil_type': 'Normal',
+            'market_price': 0
+        }
+        df_cards = df[['id','foil_type','market_price','last_update']]
+        for col, default in defaults.items():
+            df_cards.loc[:, col] = df_cards[col].fillna(default)
 
-        df.to_sql('one_piece_card', db, if_exists='append', dtype=dtype_map, index=False)
+        card_data = list(df_cards.itertuples(index=False,name=None))
+
+        values_clause = ",".join([
+            f"(:id_{i}, :foil_{i}, :price_{i}, :last_update_{i})"
+            for i in range(len(card_data))
+        ])
+
+        query = f"""
+            UPDATE one_piece_card AS t
+            SET market_price = v.market_price,
+                last_update = v.last_update
+            FROM (VALUES {values_clause}) AS v(id, foil_type, market_price, last_update)
+            WHERE t.id = v.id AND t.foil_type = v.foil_type
+        """
+
+        params = {}
+        for i, row in enumerate(card_data):
+            params[f"id_{i}"] = row[0]
+            params[f"foil_{i}"] = row[1]
+            params[f"price_{i}"] = float(row[2])
+            params[f"last_update_{i}"] = row[3]  # datetime or pd.Timestamp object
+
+        with db.begin() as conn:
+            conn.execute(text(query), params)
         
-        # Append data to History table
+        # Append data to History table on same date
         df = df.rename(columns={
             'last_update': 'history_date'
         })
         df.to_sql('one_piece_card_history', db, if_exists='append', dtype=dtype_map, index=False)
     except Exception as e:
         logging.error(f"Error saving to database: {e}")
-        print(f"Error saving to database: {e}")
+        print("Error saving to database: check log")
+        # print(f"Error saving to database: {e}")
 
 if __name__ == "__main__":
     database = connect_psql()

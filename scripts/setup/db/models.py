@@ -22,7 +22,7 @@ class OnePieceCard(Base):
     image_url = Column(String)
     tcgplayer_url = Column(String)
     market_price = Column(Float)
-    foil_type = Column(String)
+    foil_type = Column(String, default="Normal")
     rarity = Column(String)
     card_id = Column(String)
     description = Column(String)
@@ -94,6 +94,7 @@ class OnePieceDeckCard(Base):
 
     deck_id = Column(String, ForeignKey('one_piece_deck.id'), primary_key=True, nullable=False)
     card_id = Column(String, ForeignKey('one_piece_card.id'), primary_key=True, nullable=False)
+    card_foil = Column(String, nullable=False)
     quantity = Column(Integer, nullable=False, default=1)
 
     deck = relationship("OnePieceDeck", back_populates="cards")

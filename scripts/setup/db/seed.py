@@ -53,7 +53,7 @@ def seed_card_set(db: Engine):
 
 def seed_card_and_history(db: Engine):
     # Set up expected column headers
-    EXPECTED_INPUT = ['productId','cleanName','imageUrl','url','marketPrice',
+    EXPECTED_INPUT = ['productId','name','imageUrl','url','marketPrice',
                          'subTypeName','extRarity','extNumber','extDescription','extColor',
                          'extCardType','extLife','extPower','extSubtypes',
                          'extAttribute','extCost','extCounterplus']
@@ -110,7 +110,7 @@ def seed_card_and_history(db: Engine):
 
                 df_csv = df_csv.rename(columns={
                     'productId': 'id',
-                    'cleanName': 'name',
+                    'name': 'name',
                     'imageUrl': 'image_url',
                     'url': 'tcgplayer_url',
                     'marketPrice': 'market_price',
