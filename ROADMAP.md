@@ -1,8 +1,5 @@
 * Set up and populate database
-    - Script for building decks
-        > use sim syntax?
-
-    - Script for initializing database
+    - Set up deck saving in database
 
 Once I have my database kinda populated..
 - Price summaries
@@ -24,3 +21,8 @@ Complete :
     - ETL pipeline for card prices
         + history updates
         + Bounty table only updates if market price changed
+* Set up and populate database
+    - Script for building decks
+        > assumes basic version of card for now
+        -- eventually card will be picked specifically so this shouldn't matter
+    - Script for initializing database
