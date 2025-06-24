@@ -71,6 +71,10 @@ def build_deck_list(deck_list: list) -> pd.DataFrame:
     df_cards = pd.read_sql_query(stmt, database)
     df_deck = pd.DataFrame(deck)
 
+    df_cards["name_length"] = df_cards["name"].str.len()
+    df_cards = df_cards.loc[df_cards.groupby("card_id")["name_length"].idxmin()]
+    df_cards = df_cards.drop(columns=["name_length"])
+
     df_merged = df_cards.merge(df_deck, on=["card_id","foil_type"])
 
     return df_merged
@@ -78,7 +82,7 @@ def build_deck_list(deck_list: list) -> pd.DataFrame:
 if __name__ == "__main__":
     # ST04-001x04,ST03-002x02,ST04-003x01,ST04-004x02,ST03-005x01,ST03-006x04,ST04-007x04,ST01-008x01,ST01-009x01,ST03-001x03,ST02-002x03,ST02-003x04,ST02-004x02,ST06-005x02,ST02-006x02,ST02-007x01,ST05-008x01,ST02-009x01,ST02-001x02,ST01-002x04,ST05-003x01,ST01-004x02,ST01-005x03,ST02-006x01,ST01-007x03,ST05-008x02,ST03-009x03
     # deck_input = input("Enter deck list: ")
-    deck_input = 'ST04-001x04,ST03-002x02,ST04-003x01,ST04-004x02,ST03-005x01,ST03-006x04,ST04-007x04,ST01-008x01,ST01-009x01,ST03-001x03,ST02-002x03,ST02-003x04,ST02-004x02,ST06-005x02,ST02-006x02,ST02-007x01,ST05-008x01,ST02-009x01,ST02-001x02,ST01-002x04,ST05-003x01,ST01-004x02,ST01-005x03,ST02-006x01,ST01-007x03,ST05-008x02,ST03-009x03'
+    deck_input = 'ST04-001x04,ST03-002x02,ST04-003x01,ST04-004x02,ST03-005x01,ST03-006x04,ST04-007x04,ST01-008x01,ST01-009x01,ST03-001x03,ST02-002x03,ST02-003x04,ST02-004x02,ST06-005x02,ST02-006x02,ST02-007x01,ST05-018x01,ST02-009x01,ST02-001x02,ST01-002x04,ST05-003x01,ST01-004x02,ST01-005x03,ST02-013x01,ST01-007x03,ST05-008x02,ST03-009x03'
     deck_list = [card.strip() for card in deck_input.split(',')]
 
 
@@ -89,3 +93,5 @@ if __name__ == "__main__":
     df_deck['card_price'] = round(df_deck['market_price'] * df_deck['quantity'], 2)
     df_summ = df_deck[['card_id', 'name', 'foil_type', 'market_price', 'quantity', 'card_price']].sort_values('card_id')
     print(df_summ.head)
+
+    df_deck.to_csv('decklist.csv')
