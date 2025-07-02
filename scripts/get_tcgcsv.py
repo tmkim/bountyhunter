@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from pathlib import Path
 from setup.db_connect import connect_psql
@@ -93,7 +93,7 @@ def get_csvs(set_list: list):
     Output: prices directory
     """
     curr_date = datetime.today().strftime("%Y-%m-%d")
-    # curr_date = "2025-06-17"
+    # curr_date = (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
 
     prices_dir = project_root / "prices" / f"{curr_date}"
     prices_dir.mkdir(parents=True, exist_ok=True)
@@ -227,6 +227,7 @@ def csv_etl(db: Engine, csv_dir: Path):
                 df_csv[col] = df_csv[col].astype('string')
                 
             curr_date = datetime.today()
+            # curr_date = datetime.today() - timedelta(days=1)
             df_csv['last_update'] = curr_date
             
             # Ensure proper order for dataframe
