@@ -80,12 +80,14 @@ class OnePieceDeck(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String, nullable = False)
+    leader = Column(String, nullable = False)
     user = Column(String, nullable = False)
 
     cards = relationship("OnePieceDeckCard", back_populates="deck", cascade="all, delete-orphan")
 
     __tableargs__ = (
         Index('ix_deck_user', 'user'),
+        Index('ix_deck_leader', 'leader'),
     )
 
 
