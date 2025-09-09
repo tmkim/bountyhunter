@@ -1,0 +1,48 @@
+Functional Requirements --
+Core Reqirements:
+    1. Users can select which TCG to browse (initial: One Piece TCG)
+    2. Users can browse a table containing all available cards for given game
+    3. Users can filter the table based on various details
+    4. Users can hover over cards to view details 
+    5. Users can click cards to add to deck
+    6. Users can view aggregate details of deck that is built in real time 
+    7. Users can save and share decks
+
+Non-Functional Requirements -- 
+    0. System will update prices daily through TCGCSV.com
+    1. System should load available (filtered) cards with low latency 
+    2. System should load card and deck details with low latency 
+    3. System should scale to lots of daily users 
+    4. System should have strong consistency for saving/sharing decks
+    5. System should have strong consistency for adding/removing cards to deck
+    6. System requires login to save decks, not share decks?
+
+Core Entities --
+    1. User : entity that uses the app, whether they are logged in or not 
+    2. Card : card data pulled from tcgcsv (using tcgplayer api) 
+    3. Deck : set of cards that have been selected together
+
+API (what the users will interact with) --
+    /card 
+        > GET single (select a card, see info)
+        > GET list (see all available cards, filtered)
+    /deck 
+        > C R U D
+        > GET single (select a deck, see info) 
+        > GET list (see list of saved decks per user)
+        > POST deck  (save deck of selected cards)
+        > DELETE deck (delete existing deck)
+
+High Level Design --
+    1. On website load, there will be an empty area representing current deck builder 
+    2. There will be an area populated with images representing available cards 
+        - This list will be empty until the initial filter is selected (game type)
+    3. As more filters are applied, the list of cards will update 
+    4. Hovering over a card will display info on the right side
+    5. Clicking a card will add the card to the deck builder area 
+        - Option to add legal limits (max 4 of a card, warning for same color, etc)
+    6. Adding card to the deck will update deck details
+        - total price, cost counts, character counts, event counts, etc 
+    7. Users can choose to create an account and log in to save decks 
+    8. Users can share decks (without saving them?)
+
