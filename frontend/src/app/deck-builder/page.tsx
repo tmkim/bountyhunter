@@ -1,26 +1,25 @@
 import ActiveDeck from "@/components/ActiveDeck";
 import CardList from "@/components/CardList";
 import DetailsPanel from "@/components/DetailsPanel";
-
+    
 export default function Page() {
 
   return (
-      <div className="h-full px-10 py-6 flex flex-1 gap-4">
+    <div className="grid h-full grid-cols-[70%_30%] gap-4">
         {/* Left Column (Active Deck + Available Cards) */}
-        <div className="flex-[7] flex flex-col gap-4">
-          {/* #1 Active Deck */}
-          <ActiveDeck />
+        <div className="flex flex-col gap-4">
+            {/* #1 Active Deck */}
+            <ActiveDeck />
 
-          {/* #2 Available Cards + Filters */}
-          <CardList />
+            {/* #2 Available Cards + Filters */}
+            <CardList />
 
         </div>
 
         {/* Right Column (#3 Card/Deck Details) */}
-        <div className="flex-[3] flex">
-          <DetailsPanel/>
+        <div className="flex flex-col">
+            <DetailsPanel />
         </div>
-      </div>
-
+    </div>
   );
 }
