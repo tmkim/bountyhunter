@@ -1,7 +1,7 @@
 export default function CardList() {
     return (
-        <section className="flex-1 basis-2/5 rounded-lg bg-white shadow p-4 flex flex-col">
-            <h2 className="mb-2 font-semibold text-lapis">
+        <section className="basis-[65%] rounded-lg bg-lapis shadow p-4 flex flex-col">
+            <h2 className="mb-2 font-semibold text-tangerine">
                 Card List
             </h2>
             {/* 2a Filter + Search */}
@@ -9,13 +9,20 @@ export default function CardList() {
                 <input
                     type="text"
                     placeholder="Search cards..."
-                    className="flex-grow rounded border px-2 py-1"
+                    className="flex-grow bg-white text-black rounded border px-2 py-1"
                 />
-                <button className="rounded bg-tangerine px-3 py-1 font-medium hover:bg-rosso hover:text-white">
+                <button className="rounded bg-rosso text-white px-3 py-1 font-medium">
                     Filter
                 </button>
             </div>
+            <div className="mb-4">
+                Going to put some filter options here --
+                some basic options and a modal for advanced filters
+            </div>
             {/* Card pool goes here */}
+            <div className="flex-1 rounded-lg overflow-auto bg-maya shadow p-4">
+
+            </div>
         </section>
     );
 }
