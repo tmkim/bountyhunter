@@ -1,6 +1,7 @@
 export default function CardList() {
     return (
-        <section className="basis-[65%] rounded-lg bg-lapis shadow p-4 flex flex-col">
+        <section className="basis-[65%] rounded-lg bg-lapis 
+                            overflow-x-auto shadow p-4 flex flex-col">
             <h2 className="mb-2 font-semibold text-tangerine">
                 Card List
             </h2>
