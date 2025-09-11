@@ -4,14 +4,8 @@ import CardList from "@/components/CardList";
 import DetailsPanel from "@/components/DetailsPanel";
 import {useState, useRef, useEffect} from "react";
 
-export type Card = {
-  id: string;
-  name: string;
-  imageUrl: string;
-  description?: string;
-};
-
 export default function Page() {
+
   // --- handle resizable column layout ---
   const isDragging = useRef(false);
   const [leftWidth, setLeftWidth] = useState(70);
@@ -58,46 +52,15 @@ export default function Page() {
   }, []);
   // --- handle resizable column layout ---
 
-  // --- Set up card/deck management state ---
-  const [deck, setDeck] = useState<Card[]>([]);
-  const [selectedImage, setSelectedImage] = useState<Card | null>(null);
-
-  // Example pool of cards
-  const allCards: Card[] = [
-    { id: "1", name: "Fireball", imageUrl: "/cards/fireball.png" },
-    { id: "2", name: "Healing Potion", imageUrl: "/cards/heal.png" },
-    { id: "3", name: "Dragon", imageUrl: "/cards/dragon.png" },
-  ];
-  // Actions
-  const addToDeck = (card: Card) => {
-    // if (!deck.find((c) => c.id === card.id)) {
-      setDeck([...deck, card]);
-      setSelectedImage(card); // update details panel on add
-    // }
-  };
-  const removeFromDeck = (card: Card) => {
-    setDeck(deck => deck.filter((c, idx) => !(c.id === card.id && idx === deck.findIndex(d => d.id === card.id))));
-  };
-  // --- Set up card/deck management state ---
-
   return (
       <div className="h-full px-10 py-6 flex flex-1 gap-4">
         {/* Left Column (Active Deck + Available Cards) */}
         <div className="flex flex-col gap-4"
         style={{ width: `${leftWidth}%` }}>
           {/* #1 Active Deck */}
-          <ActiveDeck
-            deck={deck}
-            onRemove={removeFromDeck}
-            onHover={setSelectedImage}
-          />
+          <ActiveDeck />
           {/* #2 Available Cards + Filters */}
-          <CardList
-            allCards={allCards}
-            deck={deck}
-            onAdd={addToDeck}
-            onHover={setSelectedImage}
-          />
+          <CardList />
         </div>
 
         {/* Divider */}
@@ -109,10 +72,7 @@ export default function Page() {
         {/* Right Column (#3 Card/Deck Details) */}
         <div className="flex-[3] flex"
         style={{ width: `${100 - leftWidth}%` }}>
-          <DetailsPanel
-            image={selectedImage}
-            deck={deck} 
-          />
+          <DetailsPanel/>
         </div>
       </div>
   );

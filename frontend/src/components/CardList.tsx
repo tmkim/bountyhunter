@@ -1,4 +1,14 @@
-export default function CardList() {
+"use client";
+import { Card } from "@/app/page";
+
+type Props = {
+  allCards: Card[];
+  deck: Card[];
+  onAdd: (card: Card) => void;
+  onHover: (card: Card) => void;
+};
+
+export default function CardList({ allCards, deck, onAdd, onHover }: Props) {
     return (
         <section className="basis-[65%] rounded-lg bg-lapis 
                             overflow-x-auto shadow p-4 flex flex-col">
@@ -22,7 +32,18 @@ export default function CardList() {
             </div>
             {/* Card pool goes here */}
             <div className="flex-1 rounded-lg overflow-auto bg-maya shadow p-4">
-
+                <div className="grid grid-cols-4 gap-2">
+                    {allCards.map((card) => (
+                    <img
+                        key={card.id}
+                        src={card.imageUrl}
+                        alt={card.name}
+                        className="cursor-pointer rounded hover:ring-2 hover:ring-green-400"
+                        onClick={() => onAdd(card)}
+                        onMouseEnter={() => onHover(card)}
+                    />
+                    ))}
+                </div>
             </div>
         </section>
     );
