@@ -127,28 +127,50 @@ class Command(BaseCommand):
             df_list.append(df)
 
         df_all = pd.concat(df_list, ignore_index=True)
-        df["id"] = df["id"].astype(int)
+        df_all["id"] = df_all["id"].astype(int)
+        df_all["foil_type"] = df_all["foil_type"].apply(
+            lambda x: "Normal" if str(x).lower() == "nan" or pd.isna(x) else x
+        )
+        df_all["market_price"] = df_all["market_price"].apply(
+            lambda x: 0.0 if str(x).lower() == "nan" or pd.isna(x) else x
+        )
+
         curr_date = datetime.now()
 
-        ids = df_all["id"].tolist()
-        existing_ids = set(OnePieceCard.objects.filter(id__in=ids).values_list("id", flat=True))
+        # Build set of (product_id, foil_type) pairs that already exist
+        # existing_pairs = set(
+        #     OnePieceCard.objects
+        #     .filter(product_id__in=df_all["id"].unique())
+        #     .values_list("product_id", "foil_type")
+        # )
+        existing_pairs = set(
+            OnePieceCard.objects.values_list("product_id", "foil_type")
+        )
 
-        for e in existing_ids:
-            print(e)
+        # Separate new vs existing
+        new_rows = df_all[
+            ~df_all.apply(lambda row: (row["id"], row["foil_type"]) in existing_pairs, axis=1)
+        ]
+        existing_rows = df_all[
+            df_all.apply(lambda row: (row["id"], row["foil_type"]) in existing_pairs, axis=1)
+        ]
 
-        new_rows = df_all[~df_all["id"].isin(existing_ids)]
-        existing_rows = df_all[df_all["id"].isin(existing_ids)]
+        # ids = df_all["id"].tolist()
+        # existing_ids = set(OnePieceCard.objects.filter(product_id__in=ids).values_list("product_id", flat=True))
+        # new_rows = df_all[~df_all["id"].isin(existing_ids)]
+        # existing_rows = df_all[df_all["id"].isin(existing_ids)]
 
         # Bulk-Create any new cards
         print("Bulk create")
+        logging.info("Starting bulk insert for table one_piece_card")
         new_cards = [
             OnePieceCard(
-                id=row["id"],
+                product_id=row["id"],
+                foil_type=row["foil_type"],
                 name=row["name"],
                 image_url=row["image_url"],
                 tcgplayer_url=row["tcgplayer_url"],
                 market_price=row["market_price"] or 0,
-                foil_type=row["foil_type"],
                 rarity=row["rarity"],
                 card_id=row["card_id"],
                 description=row["description"],
@@ -165,119 +187,91 @@ class Command(BaseCommand):
             for _, row in new_rows.iterrows()
         ]
         OnePieceCard.objects.bulk_create(new_cards, batch_size=1000)
+        print(f"Inserted {len(new_cards)} new cards,")
+        logging.info(f"Inserted {len(new_cards)} new cards")
 
         # Bulk-Update existing cards
         print("Bulk update")
+        logging.info("Starting bulk update for table one_piece_card")
+        existing_cards = {
+            (c.product_id, c.foil_type): c
+            for c in OnePieceCard.objects.filter(
+                product_id__in=existing_rows["id"].unique(),
+                foil_type__in=existing_rows["foil_type"].unique()
+            ).exclude(last_update__date=curr_date)
+        }
+
         to_update = []
         for _, row in existing_rows.iterrows():
-            card = OnePieceCard(
-                id=row["id"],  # required for update
-                name=row["name"],
-                image_url=row["image_url"],
-                tcgplayer_url=row["tcgplayer_url"],
-                market_price=row["market_price"] or 0,
-                foil_type=row["foil_type"],
-                rarity=row["rarity"],
-                card_id=row["card_id"],
-                description=row["description"],
-                color=row["color"],
-                card_type=row["card_type"],
-                life=row["life"] if pd.notna(row["life"]) else None,
-                power=row["power"] if pd.notna(row["power"]) else None,
-                subtype=row["subtype"],
-                attribute=row["attribute"],
-                cost=row["cost"] if pd.notna(row["cost"]) else None,
-                counter=row["counter"] if pd.notna(row["counter"]) else None,
-                last_update=curr_date,
-            )
+            card = existing_cards.get((row["id"], row["foil_type"]))
+            if not card:
+                continue  # safety check
+
+            card.name = row["name"]
+            card.image_url = row["image_url"]
+            card.tcgplayer_url = row["tcgplayer_url"]
+            card.market_price = row["market_price"] or 0
+            card.rarity = row["rarity"]
+            card.card_id = row["card_id"]
+            card.description = row["description"]
+            card.color = row["color"]
+            card.card_type = row["card_type"]
+            card.life = row["life"] if pd.notna(row["life"]) else None
+            card.power = row["power"] if pd.notna(row["power"]) else None
+            card.subtype = row["subtype"]
+            card.attribute = row["attribute"]
+            card.cost = row["cost"] if pd.notna(row["cost"]) else None
+            card.counter = row["counter"] if pd.notna(row["counter"]) else None
+            card.last_update = curr_date
             to_update.append(card)
 
         OnePieceCard.objects.bulk_update(
             to_update,
             fields=[
-                "name", "image_url", "tcgplayer_url", "market_price", "foil_type",
-                "rarity", "card_id", "description", "color", "card_type",
-                "life", "power", "subtype", "attribute", "cost", "counter",
-                "last_update",
+                "name", "image_url", "tcgplayer_url",
+                "market_price", "rarity", "card_id", "description", "color",
+                "card_type", "life", "power", "subtype", "attribute", "cost",
+                "counter", "last_update"
             ],
-            batch_size=1000
+            batch_size=1000,
         )
+
+        print(f"updated {len(to_update)} existing cards,")
+        logging.info(f"updated {len(to_update)} existing cards")
 
         # Bulk-Create history rows
         print("Bulk history")
-        history_objs = [
-            OnePieceCardHistory(
-                card_id=row["id"],
-                name=row["name"],
-                market_price=row["market_price"] or 0,
-                foil_type=row["foil_type"],
-                rarity=row["rarity"],
-                card_type=row["card_type"],
-                description=row["description"],
-                history_date=curr_date,
+        logging.info("Starting bulk insert for table one_piece_card_history")
+        before_count = OnePieceCardHistory.objects.filter(history_date=curr_date).count()
+
+        card_map = {
+            (c.product_id, c.foil_type): c.id
+            for c in OnePieceCard.objects.filter(
+                product_id__in=df_all["id"].unique(),
+                foil_type__in=df_all["foil_type"].unique(),
             )
-            for _, row in df_all.iterrows()
-        ]
-        OnePieceCardHistory.objects.bulk_create(history_objs, batch_size=1000)
+        }
 
-        print(f"Inserted {len(new_cards)} new cards,")
-        print(f"updated {len(to_update)} existing cards,")
-        print(f"added {len(history_objs)} history rows")
+        history_objs = []
+        for _, row in df_all.iterrows():
+            card_pk = card_map.get((row["id"], row["foil_type"]))
+            if not card_pk:
+                continue  # card not in DB yet, skip or log
 
+            history_objs.append(
+                OnePieceCardHistory(
+                    card_id=card_pk,  # real auto-increment id
+                    history_date=curr_date,
+                    market_price=row["market_price"] or 0,
+                )
+            )
 
-        # for count, file in enumerate(csv_list):
-        #     print(f"\rLoading CSV: {file} ({count+1}/{len(csv_list)})", end='', flush=True)
-        #     df = pd.read_csv(file)
-        #     for col in EXPECTED_INPUT:
-        #         if col not in df.columns:
-        #             df[col] = pd.NA
+        OnePieceCardHistory.objects.bulk_create(history_objs,
+                                                batch_size=1000, 
+                                                ignore_conflicts=True)
 
-        #     df = df.rename(columns={
-        #         "productId": "id",
-        #         "name": "name",
-        #         "imageUrl": "image_url",
-        #         "url": "tcgplayer_url",
-        #         "marketPrice": "market_price",
-        #         "subTypeName": "foil_type",
-        #         "extRarity": "rarity",
-        #         "extNumber": "card_id",
-        #         "extDescription": "description",
-        #         "extColor": "color",
-        #         "extCardType": "card_type",
-        #         "extLife": "life",
-        #         "extPower": "power",
-        #         "extSubtypes": "subtype",
-        #         "extAttribute": "attribute",
-        #         "extCost": "cost",
-        #         "extCounterplus": "counter"
-        #     })
+        after_count = OnePieceCardHistory.objects.filter(history_date=curr_date).count()
+        added_count = after_count - before_count
 
-        #     curr_date = datetime.today()
-        #     for _, row in df.iterrows():
-        #         card, created = OnePieceCard.objects.update_or_create(
-        #             id=row["id"],
-        #             defaults={
-        #                 "name": row["name"],
-        #                 "image_url": row["image_url"],
-        #                 "tcgplayer_url": row["tcgplayer_url"],
-        #                 "market_price": row["market_price"] or 0,
-        #                 "foil_type": row["foil_type"],
-        #                 "rarity": row["rarity"],
-        #                 "card_id": row["card_id"],
-        #                 "description": row["description"],
-        #                 "color": row["color"],
-        #                 "card_type": row["card_type"],
-        #                 "life": row["life"] if pd.notna(row["life"]) else None,
-        #                 "power": row["power"] if pd.notna(row["power"]) else None,
-        #                 "subtype": row["subtype"],
-        #                 "attribute": row["attribute"],
-        #                 "cost": row["cost"] if pd.notna(row["cost"]) else None,
-        #                 "counter": row["counter"] if pd.notna(row["counter"]) else None,
-        #                 "last_update": curr_date,
-        #             }
-        #         )
-        #         OnePieceCardHistory.objects.create(
-        #             card=card,
-        #             history_date=curr_date,
-        #             market_price=card.market_price
-        #         )
+        print(f"Inserted {added_count} history rows")
+        logging.info(f"Inserted {added_count} history rows for {curr_date}")
