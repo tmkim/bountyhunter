@@ -23,14 +23,14 @@ class OnePieceCard(models.Model):
     description = models.TextField(blank=True, null=True)
     color = models.CharField(max_length=50, blank=True, null=True)
     card_type = models.CharField(max_length=100, blank=True, null=True)
-    life = models.IntegerField(blank=True, null=True)
-    power = models.IntegerField(blank=True, null=True)
+    life = models.IntegerField(blank=True)
+    power = models.IntegerField(blank=True)
     subtype = models.CharField(max_length=255, blank=True, null=True)
     attribute = models.CharField(max_length=50, blank=True, null=True)
-    cost = models.IntegerField(blank=True, null=True)
-    counter = models.IntegerField(blank=True, null=True)
+    cost = models.IntegerField(blank=True)
+    counter = models.IntegerField(blank=True)
 
-    last_update = models.DateTimeField(auto_now=True)
+    last_update = models.DateField()
 
     class Meta:
         unique_together = ("product_id", "foil_type")

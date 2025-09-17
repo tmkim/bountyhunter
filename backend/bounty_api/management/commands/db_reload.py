@@ -14,7 +14,7 @@ from bounty_api.models import OnePieceSet, OnePieceCard, OnePieceCardHistory
 # Setup log dir
 log_dir = Path("logs")
 log_dir.mkdir(parents=True, exist_ok=True)
-log_file = log_dir / f"get_tcgcsv_{datetime.now().strftime('%Y-%m-%d')}.log"
+log_file = log_dir / f"db_refresh_{datetime.now().strftime('%Y-%m-%d')}.log"
 
 logging.basicConfig(
     filename=log_file,
@@ -22,54 +22,85 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
+CARD_SCHEMA = {
+    "product_id":   {"dtype": "int64",   "default": 0},
+    "foil_type":    {"dtype": "string",  "default": "Normal"},
+    "name":         {"dtype": "string",  "default": ""},
+    "image_url":    {"dtype": "string",  "default": None},
+    "tcgplayer_url":{"dtype": "string",  "default": None},
+    "market_price": {"dtype": "float64", "default": 0.0},
+    "rarity":       {"dtype": "string",  "default": None},
+    "card_id":      {"dtype": "string",  "default": None},
+    "description":  {"dtype": "string",  "default": None},
+    "color":        {"dtype": "string",  "default": None},
+    "card_type":    {"dtype": "string",  "default": None},
+    "life":         {"dtype": "int64",   "default": 0},
+    "power":        {"dtype": "int64",   "default": 0},
+    "subtype":      {"dtype": "string",  "default": None},
+    "attribute":    {"dtype": "string",  "default": None},
+    "cost":         {"dtype": "int64",   "default": 0},
+    "counter":      {"dtype": "int64",   "default": 0},
+    "last_update":  {"dtype": "datetime64[ns]", "default": pd.NaT},
+}
+
 class Command(BaseCommand):
-    help = "ETL pipeline for TCGCSV data into Django models"
+    help = "ETL pipeline for TCGCSV data into Django models for EXISTING CSVs"
 
-    def clean_df(self, df_list: list) -> pd.DataFrame:
-        df_all = pd.concat(df_list, ignore_index=True)
-        df_all = df_all.replace(
-            to_replace=["nan", "NaN", "NaT", "NULL", "None"], 
-            value=np.nan
-        )
-        # df_all["foil_type"] = df_all["foil_type"].apply(
-        #     lambda x: "Normal" if str(x).lower() == "nan" or pd.isna(x) else x
-        # )
-        # df_all["market_price"] = df_all["market_price"].apply(
-        #     lambda x: 0.0 if str(x).lower() == "nan" or pd.isna(x) else x
-        # )
-        df_all["product_id"] = df_all["product_id"].astype(int)
-        df_all["foil_type"] = pd.to_numeric(df_all["foil_type"], errors="coerce").fillna("Normal")
-        df_all["market_price"] = pd.to_numeric(df_all["market_price"], errors="coerce").fillna(0.0)
+    def clean_df(self, df: pd.DataFrame) -> pd.DataFrame:
+        # Ensure all expected columns exist
+        df = df.reindex(columns=CARD_SCHEMA.keys())
 
-        num_cols = df_all.select_dtypes(include=["number"]).columns
-        df_all[num_cols] = df_all[num_cols].fillna(0.0)
-        
-        str_cols = df_all.select_dtypes(include=["object"]).columns
-        df_all[str_cols] = df_all[str_cols].fillna("")
+        # Replace common string-nulls
+        df = df.replace(to_replace=["nan", "NaN", "NaT", "NULL", "None"], value=np.nan)
 
-        return df_all
+        for col, spec in CARD_SCHEMA.items():
+            dtype = spec["dtype"]
+            default = spec["default"]
+
+            if dtype == "int64":
+                df[col] = pd.to_numeric(df[col], errors="coerce").dropna().astype("int64")
+                if default is not None:
+                    df[col] = df[col].fillna(default)
+
+            elif dtype == "float64":
+                df[col] = pd.to_numeric(df[col], errors="coerce").astype("float64")
+                if default is not None:
+                    df[col] = df[col].fillna(default)
+
+            elif dtype.startswith("datetime"):
+                df[col] = pd.to_datetime(df[col], errors="coerce")
+                if default is not None:
+                    df[col] = df[col].fillna(default)
+
+            else:  # string-like
+                df[col] = df[col].astype("string")
+                if default is not None:
+                    df[col] = df[col].fillna(default)
+
+        return df
 
     def handle(self, *args, **options):
         try:
-            set_ids = self.get_set_ids()
-            csv_dir = self.get_csvs(set_ids)
-            self.csv_etl(csv_dir)
+            # self.reload_set_ids()
+            csv_dir = self.reload_csvs()
             self.stdout.write(self.style.SUCCESS("ETL Complete!"))
         except Exception as e:
             logging.error(f"ETL error: {e}")
             self.stderr.write(self.style.ERROR(f"ETL error: {e}"))
 
-    def get_set_ids(self):
-        print("Downloading set list...")
-        url = "https://tcgcsv.com/tcgplayer/68/Groups.csv"
-        logging.info("Downloading set list...")
-        response = requests.get(url)
-        response.raise_for_status()
+    def reload_set_ids(self):
+        db_op_sets = OnePieceSet.objects.all()
+        if not db_op_sets:
+            print("Downloading set list...")
+            url = "https://tcgcsv.com/tcgplayer/68/Groups.csv"
+            logging.info("Downloading set list...")
+            response = requests.get(url)
+            response.raise_for_status()
+            df = pd.read_csv(io.StringIO(response.text))
+        else:
+            df = pd.DataFrame(list(db_op_sets.values()))
 
-        df = pd.read_csv(io.StringIO(response.text))
-        db_set_ids = set(OnePieceSet.objects.values_list("product_id", flat=True))
-
-        if len(db_set_ids) != len(df):
+        if len(db_op_sets) != len(df):
             logging.info("New set(s) found, updating CardSet table...")
             for _, row in df.iterrows():
                 OnePieceSet.objects.update_or_create(
@@ -79,41 +110,19 @@ class Command(BaseCommand):
                         "description": row["name"],
                     }
                 )
-        print("Set list up to date")
+            print("Set list up to date")
 
-        return list(OnePieceSet.objects.values_list("product_id", flat=True))
+    def reload_csvs(self):
+        print("Fetching current price lists")
+        prices_dir = Path("prices")
 
-    def get_csvs(self, set_list):
-        print("Fetching most recent price lists")
-        curr_date = datetime.today().strftime("%Y-%m-%d")
-        prices_dir = Path("prices") / curr_date
-        prices_dir.mkdir(parents=True, exist_ok=True)
-
-        for count, set_id in enumerate(set_list):
-            file_path = prices_dir / f"group_{set_id}.csv"
-            csv_url = f"https://tcgcsv.com/tcgplayer/68/{set_id}/ProductsAndPrices.csv"
-            print(f"\rLoading CSV: {file_path} ({count+1}/{len(set_list)})", end='', flush=True)
-
-            if file_path.exists():
-                logging.info(f"CSV already exists: {file_path}")
-                continue
-
-            try:
-                response = requests.get(csv_url)
-                response.raise_for_status()
-                with open(file_path, "wb") as f:
-                    f.write(response.content)
-                logging.info(f"Downloaded {file_path}")
-            except Exception as e:
-                logging.error(f"Error downloading {set_id}: {e}")
-        print()
-
-        print("... Complete!")
-
-        return prices_dir
+        for prices in prices_dir.iterdir():
+            dir_date = str(prices).split('/')[-1]
+            print(f"Perform ETL for {dir_date}")
+            self.csv_etl(prices, dir_date)
 
     @transaction.atomic
-    def csv_etl(self, csv_dir: Path):
+    def csv_etl(self, csv_dir: Path, dir_date: str):
         EXPECTED_INPUT = [
             "productId", "name", "imageUrl", "url", "marketPrice",
             "subTypeName", "extRarity", "extNumber", "extDescription", "extColor",
@@ -149,11 +158,12 @@ class Command(BaseCommand):
                 "extCost": "cost",
                 "extCounterplus": "counter",
             })
-            df_list.append(df)
+            df_list.append(self.clean_df(df))
 
-        df_all = self.clean_df(df_list)
+        print("Dataframe cleaning complete")
+        df_all = pd.concat(df_list, ignore_index=True)
 
-        curr_date = datetime.now()
+        curr_date = dir_date
 
         existing_pairs = set(
             OnePieceCard.objects.values_list("product_id", "foil_type")
@@ -205,9 +215,10 @@ class Command(BaseCommand):
             for c in OnePieceCard.objects.filter(
                 product_id__in=existing_rows["product_id"].unique(),
                 foil_type__in=existing_rows["foil_type"].unique()
-            ).exclude(last_update__date=curr_date)
+            ).exclude(last_update=curr_date)
         }
 
+        print("Updating...")
         to_update = []
         for _, row in existing_rows.iterrows():
             card = existing_cards.get((row["product_id"], row["foil_type"]))
