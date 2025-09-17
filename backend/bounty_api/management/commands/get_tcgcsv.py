@@ -22,32 +22,57 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
+CARD_SCHEMA = {
+    "product_id":   {"dtype": "int64",   "default": 0},
+    "foil_type":    {"dtype": "string",  "default": "Normal"},
+    "name":         {"dtype": "string",  "default": ""},
+    "image_url":    {"dtype": "string",  "default": None},
+    "tcgplayer_url":{"dtype": "string",  "default": None},
+    "market_price": {"dtype": "float64", "default": 0.0},
+    "rarity":       {"dtype": "string",  "default": None},
+    "card_id":      {"dtype": "string",  "default": None},
+    "description":  {"dtype": "string",  "default": None},
+    "color":        {"dtype": "string",  "default": None},
+    "card_type":    {"dtype": "string",  "default": None},
+    "life":         {"dtype": "int64",   "default": 0},
+    "power":        {"dtype": "int64",   "default": 0},
+    "subtype":      {"dtype": "string",  "default": None},
+    "attribute":    {"dtype": "string",  "default": None},
+    "cost":         {"dtype": "int64",   "default": 0},
+    "counter":      {"dtype": "int64",   "default": 0}
+}
+
 class Command(BaseCommand):
     help = "ETL pipeline for TCGCSV data into Django models"
 
-    def clean_df(self, df_list: list) -> pd.DataFrame:
-        df_all = pd.concat(df_list, ignore_index=True)
-        df_all = df_all.replace(
-            to_replace=["nan", "NaN", "NaT", "NULL", "None"], 
-            value=np.nan
-        )
-        # df_all["foil_type"] = df_all["foil_type"].apply(
-        #     lambda x: "Normal" if str(x).lower() == "nan" or pd.isna(x) else x
-        # )
-        # df_all["market_price"] = df_all["market_price"].apply(
-        #     lambda x: 0.0 if str(x).lower() == "nan" or pd.isna(x) else x
-        # )
-        df_all["product_id"] = df_all["product_id"].astype(int)
-        df_all["foil_type"] = pd.to_numeric(df_all["foil_type"], errors="coerce").fillna("Normal")
-        df_all["market_price"] = pd.to_numeric(df_all["market_price"], errors="coerce").fillna(0.0)
+    def clean_df(self, df: pd.DataFrame) -> pd.DataFrame:
+        # Ensure all expected columns exist
+        df = df.reindex(columns=CARD_SCHEMA.keys())
 
-        num_cols = df_all.select_dtypes(include=["number"]).columns
-        df_all[num_cols] = df_all[num_cols].fillna(0.0)
-        
-        str_cols = df_all.select_dtypes(include=["object"]).columns
-        df_all[str_cols] = df_all[str_cols].fillna("")
+        # Replace common string-nulls
+        df = df.replace(to_replace=["nan", "NaN", "NaT", "NULL", "None"], value=np.nan)
 
-        return df_all
+        for col, spec in CARD_SCHEMA.items():
+            dtype = spec["dtype"]
+            default = spec["default"]
+
+            if dtype == "int64":
+                df[col] = pd.to_numeric(df[col], errors="coerce").dropna().astype("int64")
+                if default is not None:
+                    df[col] = df[col].fillna(default)
+
+            elif dtype == "float64":
+                df[col] = pd.to_numeric(df[col], errors="coerce").astype("float64")
+                if default is not None:
+                    df[col] = df[col].fillna(default)
+
+            else:  # string-like
+                df[col] = df[col].astype("string")
+                if default is not None:
+                    df[col] = df[col].fillna(default)
+
+        return df
+
 
     def handle(self, *args, **options):
         try:
@@ -121,6 +146,7 @@ class Command(BaseCommand):
             "extAttribute", "extCost", "extCounterplus"
         ]
 
+        curr_date = datetime.now()
         csv_list = list(csv_dir.iterdir())
         df_list = []
 
@@ -149,17 +175,16 @@ class Command(BaseCommand):
                 "extCost": "cost",
                 "extCounterplus": "counter",
             })
-            df_list.append(df)
+            df_list.append(self.clean_df(df))
 
-        df_all = self.clean_df(df_list)
-
-        curr_date = datetime.now()
-
+        print("Dataframe cleaning complete")
+        logging.info("Dataframe cleaning complete")
+        df_all = pd.concat(df_list, ignore_index=True)
+        
+        # Separate new vs existing cards
         existing_pairs = set(
             OnePieceCard.objects.values_list("product_id", "foil_type")
         )
-
-        # Separate new vs existing
         new_rows = df_all[
             ~df_all.apply(lambda row: (row["product_id"], row["foil_type"]) in existing_pairs, axis=1)
         ]

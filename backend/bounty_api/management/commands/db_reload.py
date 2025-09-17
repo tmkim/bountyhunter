@@ -40,7 +40,6 @@ CARD_SCHEMA = {
     "attribute":    {"dtype": "string",  "default": None},
     "cost":         {"dtype": "int64",   "default": 0},
     "counter":      {"dtype": "int64",   "default": 0},
-    "last_update":  {"dtype": "datetime64[ns]", "default": pd.NaT},
 }
 
 class Command(BaseCommand):
@@ -64,11 +63,6 @@ class Command(BaseCommand):
 
             elif dtype == "float64":
                 df[col] = pd.to_numeric(df[col], errors="coerce").astype("float64")
-                if default is not None:
-                    df[col] = df[col].fillna(default)
-
-            elif dtype.startswith("datetime"):
-                df[col] = pd.to_datetime(df[col], errors="coerce")
                 if default is not None:
                     df[col] = df[col].fillna(default)
 
@@ -130,6 +124,7 @@ class Command(BaseCommand):
             "extAttribute", "extCost", "extCounterplus"
         ]
 
+        curr_date = dir_date
         csv_list = list(csv_dir.iterdir())
         df_list = []
 
@@ -163,13 +158,10 @@ class Command(BaseCommand):
         print("Dataframe cleaning complete")
         df_all = pd.concat(df_list, ignore_index=True)
 
-        curr_date = dir_date
-
+        # Separate new vs existing cards
         existing_pairs = set(
             OnePieceCard.objects.values_list("product_id", "foil_type")
         )
-
-        # Separate new vs existing
         new_rows = df_all[
             ~df_all.apply(lambda row: (row["product_id"], row["foil_type"]) in existing_pairs, axis=1)
         ]
@@ -218,7 +210,6 @@ class Command(BaseCommand):
             ).exclude(last_update=curr_date)
         }
 
-        print("Updating...")
         to_update = []
         for _, row in existing_rows.iterrows():
             card = existing_cards.get((row["product_id"], row["foil_type"]))
