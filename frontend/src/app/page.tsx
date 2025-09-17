@@ -3,15 +3,12 @@ import ActiveDeck from "@/components/ActiveDeck";
 import CardList from "@/components/CardList";
 import DetailsPanel from "@/components/DetailsPanel";
 import {useState, useRef, useEffect} from "react";
+import { useCards } from "@/hooks/useCards";
+import { OnePieceCard } from "@/lib/types";
 
-export type Card = {
-  id: string;
-  name: string;
-  imageUrl: string;
-  description?: string;
-};
 
 export default function Page() {
+
   // --- handle resizable column layout ---
   const isDragging = useRef(false);
   const [leftWidth, setLeftWidth] = useState(70);
@@ -59,26 +56,33 @@ export default function Page() {
   // --- handle resizable column layout ---
 
   // --- Set up card/deck management state ---
-  const [deck, setDeck] = useState<Card[]>([]);
-  const [selectedImage, setSelectedImage] = useState<Card | null>(null);
+  const { cards: allCards, loading } = useCards();
+  const [search, setSearch] = useState("");
 
-  // Example pool of cards
-  const allCards: Card[] = [
-    { id: "1", name: "Fireball", imageUrl: "/cards/fireball.png" },
-    { id: "2", name: "Healing Potion", imageUrl: "/cards/heal.png" },
-    { id: "3", name: "Dragon", imageUrl: "/cards/dragon.png" },
-  ];
+  const [deck, setDeck] = useState<OnePieceCard[]>([]);
+  const [selectedImage, setSelectedImage] = useState<OnePieceCard | null>(null);
+
+  // The active search string that actually filters cards
+  const [activeSearch, setActiveSearch] = useState<string>("");
+
+  // Filter using the active search (only updated on Filter/Enter)
+  const filteredCards = allCards.filter((card) =>
+    card.name.toLowerCase().includes(activeSearch.toLowerCase())
+  );
+  
   // Actions
-  const addToDeck = (card: Card) => {
+  const addToDeck = (card: OnePieceCard) => {
     // if (!deck.find((c) => c.id === card.id)) {
       setDeck([...deck, card]);
       setSelectedImage(card); // update details panel on add
     // }
   };
-  const removeFromDeck = (card: Card) => {
+  const removeFromDeck = (card: OnePieceCard) => {
     setDeck(deck => deck.filter((c, idx) => !(c.id === card.id && idx === deck.findIndex(d => d.id === card.id))));
   };
   // --- Set up card/deck management state ---
+
+  if (loading) return <p>Loading cards…</p>;
 
   return (
       <div className="h-full px-10 py-6 flex flex-1 gap-4">
@@ -93,8 +97,10 @@ export default function Page() {
           />
           {/* #2 Available Cards + Filters */}
           <CardList
-            allCards={allCards}
+            allCards={filteredCards}
             deck={deck}
+            search={activeSearch}
+            setSearch={setActiveSearch}
             onAdd={addToDeck}
             onHover={setSelectedImage}
           />
