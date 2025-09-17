@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 from pathlib import Path
+import numpy as np
 import pandas as pd
 import requests
 import io
@@ -23,6 +24,30 @@ logging.basicConfig(
 
 class Command(BaseCommand):
     help = "ETL pipeline for TCGCSV data into Django models"
+
+    def clean_df(self, df_list: list) -> pd.DataFrame:
+        df_all = pd.concat(df_list, ignore_index=True)
+        df_all = df_all.replace(
+            to_replace=["nan", "NaN", "NaT", "NULL", "None"], 
+            value=np.nan
+        )
+        # df_all["foil_type"] = df_all["foil_type"].apply(
+        #     lambda x: "Normal" if str(x).lower() == "nan" or pd.isna(x) else x
+        # )
+        # df_all["market_price"] = df_all["market_price"].apply(
+        #     lambda x: 0.0 if str(x).lower() == "nan" or pd.isna(x) else x
+        # )
+        df_all["id"] = df_all["id"].astype(int)
+        df_all["foil_type"] = pd.to_numeric(df_all["foil_type"], errors="coerce").fillna("Normal")
+        df_all["market_price"] = pd.to_numeric(df_all["market_price"], errors="coerce").fillna(0.0)
+
+        num_cols = df_all.select_dtypes(include=["number"]).columns
+        df_all[num_cols] = df_all[num_cols].fillna(0.0)
+        
+        str_cols = df_all.select_dtypes(include=["object"]).columns
+        df_all[str_cols] = df_all[str_cols].fillna("")
+
+        return df_all
 
     def handle(self, *args, **options):
         try:
@@ -126,23 +151,10 @@ class Command(BaseCommand):
             })
             df_list.append(df)
 
-        df_all = pd.concat(df_list, ignore_index=True)
-        df_all["id"] = df_all["id"].astype(int)
-        df_all["foil_type"] = df_all["foil_type"].apply(
-            lambda x: "Normal" if str(x).lower() == "nan" or pd.isna(x) else x
-        )
-        df_all["market_price"] = df_all["market_price"].apply(
-            lambda x: 0.0 if str(x).lower() == "nan" or pd.isna(x) else x
-        )
+        df_all = self.clean_df(df_list)
 
         curr_date = datetime.now()
 
-        # Build set of (product_id, foil_type) pairs that already exist
-        # existing_pairs = set(
-        #     OnePieceCard.objects
-        #     .filter(product_id__in=df_all["id"].unique())
-        #     .values_list("product_id", "foil_type")
-        # )
         existing_pairs = set(
             OnePieceCard.objects.values_list("product_id", "foil_type")
         )
@@ -154,11 +166,6 @@ class Command(BaseCommand):
         existing_rows = df_all[
             df_all.apply(lambda row: (row["id"], row["foil_type"]) in existing_pairs, axis=1)
         ]
-
-        # ids = df_all["id"].tolist()
-        # existing_ids = set(OnePieceCard.objects.filter(product_id__in=ids).values_list("product_id", flat=True))
-        # new_rows = df_all[~df_all["id"].isin(existing_ids)]
-        # existing_rows = df_all[df_all["id"].isin(existing_ids)]
 
         # Bulk-Create any new cards
         print("Bulk create")
