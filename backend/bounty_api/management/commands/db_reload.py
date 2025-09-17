@@ -14,7 +14,7 @@ from bounty_api.models import OnePieceSet, OnePieceCard, OnePieceCardHistory
 # Setup log dir
 log_dir = Path("logs")
 log_dir.mkdir(parents=True, exist_ok=True)
-log_file = log_dir / f"db_refresh_{datetime.now().strftime('%Y-%m-%d')}.log"
+log_file = log_dir / f"db_reload_{datetime.now().strftime('%Y-%m-%d')}.log"
 
 logging.basicConfig(
     filename=log_file,
@@ -114,6 +114,7 @@ class Command(BaseCommand):
             dir_date = str(prices).split('/')[-1]
             print(f"Perform ETL for {dir_date}")
             self.csv_etl(prices, dir_date)
+            print("-------------------")
 
     @transaction.atomic
     def csv_etl(self, csv_dir: Path, dir_date: str):
@@ -168,6 +169,7 @@ class Command(BaseCommand):
         existing_rows = df_all[
             df_all.apply(lambda row: (row["product_id"], row["foil_type"]) in existing_pairs, axis=1)
         ]
+        logging.info((new_rows.to_string()))
 
         # Bulk-Create any new cards
         print("Bulk create")
