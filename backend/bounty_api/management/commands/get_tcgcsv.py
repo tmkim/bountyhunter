@@ -92,7 +92,7 @@ class Command(BaseCommand):
         response.raise_for_status()
 
         df = pd.read_csv(io.StringIO(response.text))
-        db_set_ids = set(OnePieceSet.objects.values_list("product_id", flat=True))
+        db_set_ids = set(OnePieceSet.objects.values_list("id", flat=True))
 
         if len(db_set_ids) != len(df):
             logging.info("New set(s) found, updating CardSet table...")
@@ -106,7 +106,7 @@ class Command(BaseCommand):
                 )
         print("Set list up to date")
 
-        return list(OnePieceSet.objects.values_list("product_id", flat=True))
+        return list(OnePieceSet.objects.values_list("id", flat=True))
 
     def get_csvs(self, set_list):
         print("Fetching most recent price lists")
@@ -230,7 +230,7 @@ class Command(BaseCommand):
             for c in OnePieceCard.objects.filter(
                 product_id__in=existing_rows["product_id"].unique(),
                 foil_type__in=existing_rows["foil_type"].unique()
-            ).exclude(last_update__date=curr_date)
+            ).exclude(last_update=curr_date)
         }
 
         to_update = []
