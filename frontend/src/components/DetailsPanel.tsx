@@ -1,9 +1,10 @@
 "use client";
-import { Card } from "@/app/page";
+import { OnePieceCard } from "@/lib/types";
+import Image from "next/image";
 
 type Props = {
-  image: Card | null;
-  deck: Card[];
+  image: OnePieceCard | null;
+  deck: OnePieceCard[];
 };
 
 export default function ActiveDeck({ image, deck }: Props) {
@@ -15,10 +16,14 @@ export default function ActiveDeck({ image, deck }: Props) {
             {/* Top half: selected image */}
             <div className="flex-1 flex items-center justify-center border rounded">
                 {image ? (
-                <img
-                    src={image.imageUrl}
+                <Image
+                    src={image.image_url || ""}
                     alt={image.name}
+                    width={450}
+                    height={630}
                     className="max-h-full max-w-full"
+                    loading="lazy"    // optional (Next does this automatically)
+                    unoptimized // optional to skip Next’s proxy and just get lazy loading
                 />
                 ) : (
                 <span className="text-gray-400">Hover or select a card</span>

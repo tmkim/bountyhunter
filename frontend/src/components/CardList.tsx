@@ -1,6 +1,7 @@
 "use client";
 import { OnePieceCard } from "@/lib/types";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
 type Props = {
   allCards: OnePieceCard[];
@@ -55,15 +56,19 @@ export default function CardList({ allCards, deck, search, setSearch, onAdd, onH
 
             {/* Card pool goes here */}
             <div className="flex-1 rounded-lg overflow-auto bg-maya shadow p-4">
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
                     {allCards.map((card) => (
-                    <img
+                    <Image
                         key={card.id}
-                        src={card.tcgplayer_url || ''}
+                        src={card.image_url || ""}
                         alt={card.name}
+                        width={150}       // expected display width (px)
+                        height={210}      // keep aspect ratio close to real card proportions
                         className="cursor-pointer rounded hover:ring-2 hover:ring-green-400"
                         onClick={() => onAdd(card)}
                         onMouseEnter={() => onHover(card)}
+                        loading="lazy"    // optional (Next does this automatically)
+                        unoptimized // optional to skip Next’s proxy and just get lazy loading
                     />
                     ))}
                 </div>

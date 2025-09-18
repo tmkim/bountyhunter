@@ -9,7 +9,7 @@ import { OnePieceCard } from "@/lib/types";
 
 export default function Page() {
 
-  // --- handle resizable column layout ---
+  // #region -- resizable column layout
   const isDragging = useRef(false);
   const [leftWidth, setLeftWidth] = useState(70);
 
@@ -53,7 +53,7 @@ export default function Page() {
       window.removeEventListener("mouseup", handleMouseUp);
     };
   }, []);
-  // --- handle resizable column layout ---
+  // #endregion
 
   // --- Set up card/deck management state ---
   const { cards: allCards, loading } = useCards();
