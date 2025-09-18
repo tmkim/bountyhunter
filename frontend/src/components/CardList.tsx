@@ -9,7 +9,7 @@ type Props = {
   search: string;
   setSearch: (value: string) => void;
   onAdd: (card: OnePieceCard) => void;
-  onHover: (card: OnePieceCard) => void;
+  onHover: (card: OnePieceCard | null) => void;
 };
 
 export default function CardList({ allCards, deck, search, setSearch, onAdd, onHover }: Props) {
@@ -40,17 +40,17 @@ export default function CardList({ allCards, deck, search, setSearch, onAdd, onH
                 }}
             >
                 <input
-                type="text"
-                placeholder="Search cards..."
-                value={draftSearch}
-                onChange={(e) => setDraftSearch(e.target.value)}
-                className="flex-grow bg-white text-black rounded border px-2 py-1"
+                    type="text"
+                    placeholder="Search cards..."
+                    value={draftSearch}
+                    onChange={(e) => setDraftSearch(e.target.value)}
+                    className="flex-grow bg-white text-black rounded border px-2 py-1"
                 />
-                <button
-                type="submit"
-                className="rounded bg-rosso text-white px-3 py-1 font-medium hover:text-maya"
+                <button 
+                    type="submit"
+                    className="rounded bg-rosso text-white px-3 py-1 font-medium hover:text-maya"
                 >
-                Filter
+                    Filter
                 </button>
             </form>
 
@@ -67,6 +67,7 @@ export default function CardList({ allCards, deck, search, setSearch, onAdd, onH
                         className="cursor-pointer rounded hover:ring-2 hover:ring-green-400"
                         onClick={() => onAdd(card)}
                         onMouseEnter={() => onHover(card)}
+                        onMouseLeave={() => onHover(null)}
                         loading="lazy"    // optional (Next does this automatically)
                         unoptimized // optional to skip Next’s proxy and just get lazy loading
                     />

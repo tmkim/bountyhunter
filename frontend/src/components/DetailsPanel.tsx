@@ -14,24 +14,24 @@ export default function ActiveDeck({ image, deck }: Props) {
             {/* Details view content */}
             <div className="flex-1 rounded-lg bg-maya shadow p-4">
             {/* Top half: selected image */}
-            <div className="flex-1 flex items-center justify-center border rounded">
+            {/* </div><div className="h-[630px] flex-1 flex items-center justify-center"> */}
+            <div className="relative aspect-[2/3] items-center justify-center flex-1 flex">
                 {image ? (
                 <Image
                     src={image.image_url || ""}
                     alt={image.name}
-                    width={450}
-                    height={630}
-                    className="max-h-full max-w-full"
+                    fill
+                    // className="max-h-full max-w-full"
                     loading="lazy"    // optional (Next does this automatically)
                     unoptimized // optional to skip Next’s proxy and just get lazy loading
                 />
                 ) : (
-                <span className="text-gray-400">Hover or select a card</span>
+                <span className="text-2xl text-black">Hover card to preview</span>
                 )}
             </div>
 
             {/* Bottom half: deck details */}
-            <div className="flex-1 border rounded p-2">
+            <div className="flex-1 border rounded p-2 mt-4">
                 <h2 className="font-bold mb-2">Deck Details</h2>
                 <p>Total cards: {deck.length}</p>
                 {/* Add stats or metadata here */}

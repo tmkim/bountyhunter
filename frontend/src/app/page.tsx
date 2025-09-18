@@ -74,7 +74,7 @@ export default function Page() {
   const addToDeck = (card: OnePieceCard) => {
     // if (!deck.find((c) => c.id === card.id)) {
       setDeck([...deck, card]);
-      setSelectedImage(card); // update details panel on add
+      // setSelectedImage(card); // update details panel on add
     // }
   };
   const removeFromDeck = (card: OnePieceCard) => {
