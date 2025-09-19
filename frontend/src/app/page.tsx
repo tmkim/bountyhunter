@@ -80,9 +80,14 @@ export default function Page() {
       console.warn(`${card.name} is already at the max of 4 copies.`);
     }
   };
+  
   const removeFromDeck = (card: OnePieceCard) => {
     setDeck(deck => deck.filter((c, idx) => !(c.id === card.id && idx === deck.findLastIndex(d => d.id === card.id))));
   };
+
+  const clearDeck = () => {
+    setDeck([])
+  }
   // #endregion
 
   if (loading) return <p>Loading cards…</p>;
@@ -95,6 +100,7 @@ export default function Page() {
           {/* #1 Active Deck */}
           <ActiveDeck
             deck={deck}
+            onClear={clearDeck}
             onRemove={removeFromDeck}
             onHover={setSelectedImage}
           />

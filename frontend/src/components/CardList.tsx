@@ -48,7 +48,8 @@ export default function CardList({ allCards, deck, search, setSearch, onAdd, onH
                 />
                 <button 
                     type="submit"
-                    className="rounded bg-rosso text-white px-3 py-1 font-medium hover:text-maya"
+                    className="rounded bg-rosso text-white px-3 py-1 font-medium 
+                    hover:text-tangerine hover:cursor-pointer"
                 >
                     Filter
                 </button>

@@ -4,6 +4,7 @@ import Image from "next/image";
 
 type Props = {
   deck: OnePieceCard[];
+  onClear: () => void;
   onRemove: (card: OnePieceCard) => void;
   onHover: (card: OnePieceCard | null) => void;
 };
@@ -24,13 +25,31 @@ function groupDeck(deck: OnePieceCard[]): GroupedDeck[] {
   return Array.from(map.values());
 }
 
-export default function ActiveDeck({ deck, onRemove, onHover }: Props) {
+export default function ActiveDeck({ deck, onClear, onRemove, onHover }: Props) {
     return (
         <section className="basis-[35%] flex flex-col rounded-lg 
                             overflow-x bg-lapis shadow p-4">
-            <h2 className="mb-2 font-bold text-tangerine">Active Deck</h2>
-                <div className="max-h-[30vh] flex-1 rounded-lg overflow-y-auto 
-                                bg-maya shadow pt-4 pb-8 px-4">
+            <div className="mb-2 flex items-center justify-between">
+                <span className="font-bold text-lg text-tangerine">Active Deck</span>
+                <button
+                    // onClick={onClear}
+                    className="px-2 py-1 font-medium bg-rosso text-white rounded 
+                    hover:text-tangerine hover:cursor-pointer"
+                >
+                    Save
+                </button>
+                <button
+                    onClick={onClear}
+                    className="px-2 py-1 font-medium bg-rosso text-white rounded 
+                    hover:text-tangerine hover:cursor-pointer"
+                >
+                    Clear
+                </button>
+            </div>
+
+
+            <div className="max-h-[30vh] flex-1 rounded-lg overflow-y-auto 
+                            bg-maya shadow pt-4 pb-8 px-4">
 {/* ----------------------- */}
                 <div className="grid gap-x-2 gap-y-6
                                 grid-cols-[repeat(auto-fill,minmax(90px,1fr))]
