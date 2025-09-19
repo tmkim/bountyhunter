@@ -55,7 +55,7 @@ export default function Page() {
   }, []);
   // #endregion
 
-  // --- Set up card/deck management state ---
+  // #region -- Set up card/deck management state
   const { cards: allCards, loading } = useCards();
   const [search, setSearch] = useState("");
 
@@ -72,15 +72,12 @@ export default function Page() {
   
   // Actions
   const addToDeck = (card: OnePieceCard) => {
-    // if (!deck.find((c) => c.id === card.id)) {
       setDeck([...deck, card]);
-      // setSelectedImage(card); // update details panel on add
-    // }
   };
   const removeFromDeck = (card: OnePieceCard) => {
-    setDeck(deck => deck.filter((c, idx) => !(c.id === card.id && idx === deck.findIndex(d => d.id === card.id))));
+    setDeck(deck => deck.filter((c, idx) => !(c.id === card.id && idx === deck.findLastIndex(d => d.id === card.id))));
   };
-  // --- Set up card/deck management state ---
+  // #endregion
 
   if (loading) return <p>Loading cards…</p>;
 

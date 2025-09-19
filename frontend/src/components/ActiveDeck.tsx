@@ -31,44 +31,48 @@ export default function ActiveDeck({ deck, onRemove, onHover }: Props) {
             <h2 className="mb-2 font-bold text-tangerine">Active Deck</h2>
                 <div className="flex-1 rounded-lg overflow-auto bg-maya shadow p-4">
                     <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
-                        {groupDeck(deck).map(({ card, count }) => (
+                        {groupDeck(deck).map(({ card, count }) => {
+                            const cardWidth = 150;
+                            const cardHeight = 210;
+                            const stagger = 6; // px offset between stacked cards
+                            const totalHeight = cardHeight + stagger * (count - 1);
+
+                            return (
                             <div
-                            key={card.product_id}
-                            className="relative cursor-pointer"
-                            onClick={() => onRemove(card)}
-                            onMouseEnter={() => onHover(card)}
-                            onMouseLeave={() => onHover(null)}
+                                key={card.product_id}
+                                className="relative cursor-pointer"
+                                style={{ width: cardWidth, height: totalHeight }}
+                                onClick={() => onRemove(card)}
+                                onMouseEnter={() => onHover(card)}
+                                onMouseLeave={() => onHover(null)}
                             >
-                            {/* render duplicates stacked */}
-                            {Array.from({ length: count }).map((_, i) => (
+                                {Array.from({ length: count }).map((_, i) => (
                                 <Image
-                                key={i}
-                                src={card.image_url || ""}
-                                alt={card.name}
-                                width={150}
-                                height={210}
-                                className={`
-                                    absolute rounded transition-transform
-                                    hover:ring-2 hover:ring-green-400
-                                `}
-                                style={{
-                                    top: `${i * 6}px`,   // stagger down slightly
-                                    left: `${i * 6}px`,  // stagger right slightly
-                                    zIndex: i,           // higher cards on top
-                                }}
-                                loading="lazy"
-                                unoptimized
+                                    key={i}
+                                    src={card.image_url || ""}
+                                    alt={card.name}
+                                    width={cardWidth}
+                                    height={cardHeight}
+                                    className="absolute rounded hover:ring-2 hover:ring-green-400"
+                                    style={{
+                                    top: `${i * stagger}px`,
+                                    left: `${i * stagger}px`,
+                                    zIndex: i,
+                                    }}
+                                    loading="lazy"
+                                    unoptimized
                                 />
-                            ))} 
-                            {/* Optional counter badge */}
-                            {count > 1 && (
+                                ))}
+
+                                {count > 1 && (
                                 <span className="absolute bottom-1 right-1 bg-black text-white text-xs px-1 rounded">
-                                ×{count}
+                                    ×{count}
                                 </span>
-                            )}
+                                )}
                             </div>
-                        ))}
-                        </div>
+                            );
+                        })}
+                    </div>
 
                     {/* <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
                         {deck.map((card,idx) => (
