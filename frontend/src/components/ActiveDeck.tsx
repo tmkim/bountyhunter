@@ -29,57 +29,58 @@ export default function ActiveDeck({ deck, onRemove, onHover }: Props) {
         <section className="basis-[35%] flex flex-col rounded-lg 
                             overflow-x bg-lapis shadow p-4">
             <h2 className="mb-2 font-bold text-tangerine">Active Deck</h2>
-                <div className="flex-1 rounded-lg overflow-auto bg-maya shadow p-4">
-                    <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-x-2 gap-y-4">
-                        {groupDeck(deck).map(({ card, count }) => {
-                            const cardWidth = 150;
-                            const cardHeight = 210;
-                            const stagger = 3; // px offset between stacked cards
-                            const totalHeight = cardHeight + stagger * (count - 1);
+                <div className="max-h-[30vh] flex-1 rounded-lg overflow-y-auto 
+                                bg-maya shadow pt-4 pb-8 px-4">
+{/* ----------------------- */}
+                <div className="grid gap-x-2 gap-y-6
+                                grid-cols-[repeat(auto-fill,minmax(90px,1fr))]
+                                md:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]          
+                                lg:grid-cols-[repeat(auto-fill,minmax(130px,1fr))]          
+                                xl:grid-cols-[repeat(auto-fill,minmax(150px,1fr))] 
+                                ">
+                    {groupDeck(deck).map(({ card, count }) => {
+                        const stagger = 3; // px offset between stacked cards
 
-                            return (
-                            <div
-                                key={card.product_id}
-                                className="relative cursor-pointer"
-                                style={{ width: cardWidth, height: totalHeight }}
-                                onClick={() => onRemove(card)}
-                                onMouseEnter={() => onHover(card)}
-                                onMouseLeave={() => onHover(null)}
-                            >
-                                {/* Floating badge above top-right */}
-                                {count > 1 && (
+                        return (
+                        <div
+                            key={card.product_id}
+                            className="relative cursor-pointer
+                                       w-[90px] md:w-[110px] lg:w-[130px] xl:w-[150px]
+                                       h-[135px] md:h-[165px] lg:h-[195px] xl:h-[225px]"
+                            onClick={() => onRemove(card)}
+                            onMouseEnter={() => onHover(card)}
+                            onMouseLeave={() => onHover(null)}
+                        >
+                            {/* Floating badge above top-right */}
+                            {count > 1 && (
                                 <span
-                                    className="absolute bg-black text-white text-xs px-1 rounded"
-                                    style={{
-                                    top: "-12px",   // float above
-                                    right: "0px",   // align with right edge
-                                    zIndex: totalHeight + 1,
-                                    }}
+                                    className="absolute -top-3 left-0 bg-black text-white text-xs px-1 rounded"
+                                    style={{ zIndex: count + 1 }}
                                 >
                                     ×{count}
                                 </span>
-                                )}
-                                {Array.from({ length: count }).map((_, i) => (
-                                <Image
-                                    key={i}
-                                    src={card.image_url || ""}
-                                    alt={card.name}
-                                    width={cardWidth}
-                                    height={cardHeight}
-                                    className="absolute rounded hover:ring-2 hover:ring-green-400"
-                                    style={{
-                                    top: `${i * stagger}px`,
-                                    left: `${i * stagger}px`,
-                                    zIndex: i,
-                                    }}
-                                    loading="lazy"
-                                    unoptimized
-                                />
-                                ))}
-                            </div>
-                            );
-                        })}
+                            )}
+                            {Array.from({ length: count }).map((_, i) => (
+                            <Image
+                                key={i}
+                                src={card.image_url || ""}
+                                alt={card.name}
+                                fill
+                                className="absolute rounded hover:ring-2 hover:ring-rosso"
+                                style={{
+                                top: `${i * stagger}px`,
+                                left: `${i * stagger}px`,
+                                zIndex: i,
+                                }}
+                                loading="lazy"
+                                unoptimized
+                            />
+                            ))}
                         </div>
+                        );
+                    })}
+                    </div>
+{/* ----------------------- */}
                 </div>
         </section>
     );

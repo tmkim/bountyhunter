@@ -72,7 +72,13 @@ export default function Page() {
   
   // Actions
   const addToDeck = (card: OnePieceCard) => {
+    const count = deck.filter(c => c.product_id === card.product_id).length;
+
+    if (count < 4) {
       setDeck([...deck, card]);
+    } else {
+      console.warn(`${card.name} is already at the max of 4 copies.`);
+    }
   };
   const removeFromDeck = (card: OnePieceCard) => {
     setDeck(deck => deck.filter((c, idx) => !(c.id === card.id && idx === deck.findLastIndex(d => d.id === card.id))));
