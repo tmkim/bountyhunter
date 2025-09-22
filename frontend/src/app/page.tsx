@@ -60,7 +60,7 @@ export default function Page() {
   const [search, setSearch] = useState("");
 
   const [deck, setDeck] = useState<OnePieceCard[]>([]);
-  const [selectedImage, setSelectedImage] = useState<OnePieceCard | null>(null);
+  const [selectedCard, setSelectedCard] = useState<OnePieceCard | null>(null);
 
   // The active search string that actually filters cards
   const [activeSearch, setActiveSearch] = useState<string>("");
@@ -102,7 +102,7 @@ export default function Page() {
             deck={deck}
             onClear={clearDeck}
             onRemove={removeFromDeck}
-            onHover={setSelectedImage}
+            onHover={setSelectedCard}
           />
           {/* #2 Available Cards + Filters */}
           <CardList
@@ -111,7 +111,7 @@ export default function Page() {
             search={activeSearch}
             setSearch={setActiveSearch}
             onAdd={addToDeck}
-            onHover={setSelectedImage}
+            onHover={setSelectedCard}
           />
         </div>
 
@@ -125,7 +125,7 @@ export default function Page() {
         <div className="flex-[3] flex"
         style={{ width: `${100 - leftWidth}%` }}>
           <DetailsPanel
-            image={selectedImage}
+            image={selectedCard}
             deck={deck} 
           />
         </div>
