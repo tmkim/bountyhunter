@@ -117,7 +117,7 @@ export default function Page() {
       });
       setRarityMap(prev => {
         const newMap = new Map(prev);
-        const key = String(card.rarity ?? "0"); // normalize nulls
+        const key = card.rarity === "DON!!" ? "DON" : String(card.rarity ?? "0"); // normalize nulls
         newMap.set(key, (newMap.get(key) ?? 0) + 1);
         return newMap;
       });
@@ -140,7 +140,7 @@ export default function Page() {
     });
     setRarityMap(prev => {
       const newMap = new Map(prev);
-      const key = String(card.rarity ?? "0");
+      const key = card.rarity === "DON!!" ? "DON" : String(card.rarity ?? "0"); // normalize nulls
       const current = newMap.get(key) ?? 0;
       newMap.set(key, Math.max(0, current - 1)); // avoid negatives
       return newMap;

@@ -59,25 +59,81 @@ export default function ActiveDeck({ card, deck, deckPrice, costData, rarityData
                         <h2 className="font-bold mb-2">Deck Details</h2>
                         <p>Total cards: {deck.length}</p>
                         <p>Total cost: ${deckPrice.toFixed(2)}</p>
-                        <div className="w-full h-64">
+                        <div className="w-full h-64 py-2">
                             <ResponsiveContainer>
-                                <BarChart data={costData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="cost" label={{ value: "Cost", position: "insideBottom", offset: -5 }} />
-                                <YAxis allowDecimals={false} />
-                                <Tooltip />
-                                <Bar dataKey="count" fill="#D70000" />
+                                <BarChart data={costData}
+                                margin={{ top: 0, right: 0, left: -30, bottom: 0 }}>
+                                    {/* Grid lines */}
+                                    <CartesianGrid stroke="#ffffff22" strokeDasharray="3 3" />
+
+                                    {/* X Axis */}
+                                    <XAxis
+                                    dataKey="cost"
+                                    tick={{ fill: "black", fontSize: 12 }}
+                                    label={{
+                                        value: "Cost",
+                                        position: "insideBottom",
+                                        offset: -5,
+                                        fill: "black",
+                                        fontSize: 14,
+                                    }}
+                                    axisLine={{ stroke: "black" }}
+                                    tickLine={{ stroke: "black" }}
+                                    />
+
+                                    {/* Y Axis */}
+                                    <YAxis
+                                    allowDecimals={false}
+                                    tick={{ fill: "black", fontSize: 12 }}
+                                    axisLine={{ stroke: "black" }}
+                                    tickLine={{ stroke: "black" }}
+                                    />
+
+                                    {/* Bars */}
+                                    <Bar
+                                    dataKey="count"
+                                    fill="#D70000"
+                                    radius={[6, 6, 0, 0]} // rounded tops
+                                    />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
-                        <div className="w-full h-64">
+                        <div className="w-full h-64 py-2">
                             <ResponsiveContainer>
-                                <BarChart data={rarityData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="rarity" label={{ value: "Rarity", position: "insideBottom", offset: -5 }} />
-                                <YAxis allowDecimals={false} />
-                                <Tooltip />
-                                <Bar dataKey="count" fill="#D70000" />
+                                <BarChart data={rarityData}
+                                margin={{ top: 0, right: 0, left: -30, bottom: 0 }}>
+                                    {/* Grid lines */}
+                                    <CartesianGrid stroke="#ffffff22" strokeDasharray="3 3" />
+
+                                    {/* X Axis */}
+                                    <XAxis
+                                    dataKey="rarity"
+                                    tick={{ fill: "black", fontSize: 12 }}
+                                    label={{
+                                        value: "Rarity",
+                                        position: "insideBottom",
+                                        offset: -5,
+                                        fill: "black",
+                                        fontSize: 14,
+                                    }}
+                                    axisLine={{ stroke: "black" }}
+                                    tickLine={{ stroke: "black" }}
+                                    />
+
+                                    {/* Y Axis */}
+                                    <YAxis
+                                    allowDecimals={false}
+                                    tick={{ fill: "black", fontSize: 12 }}
+                                    axisLine={{ stroke: "black" }}
+                                    tickLine={{ stroke: "black" }}
+                                    />
+
+                                    {/* Bars */}
+                                    <Bar
+                                    dataKey="count"
+                                    fill="#D70000"
+                                    radius={[6, 6, 0, 0]} // rounded tops
+                                    />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
