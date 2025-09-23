@@ -7,27 +7,11 @@ type Props = {
   card: OnePieceCard | null;
   deck: OnePieceCard[];
   deckPrice: number;
-  costMap: Map<string, number>;
-//   costData: {cost: string; count: number;}
-  rarityMap: Map<string, number>;
+  costData: {cost: string; count: number;}[]
+  rarityData: {rarity: string; count: number;}[]
 };
 
-export default function ActiveDeck({ card, deck, deckPrice, costMap, rarityMap }: Props) {
-
-    // Map Deck Cost Distribution
-    const cost_data = Array.from(costMap.entries()).map(([cost, count]) => ({
-        cost,
-        count,
-    }));
-    cost_data.sort((a, b) => (a.cost === "none" ? 999 : +a.cost) - (b.cost === "none" ? 999 : +b.cost));
-
-    // Map Deck Rarity Distribution
-    const rarity_data = Array.from(rarityMap.entries()).map(([rarity, count]) => ({
-        rarity,
-        count,
-    }));
-    rarity_data.sort((a, b) => (a.rarity === "none" ? 999 : +a.rarity) - (b.rarity === "none" ? 999 : +b.rarity));
-
+export default function ActiveDeck({ card, deck, deckPrice, costData, rarityData }: Props) {
     return (
         <section className="flex-1 flex flex-col row-span-2 rounded-lg bg-lapis shadow p-4">
             <h2 className="mb-2 font-semibold text-tangerine">Details</h2>
@@ -77,7 +61,7 @@ export default function ActiveDeck({ card, deck, deckPrice, costMap, rarityMap }
                         <p>Total cost: ${deckPrice.toFixed(2)}</p>
                         <div className="w-full h-64">
                             <ResponsiveContainer>
-                                <BarChart data={cost_data}>
+                                <BarChart data={costData}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="cost" label={{ value: "Cost", position: "insideBottom", offset: -5 }} />
                                 <YAxis allowDecimals={false} />
@@ -88,7 +72,7 @@ export default function ActiveDeck({ card, deck, deckPrice, costMap, rarityMap }
                         </div>
                         <div className="w-full h-64">
                             <ResponsiveContainer>
-                                <BarChart data={rarity_data}>
+                                <BarChart data={rarityData}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="rarity" label={{ value: "Rarity", position: "insideBottom", offset: -5 }} />
                                 <YAxis allowDecimals={false} />

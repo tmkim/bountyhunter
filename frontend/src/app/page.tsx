@@ -161,6 +161,16 @@ export default function Page() {
           (b.cost === "none" ? 999 : +b.cost)
       );
   }, [costMap]);
+
+  const rarityData = useMemo(() => {
+    return Array.from(rarityMap.entries())
+      .map(([rarity, count]) => ({ rarity, count }))
+      .sort(
+        (a, b) =>
+          (a.rarity === "none" ? 999 : +a.rarity) -
+          (b.rarity === "none" ? 999 : +b.rarity)
+      );
+  }, [rarityMap]);
   // #endregion
 
   if (loading) return <p>Loading cards…</p>;
@@ -201,9 +211,8 @@ export default function Page() {
             card={selectedCard}
             deck={deck}
             deckPrice={deckPrice}
-            // costData={costData}
-            costMap={costMap}
-            rarityMap={rarityMap}
+            costData={costData}
+            rarityData={rarityData}
           />
         </div>
       </div>
