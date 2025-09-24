@@ -118,14 +118,17 @@ export default function Page() {
   };
 
   // Filter using the active search (only updated on Filter/Enter)
-  const filteredCards = allCards.filter(card => {
+  const filteredCards = allCards.filter((card: OnePieceCard) => {
     const hasAnyFilters = Object.values(filters).some(set => set.size > 0);
     if (!hasAnyFilters) return false;
 
     const matchesColor =
-      filters.colors.size > 0 && card.color
-        ? filters.colors.has(card.color)
-        : false;
+    filters.colors.size > 0 && card.color
+      ? card.color
+          .split(";")
+          .map(c => c.trim())
+          .some(c => filters.colors.has(c))
+      : false;
 
     const matchesType =
       filters.types.size > 0 && card.card_type
