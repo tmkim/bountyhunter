@@ -2,17 +2,21 @@
 import { OnePieceCard } from "@/lib/types";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import ColorFilter from "./ColorFilter";
 
 type Props = {
   allCards: OnePieceCard[];
   deck: OnePieceCard[];
   search: string;
+  activeColors: Set<string>;
   setSearch: (value: string) => void;
+  setActiveColors: React.Dispatch<React.SetStateAction<Set<string>>>;
   onAdd: (card: OnePieceCard) => void;
   onHover: (card: OnePieceCard | null) => void;
 };
 
-export default function CardList({ allCards, deck, search, setSearch, onAdd, onHover }: Props) {
+export default function CardList({ allCards, deck, search, activeColors, 
+                        setSearch, setActiveColors, onAdd, onHover }: Props) {
     // draftSearch updates on every keystroke locally
     const [draftSearch, setDraftSearch] = useState<string>(search ?? "");
 
@@ -30,6 +34,11 @@ export default function CardList({ allCards, deck, search, setSearch, onAdd, onH
         <section className="basis-[65%] rounded-lg bg-lapis 
                             overflow-x-auto shadow p-4 flex flex-col">
             <h2 className="mb-2 font-semibold text-tangerine">Card List</h2>
+            <ColorFilter
+                colors={["red", "blue", "green", "purple", "black", "yellow"]}
+                activeColors={activeColors}
+                setActiveColors={setActiveColors}
+            />
 
             {/* 2a Filter + Search */}
             <form

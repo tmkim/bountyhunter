@@ -94,13 +94,20 @@ export default function Page() {
 
   // The active search string that actually filters cards
   const [activeSearch, setActiveSearch] = useState<string>("");
+  const [activeColors, setActiveColors] = useState<Set<string>>(new Set());
 
   // Filter using the active search (only updated on Filter/Enter)
-  const filteredCards = allCards.filter((card) =>
-    card.name.toLowerCase().includes(activeSearch.toLowerCase())
+  const filteredCards = allCards.filter((card: OnePieceCard) => {
+    const matchesSearch = card.name.toLowerCase().includes(activeSearch.toLowerCase());
+    const matchesColor = activeColors.size > 0 && activeColors.has((card.color ?? '').toLowerCase());
+    // const matchesColor = activeColors.size === 0 || activeColors.has(card.color ?? ''); // if no color filters, allow all
+
+    return matchesSearch && matchesColor;
+    }
   );
+  // #endregion
   
-  // Actions
+  // #region Actions
   const addToDeck = (card: OnePieceCard) => {
     const count = deck.filter(c => c.product_id === card.product_id).length;
 
@@ -193,6 +200,8 @@ export default function Page() {
             deck={deck}
             search={activeSearch}
             setSearch={setActiveSearch}
+            activeColors={activeColors}
+            setActiveColors={setActiveColors}
             onAdd={addToDeck}
             onHover={setSelectedCard}
           />
