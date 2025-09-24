@@ -92,19 +92,62 @@ export default function Page() {
     ])
   );
 
+  // const [activeColors, setActiveColors] = useState<Set<string>>(new Set());
+  // Filter using the active search (only updated on Filter/Enter)
+  // const filteredCards = allCards.filter((card: OnePieceCard) => {
+  //   const matchesSearch = card.name.toLowerCase().includes(activeSearch.toLowerCase());
+  //   const matchesColor = activeColors.size > 0 && activeColors.has((card.color ?? '').toLowerCase());
+  //   // const matchesColor = activeColors.size === 0 || activeColors.has(card.color ?? ''); // if no color filters, allow all
+
+  //   return matchesSearch && matchesColor;
+  //   }
+  // );
+
   // The active search string that actually filters cards
   const [activeSearch, setActiveSearch] = useState<string>("");
-  const [activeColors, setActiveColors] = useState<Set<string>>(new Set());
+  const [filters, setFilters] = useState<Record<string, Set<string>>>({
+    colors: new Set(),
+    types: new Set(),
+    // rarity: new Set(), etc
+  });
+  const updateFilter = (group: string, updater: (prev: Set<string>) => Set<string>) => {
+    setFilters((prev) => ({
+      ...prev,
+      [group]: updater(prev[group] ?? new Set()),
+    }));
+  };
 
   // Filter using the active search (only updated on Filter/Enter)
-  const filteredCards = allCards.filter((card: OnePieceCard) => {
-    const matchesSearch = card.name.toLowerCase().includes(activeSearch.toLowerCase());
-    const matchesColor = activeColors.size > 0 && activeColors.has((card.color ?? '').toLowerCase());
-    // const matchesColor = activeColors.size === 0 || activeColors.has(card.color ?? ''); // if no color filters, allow all
+  const filteredCards = allCards.filter(card => {
+    const hasAnyFilters = Object.values(filters).some(set => set.size > 0);
+    if (!hasAnyFilters) return false;
 
-    return matchesSearch && matchesColor;
+    const matchesColor =
+      filters.colors.size > 0 && card.color
+        ? filters.colors.has(card.color)
+        : false;
+
+    const matchesType =
+      filters.types.size > 0 && card.card_type
+        ? filters.types.has(card.card_type)
+        : false;
+
+    // --- Special logic ---
+    // If card has no color (like DON!!), ignore color and only check type
+    if (!card.color) {
+      return matchesType;
     }
-  );
+
+    // If card has a color and also has a type that’s being filtered,
+    // require BOTH to match (e.g. "red leaders only")
+    if (filters.colors.size > 0 && filters.types.size > 0) {
+      return matchesColor && matchesType;
+    }
+
+    // Otherwise fall back to OR logic
+    return matchesColor || matchesType;
+  });
+
   // #endregion
   
   // #region Actions
@@ -200,8 +243,8 @@ export default function Page() {
             deck={deck}
             search={activeSearch}
             setSearch={setActiveSearch}
-            activeColors={activeColors}
-            setActiveColors={setActiveColors}
+            filters={filters}
+            updateFilter={updateFilter}
             onAdd={addToDeck}
             onHover={setSelectedCard}
           />

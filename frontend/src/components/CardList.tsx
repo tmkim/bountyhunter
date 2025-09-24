@@ -3,20 +3,21 @@ import { OnePieceCard } from "@/lib/types";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import ColorFilter from "./ColorFilter";
+import CheckboxFilter from "./CheckboxFilter";
 
 type Props = {
   allCards: OnePieceCard[];
   deck: OnePieceCard[];
   search: string;
-  activeColors: Set<string>;
+  filters: Record<string, Set<string>>;
   setSearch: (value: string) => void;
-  setActiveColors: React.Dispatch<React.SetStateAction<Set<string>>>;
+  updateFilter: (group: string, updater: (prev: Set<string>) => Set<string>) => void;
   onAdd: (card: OnePieceCard) => void;
   onHover: (card: OnePieceCard | null) => void;
 };
 
-export default function CardList({ allCards, deck, search, activeColors, 
-                        setSearch, setActiveColors, onAdd, onHover }: Props) {
+export default function CardList({ allCards, deck, search, filters,
+                        setSearch, updateFilter, onAdd, onHover }: Props) {
     // draftSearch updates on every keystroke locally
     const [draftSearch, setDraftSearch] = useState<string>(search ?? "");
 
@@ -34,11 +35,22 @@ export default function CardList({ allCards, deck, search, activeColors,
         <section className="basis-[65%] rounded-lg bg-lapis 
                             overflow-x-auto shadow p-4 flex flex-col">
             <h2 className="mb-2 font-semibold text-tangerine">Card List</h2>
-            <ColorFilter
-                colors={["red", "blue", "green", "purple", "black", "yellow"]}
-                activeColors={activeColors}
-                setActiveColors={setActiveColors}
+            <CheckboxFilter
+                label="Colors"
+                group="colors"
+                options={["Red", "Green", "Blue", "Purple", "Black", "Yellow"]}
+                filters={filters}
+                updateFilter={updateFilter}
             />
+
+            <CheckboxFilter
+                label="Types"
+                group="types"
+                options={["DON!!", "Leader", "Stage"]}
+                filters={filters}
+                updateFilter={updateFilter}
+            />
+
 
             {/* 2a Filter + Search */}
             <form
