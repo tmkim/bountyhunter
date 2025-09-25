@@ -110,6 +110,7 @@ class Command(BaseCommand):
 
     def get_csvs(self, set_list):
         print("Fetching most recent price lists")
+        # curr_date = '2025-09-24'
         curr_date = datetime.today().strftime("%Y-%m-%d")
         prices_dir = Path("prices") / curr_date
         prices_dir.mkdir(parents=True, exist_ok=True)
@@ -146,6 +147,7 @@ class Command(BaseCommand):
             "extAttribute", "extCost", "extCounterplus"
         ]
 
+        # curr_date = '2025-09-24'
         curr_date = datetime.now()
         csv_list = list(csv_dir.iterdir())
         df_list = []

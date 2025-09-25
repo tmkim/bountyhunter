@@ -75,36 +75,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-            # self.reload_set_ids()
-            csv_dir = self.reload_csvs()
+            self.reload_csvs()
             self.stdout.write(self.style.SUCCESS("ETL Complete!"))
         except Exception as e:
             logging.error(f"ETL error: {e}")
             self.stderr.write(self.style.ERROR(f"ETL error: {e}"))
-
-    def reload_set_ids(self):
-        db_op_sets = OnePieceSet.objects.all()
-        if not db_op_sets:
-            print("Downloading set list...")
-            url = "https://tcgcsv.com/tcgplayer/68/Groups.csv"
-            logging.info("Downloading set list...")
-            response = requests.get(url)
-            response.raise_for_status()
-            df = pd.read_csv(io.StringIO(response.text))
-        else:
-            df = pd.DataFrame(list(db_op_sets.values()))
-
-        if len(db_op_sets) != len(df):
-            logging.info("New set(s) found, updating CardSet table...")
-            for _, row in df.iterrows():
-                OnePieceSet.objects.update_or_create(
-                    id=row["groupId"],
-                    defaults={
-                        "name": row["abbreviation"].replace(" ", "_"),
-                        "description": row["name"],
-                    }
-                )
-            print("Set list up to date")
 
     def reload_csvs(self):
         print("Fetching current price lists")
@@ -112,6 +87,8 @@ class Command(BaseCommand):
 
         for prices in prices_dir.iterdir():
             dir_date = str(prices).split('/')[-1]
+            if dir_date == 'prev':
+                continue
             print(f"Perform ETL for {dir_date}")
             self.csv_etl(prices, dir_date)
             print("-------------------")
