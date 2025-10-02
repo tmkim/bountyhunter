@@ -59,6 +59,7 @@ class Command(BaseCommand):
         total_inserted = 0
 
         for folder in sorted(os.listdir(base_dir)):
+            inserted_for_date = 0
             folder_path = os.path.join(base_dir, folder)
             if not os.path.isdir(folder_path):
                 continue
@@ -126,7 +127,34 @@ class Command(BaseCommand):
                         history_objs, ignore_conflicts=True, batch_size=5000
                     )
 
+                inserted_for_date += len(history_objs)
                 total_inserted += len(history_objs)
-                self.stdout.write(self.style.SUCCESS(f"Inserted {len(history_objs)} rows from {fpath}"))
+                # self.stdout.write(self.style.SUCCESS(f"Inserted {len(history_objs)} rows from {fpath}"))
+
+            # --- fill in missing cards (those not in JSONs) ---
+            existing_card_ids = OnePieceCardHistory.objects.filter(
+                history_date=history_date
+            ).values_list("card_id", flat=True)
+
+            missing_cards = OnePieceCard.objects.exclude(id__in=existing_card_ids)
+
+            filler_objs = [
+                OnePieceCardHistory(
+                    card_id=c.id,
+                    history_date=history_date,
+                    market_price=c.market_price or 0,  # fall back to current card value
+                )
+                for c in missing_cards
+            ]
+
+            if filler_objs:
+                with transaction.atomic():
+                    OnePieceCardHistory.objects.bulk_create(
+                        filler_objs, ignore_conflicts=True, batch_size=5000
+                    )
+                inserted_for_date += len(filler_objs)
+
+            total_inserted += inserted_for_date
+            self.stdout.write(f"Inserted {inserted_for_date} rows for {history_date}")
 
         self.stdout.write(self.style.SUCCESS(f"Done! Inserted total {total_inserted} rows."))

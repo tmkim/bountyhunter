@@ -4,15 +4,20 @@ set -euo pipefail
 BASE_URL="https://tcgcsv.com/archive/tcgplayer"
 TARGET_DIR="$HOME/bountyhunter/backend/prices/prev"
 DAYS_BACK=7  # change this if you want more/less
+BACKEND_DIR="$HOME/bountyhunter/backend"
 
-for i in $(seq 0 $((DAYS_BACK-1))); do
+for i in $(seq 1 $((DAYS_BACK))); do
     DATE=$(date -d "-$i day" +%Y-%m-%d)
     ARCHIVE="prices-${DATE}.ppmd.7z"
     ARCHIVE_URL="$BASE_URL/$ARCHIVE"
 
     echo "========== $DATE =========="
 
-    if [ -d "$TARGET_DIR/bak/$DATE" ]; then
+    if [ -d "$TARGET_DIR/bak/jsons/$DATE" ]; then
+        echo "  Skipping (already exists)"
+        continue
+    fi
+    if [ -d "$TARGET_DIR/bak/csvs/$DATE" ]; then
         echo "  Skipping (already exists)"
         continue
     fi
@@ -43,6 +48,8 @@ for i in $(seq 0 $((DAYS_BACK-1))); do
 
     echo "  ✅ Finished: $DEST_DIR"
     echo
+
+    # python3 "$BACKEND_DIR/manage.py" import_history
 done
 
 echo "All done!"

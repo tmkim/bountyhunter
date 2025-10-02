@@ -224,42 +224,28 @@ class Command(BaseCommand):
             batch_size=1000,
         )
 
+        # Update last_update for any cards that were not included in CSVs
+        OnePieceCard.objects.exclude(last_update=curr_date).update(last_update=curr_date)
+
         print(f"updated {len(to_update)} existing cards,")
         logging.info(f"updated {len(to_update)} existing cards")
 
         # Bulk-Create history rows
         print("Bulk history")
         logging.info("Starting bulk insert for table one_piece_card_history")
-        before_count = OnePieceCardHistory.objects.filter(history_date=curr_date).count()
 
-        card_map = {
-            (c.product_id, c.foil_type): c.id
-            for c in OnePieceCard.objects.filter(
-                product_id__in=df_all["product_id"].unique(),
-                foil_type__in=df_all["foil_type"].unique(),
+        all_cards = OnePieceCard.objects.all()
+        history_objs = [
+            OnePieceCardHistory(
+                card_id=card.id,
+                history_date=curr_date,
+                market_price=card.market_price or 0,
             )
-        }
+            for card in all_cards
+        ]
+        OnePieceCardHistory.objects.bulk_create(history_objs, batch_size=1000, ignore_conflicts=True)
 
-        history_objs = []
-        for _, row in df_all.iterrows():
-            card_pk = card_map.get((row["product_id"], row["foil_type"]))
-            if not card_pk:
-                continue  # card not in DB yet, skip or log
-
-            history_objs.append(
-                OnePieceCardHistory(
-                    card_id=card_pk,  # real auto-increment id
-                    history_date=curr_date,
-                    market_price=row["market_price"] or 0,
-                )
-            )
-
-        OnePieceCardHistory.objects.bulk_create(history_objs,
-                                                batch_size=1000, 
-                                                ignore_conflicts=True)
-
-        after_count = OnePieceCardHistory.objects.filter(history_date=curr_date).count()
-        added_count = after_count - before_count
+        added_count = all_cards.count()
 
         print(f"Inserted {added_count} history rows")
         logging.info(f"Inserted {added_count} history rows for {curr_date}")
