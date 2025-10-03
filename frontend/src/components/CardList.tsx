@@ -34,23 +34,28 @@ export default function CardList({ allCards, deck, search, filters,
     return (
         <section className="basis-[65%] rounded-lg bg-lapis 
                             overflow-x-auto shadow p-4 flex flex-col">
-            <h2 className="mb-2 font-semibold text-tangerine">Card List - Left Click to add to deck, Right Click to lock preview</h2>
-            <CheckboxFilter
-                label="Colors"
-                group="colors"
-                options={["Red", "Green", "Blue", "Purple", "Black", "Yellow"]}
-                filters={filters}
-                updateFilter={updateFilter}
-            />
-
-            <CheckboxFilter
-                label="Types"
-                group="types"
-                options={["DON!!", "Leader", "Stage"]}
-                filters={filters}
-                updateFilter={updateFilter}
-            />
-
+            <h2 className="mb-2 font-semibold text-tangerine">Card List</h2>
+            <div className="flex items-center gap-6 overflow-x-auto pb-2">
+                <div className="min-w-[436px]">
+                    <CheckboxFilter
+                        label="Colors"
+                        group="colors"
+                        options={["Red", "Green", "Blue", "Purple", "Black", "Yellow"]}
+                        filters={filters}
+                        updateFilter={updateFilter}
+                    />
+                </div>
+                <div className="w-px bg-tangerine h-1/2 mx-2 flex-shrink-0" />
+                <div className="min-w-[228px]">
+                    <CheckboxFilter
+                        label="Types"
+                        group="types"
+                        options={["DON!!", "Leader", "Stage"]}
+                        filters={filters}
+                        updateFilter={updateFilter}
+                    />
+                </div>
+            </div>
 
             {/* 2a Filter + Search */}
             <form
@@ -72,7 +77,7 @@ export default function CardList({ allCards, deck, search, filters,
                     className="rounded bg-rosso text-white px-3 py-1 font-medium 
                     hover:text-tangerine hover:cursor-pointer"
                 >
-                    Filter
+                    Advanced Filter
                 </button>
             </form>
 
