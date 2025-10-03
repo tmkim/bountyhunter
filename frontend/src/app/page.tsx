@@ -125,6 +125,8 @@ export default function Page() {
 
   // Filter using the active search (only updated on Filter/Enter)
   const filteredCards = allCards.filter((card: OnePieceCard) => {
+    const matchesSearch = card.name.toLowerCase().includes(activeSearch.toLowerCase());
+
     const hasAnyFilters = Object.values(filters).some(set => set.size > 0);
     if (!hasAnyFilters) return false;
 
@@ -150,11 +152,11 @@ export default function Page() {
     // If card has a color and also has a type that’s being filtered,
     // require BOTH to match (e.g. "red leaders only")
     if (filters.colors.size > 0 && filters.types.size > 0) {
-      return matchesColor && matchesType;
+      return matchesColor && matchesType && matchesSearch;
     }
 
     // Otherwise fall back to OR logic
-    return matchesColor || matchesType;
+    return (matchesColor || matchesType) && matchesSearch;
   });
 
   // #endregion
