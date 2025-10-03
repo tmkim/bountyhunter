@@ -18,25 +18,24 @@ export default function ActiveDeck({ card, deck, deckPrice, costData, rarityData
             {/* Details view content */}
             <div className="flex-1 rounded-lg bg-maya shadow p-4 max-h-full overflow-auto">
                 {/* Top half: selected image */}
-                {/* </div><div className="h-[630px] flex-1 flex items-center justify-center"> */}
-                <div className="relative max-h-1/2 aspect-[2/3] flex items-center justify-center flex-1">
-                    {card ? (
+                <div className="relative max-h-1/2 aspect-[2/3] flex mx-auto">
+                    <div className="flex w-full h-full items-center justify-center">
+                        {card ? (
                         <Image
-                        src={card.image_url || ""}
-                        alt={card.name}
-                        fill
-                        className="object-contain"
-                        loading="lazy"
-                        unoptimized
+                            src={card.image_url || ""}
+                            alt={card.name}
+                            fill
+                            className="object-contain"
+                            loading="lazy"
+                            unoptimized
                         />
-                    ) : (
+                        ) : (
                         <span className="text-2xl text-black text-center">
-                        Hover card to preview
+                            Hover card to preview
                         </span>
-                    )}
+                        )}
+                    </div>
                 </div>
-
-
                 {/* Bottom half: split card/deck details */}
                 <div className="flex-col flex-1 overflow-y-auto text-black">
                     <div className="flex-1 border rounded p-2 mt-2">
