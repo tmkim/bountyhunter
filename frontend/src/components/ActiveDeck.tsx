@@ -6,7 +6,7 @@ type Props = {
   deck: OnePieceCard[];
   onClear: () => void;
   onRemove: (card: OnePieceCard) => void;
-  onHover: (card: OnePieceCard | null) => void;
+  onRightClick: (c: OnePieceCard) => void;   
 };
 type GroupedDeck = {
   card: OnePieceCard;
@@ -25,7 +25,7 @@ function groupDeck(deck: OnePieceCard[]): GroupedDeck[] {
   return Array.from(map.values());
 }
 
-export default function ActiveDeck({ deck, onClear, onRemove, onHover }: Props) {
+export default function ActiveDeck({ deck, onRightClick, onClear, onRemove }: Props) {
     return (
         <section className="basis-[35%] flex flex-col rounded-lg 
                             overflow-x bg-lapis shadow p-4">
@@ -48,15 +48,18 @@ export default function ActiveDeck({ deck, onClear, onRemove, onHover }: Props) 
             </div>
 
 
-            <div className="max-h-[30vh] flex-1 rounded-lg overflow-y-auto 
-                            bg-maya shadow pt-4 pb-8 px-4">
-{/* ----------------------- */}
-                <div className="grid gap-x-2 gap-y-6
-                                grid-cols-[repeat(auto-fill,minmax(90px,1fr))]
-                                md:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]          
-                                lg:grid-cols-[repeat(auto-fill,minmax(130px,1fr))]          
-                                xl:grid-cols-[repeat(auto-fill,minmax(150px,1fr))] 
-                                ">
+            <div className={
+                `max-h-[30vh] flex-1 rounded-lg overflow-y-auto 
+                bg-maya shadow pt-4 pb-8 px-4
+                ${deck.length === 0 ? "flex items-center justify-center" : ""}`
+            }>
+                {deck.length>0 ? (
+                    <div className="grid gap-x-2 gap-y-6
+                        grid-cols-[repeat(auto-fill,minmax(90px,1fr))]
+                        md:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]          
+                        lg:grid-cols-[repeat(auto-fill,minmax(130px,1fr))]          
+                        xl:grid-cols-[repeat(auto-fill,minmax(150px,1fr))] 
+                        ">
                     {groupDeck(deck).map(({ card, count }) => {
                         const stagger = 3; // px offset between stacked cards
 
@@ -67,8 +70,10 @@ export default function ActiveDeck({ deck, onClear, onRemove, onHover }: Props) 
                                        w-[90px] md:w-[110px] lg:w-[130px] xl:w-[150px]
                                        h-[135px] md:h-[165px] lg:h-[195px] xl:h-[225px]"
                             onClick={() => onRemove(card)}
-                            onMouseEnter={() => onHover(card)}
-                            onMouseLeave={() => onHover(null)}
+                            onContextMenu={(e) => {
+                                e.preventDefault();        // stop browser context menu
+                                onRightClick(card);        // call the prop
+                            }}
                         >
                             {/* Floating badge above top-right */}
                             {count > 1 && (
@@ -99,8 +104,13 @@ export default function ActiveDeck({ deck, onClear, onRemove, onHover }: Props) 
                         );
                     })}
                     </div>
-{/* ----------------------- */}
-                </div>
+                    ):(
+                        <span className="text-2xl text-black text-center">
+                            Left-Click card to add to active deck
+                        </span>
+                    )
+                }
+            </div>
         </section>
     );
 }

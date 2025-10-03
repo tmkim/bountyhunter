@@ -13,11 +13,11 @@ type Props = {
   setSearch: (value: string) => void;
   updateFilter: (group: string, updater: (prev: Set<string>) => Set<string>) => void;
   onAdd: (card: OnePieceCard) => void;
-  onHover: (card: OnePieceCard | null) => void;
+  onRightClick: (c: OnePieceCard) => void;   
 };
 
 export default function CardList({ allCards, deck, search, filters,
-                        setSearch, updateFilter, onAdd, onHover }: Props) {
+                        setSearch, updateFilter, onAdd, onRightClick }: Props) {
     // draftSearch updates on every keystroke locally
     const [draftSearch, setDraftSearch] = useState<string>(search ?? "");
 
@@ -34,7 +34,7 @@ export default function CardList({ allCards, deck, search, filters,
     return (
         <section className="basis-[65%] rounded-lg bg-lapis 
                             overflow-x-auto shadow p-4 flex flex-col">
-            <h2 className="mb-2 font-semibold text-tangerine">Card List</h2>
+            <h2 className="mb-2 font-semibold text-tangerine">Card List - Left Click to add to deck, Right Click to lock preview</h2>
             <CheckboxFilter
                 label="Colors"
                 group="colors"
@@ -88,8 +88,10 @@ export default function CardList({ allCards, deck, search, filters,
                         height={210}      // keep aspect ratio close to real card proportions
                         className="cursor-pointer rounded hover:ring-2 hover:ring-green-400"
                         onClick={() => onAdd(card)}
-                        onMouseEnter={() => onHover(card)}
-                        onMouseLeave={() => onHover(null)}
+                        onContextMenu={(e) => {
+                            e.preventDefault();        // stop browser context menu
+                            onRightClick(card);        // call the prop
+                        }}
                         loading="lazy"    // optional (Next does this automatically)
                         unoptimized // optional to skip Next’s proxy and just get lazy loading
                     />

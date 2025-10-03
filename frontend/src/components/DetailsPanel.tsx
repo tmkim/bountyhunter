@@ -31,7 +31,7 @@ export default function ActiveDeck({ card, deck, deckPrice, costData, rarityData
                         />
                         ) : (
                         <span className="text-2xl text-black text-center">
-                            Hover card to preview
+                            Right-Click card to preview
                         </span>
                         )}
                     </div>

@@ -60,7 +60,13 @@ export default function Page() {
   const [search, setSearch] = useState("");
 
   const [deck, setDeck] = useState<OnePieceCard[]>([]);
-  const [selectedCard, setSelectedCard] = useState<OnePieceCard | null>(null);
+  const [previewCard, setPreviewCard] = useState<OnePieceCard | null>(null);
+
+  const previewTarget = previewCard;
+
+  const handleRightClick = (card: OnePieceCard) => {
+    setPreviewCard((prev) => (prev?.id === card.id ? null : card));
+  };
 
   const [deckPrice, setDeckPrice] = useState<number>(0);
   const [costMap, setCostMap] = useState<Map<string, number>>(
@@ -238,7 +244,7 @@ export default function Page() {
             deck={deck}
             onClear={clearDeck}
             onRemove={removeFromDeck}
-            onHover={setSelectedCard}
+            onRightClick={handleRightClick}
           />
           {/* #2 Available Cards + Filters */}
           <CardList
@@ -249,7 +255,7 @@ export default function Page() {
             filters={filters}
             updateFilter={updateFilter}
             onAdd={addToDeck}
-            onHover={setSelectedCard}
+            onRightClick={handleRightClick}
           />
         </div>
 
@@ -263,7 +269,7 @@ export default function Page() {
         <div className="flex-[3] flex"
         style={{ width: `${100 - leftWidth}%` }}>
           <DetailsPanel
-            card={selectedCard}
+            card={previewTarget}
             deck={deck}
             deckPrice={deckPrice}
             costData={costData}
