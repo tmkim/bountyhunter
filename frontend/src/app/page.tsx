@@ -4,7 +4,7 @@ import CardList from "@/components/CardList";
 import DetailsPanel from "@/components/DetailsPanel";
 import {useState, useRef, useEffect, useMemo} from "react";
 import { useCards } from "@/hooks/useCards";
-import { OnePieceCard } from "@/lib/types";
+import { OnePieceCard, OnePieceCardHistory } from "@/lib/types";
 
 
 export default function Page() {
@@ -61,11 +61,25 @@ export default function Page() {
 
   const [deck, setDeck] = useState<OnePieceCard[]>([]);
   const [previewCard, setPreviewCard] = useState<OnePieceCard | null>(null);
+  const [cardPriceHistory, setCardPriceHistory] = useState<Map<string, number>>(
+    new Map([])
+  );
 
   const previewTarget = previewCard;
 
   const handleRightClick = (card: OnePieceCard) => {
     setPreviewCard((prev) => (prev?.id === card.id ? null : card));
+    setCardPriceHistory((prev) => {
+      const newMap = new Map(prev);
+      
+
+
+      // const newMap = new Map(prev);
+      // const key = String(card.cost ?? "0"); // normalize nulls
+      // newMap.set(key, (newMap.get(key) ?? 0) + 1);
+      // return newMap;
+    })
+
   };
 
   const [deckPrice, setDeckPrice] = useState<number>(0);
@@ -97,17 +111,6 @@ export default function Page() {
       ['DON', 0],
     ])
   );
-
-  // const [activeColors, setActiveColors] = useState<Set<string>>(new Set());
-  // Filter using the active search (only updated on Filter/Enter)
-  // const filteredCards = allCards.filter((card: OnePieceCard) => {
-  //   const matchesSearch = card.name.toLowerCase().includes(activeSearch.toLowerCase());
-  //   const matchesColor = activeColors.size > 0 && activeColors.has((card.color ?? '').toLowerCase());
-  //   // const matchesColor = activeColors.size === 0 || activeColors.has(card.color ?? ''); // if no color filters, allow all
-
-  //   return matchesSearch && matchesColor;
-  //   }
-  // );
 
   // The active search string that actually filters cards
   const [activeSearch, setActiveSearch] = useState<string>("");
@@ -276,6 +279,7 @@ export default function Page() {
             deckPrice={deckPrice}
             costData={costData}
             rarityData={rarityData}
+            cardPriceHistoryData={[]}
           />
         </div>
       </div>

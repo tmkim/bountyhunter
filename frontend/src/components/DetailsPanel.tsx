@@ -1,7 +1,7 @@
 "use client";
 import { OnePieceCard } from "@/lib/types";
 import Image from "next/image";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, LineChart } from "recharts";
 
 type Props = {
   card: OnePieceCard | null;
@@ -9,9 +9,10 @@ type Props = {
   deckPrice: number;
   costData: {cost: string; count: number;}[]
   rarityData: {rarity: string; count: number;}[]
+  cardPriceHistoryData: {date: string; market_price: number;}[]
 };
 
-export default function ActiveDeck({ card, deck, deckPrice, costData, rarityData }: Props) {
+export default function ActiveDeck({ card, deck, deckPrice, costData, rarityData, cardPriceHistoryData }: Props) {
     return (
         <section className="flex-1 flex flex-col row-span-2 rounded-lg bg-lapis shadow p-4">
             <h2 className="mb-2 font-semibold text-tangerine">Details</h2>
@@ -47,6 +48,14 @@ export default function ActiveDeck({ card, deck, deckPrice, costData, rarityData
                                 <p>Rarity: {card.rarity}</p>
                                 <p>Foil: {card.foil_type}</p>
                                 <p>{card.description}</p>
+                                <div>
+                                    <ResponsiveContainer>
+                                        <LineChart data={cardPriceHistoryData}
+                                        margin={{ top: 0, right: 0, left: -30, bottom: 0 }}>
+
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
                             </div>
                         ):(
                             <span className="text-2xl text-black">Hover card to preview</span>
