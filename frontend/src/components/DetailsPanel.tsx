@@ -44,28 +44,116 @@ export default function ActiveDeck({ card, deck, deckPrice, costData, rarityData
                         <h2 className="font-bold mb-2">Card Details</h2>
                         {card ? (
                             <div>
-                                <p>Market Price: {card.market_price}</p>
-                                <p>{card.color} {card.name}</p>
-                                <p>Rarity: {card.rarity}</p>
-                                <p>Foil: {card.foil_type}</p>
-                                <p>{card.description}</p>
-                                <ResponsiveContainer>
-                                    {isLoading ? (
-                                        <p>Loading price history...</p>
-                                    ) : history && history.length > 0 ? (
-                                        <ResponsiveContainer width="100%" height={300}>
-                                        <LineChart data={cardPriceHistoryData}>
-                                            <XAxis dataKey="date" />
-                                            <YAxis />
-                                            <Tooltip />
-                                            <Line type="monotone" dataKey="price" stroke="#8884d8" dot={false} />
-                                        </LineChart>
-                                        </ResponsiveContainer>
-                                    ) : (
-                                        <p>No price history available.</p>
-                                    )}
-                                </ResponsiveContainer>
-                            </div>
+      {/* Header */}
+      <div className="mb-4">
+        <h2 className="text-xl font-semibold text-gray-800">{card.name}</h2>
+        <p className="text-sm text-gray-500">
+          {card.color} • {card.rarity} • {card.foil_type}
+        </p>
+      </div>
+
+      {/* Info Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6 text-sm">
+        <div>
+          <p className="text-gray-500">Market Price</p>
+          <p className="font-medium">${card.market_price ?? "N/A"}</p>
+        </div>
+        <div>
+          <p className="text-gray-500">Power</p>
+          <p className="font-medium">{card.power ?? "—"}</p>
+        </div>
+        <div>
+          <p className="text-gray-500">Cost</p>
+          <p className="font-medium">{card.cost ?? "—"}</p>
+        </div>
+      </div>
+
+      {/* Description */}
+      {card.description && (
+        <p className="text-gray-700 mb-6 text-sm leading-relaxed">{card.description}</p>
+      )}
+
+      {/* Chart */}
+      <div className="bg-gradient-to-b from-gray-50 to-white border border-gray-200 rounded-xl p-4 shadow-inner h-[320px]">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full text-gray-500">Loading price history...</div>
+        ) : cardPriceHistoryData && cardPriceHistoryData.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={cardPriceHistoryData}
+                       margin={{ top: 10, right: 0, left: -30, bottom: 0 }}>
+            
+              <defs>
+                <linearGradient id="priceLine" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.8}/>
+                  <stop offset="100%" stopColor="#4f46e5" stopOpacity={0.1}/>
+                </linearGradient>
+              </defs>
+
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis
+                dataKey="date"
+                scale="point"
+                interval={2}
+                tickFormatter={(d) => {
+                    const date = new Date(d);
+                    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" }); // e.g. "Oct 8"
+                }}
+                tick={{ fill: "#6b7280", fontSize: 12 }}
+              />
+              <YAxis
+                domain={["auto", "auto"]}
+                tick={{ fill: "#6b7280", fontSize: 12 }}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "white",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "0.5rem",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+                }}
+                labelFormatter={(d) => new Date(d).toLocaleDateString()}
+                formatter={(value) => [`$${Number(value).toFixed(2)}`, "Price"]}
+              />
+              <Line
+                type="monotone"
+                dataKey="price"
+                stroke="url(#priceLine)"
+                strokeWidth={3}
+                dot={false}
+                activeDot={{ r: 5 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-400">
+            No price history available.
+          </div>
+        )}
+      </div>
+    </div>
+                            // <div>
+                            // <p>Market Price: {card.market_price}</p>
+                            // <p>{card.color} {card.name}</p>
+                            // <p>Rarity: {card.rarity}</p>
+                            // <p>Foil: {card.foil_type}</p>
+                            // <p>{card.description}</p>
+
+                            // {isLoading ? (
+                            //     <p>Loading price history...</p>
+                            // ) : cardPriceHistoryData && cardPriceHistoryData.length > 0 ? (
+                            //     <ResponsiveContainer width="100%" height={300}>
+                            //     <LineChart data={cardPriceHistoryData}
+                            //     margin={{ top: 0, right: 0, left: -30, bottom: 0 }}>
+                            //         <XAxis dataKey="date" />
+                            //         <YAxis />
+                            //         <Tooltip />
+                            //         <Line type="monotone" dataKey="price" stroke="#8884d8" dot={false} />
+                            //     </LineChart>
+                            //     </ResponsiveContainer>
+                            // ) : (
+                            //     <p>No price history available.</p>
+                            // )}
+                            // </div>
                         ):(
                             <span className="text-2xl text-black">Hover card to preview</span>
                         )
