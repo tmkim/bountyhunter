@@ -41,16 +41,17 @@ class OnePieceCard(models.Model):
 
 
 class OnePieceCardHistory(models.Model):
-    card = models.ForeignKey(OnePieceCard, on_delete=models.CASCADE, related_name="history")
+    # card = models.ForeignKey(OnePieceCard, on_delete=models.CASCADE, related_name="history")
+    card_id = models.IntegerField()
     history_date = models.DateField()
     market_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     class Meta:
-        unique_together = ("card", "history_date")
+        unique_together = ("card_id", "history_date")
         db_table = "one_piece_card_history"
 
     def __str__(self):
-        return f"{self.card} on {self.history_date} - {self.market_price}"
+        return f"{self.card_id} on {self.history_date} - {self.market_price}"
 
 
 class OnePieceDeck(models.Model):

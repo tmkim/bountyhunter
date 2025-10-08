@@ -4,6 +4,7 @@ import CardList from "@/components/CardList";
 import DetailsPanel from "@/components/DetailsPanel";
 import {useState, useRef, useEffect, useMemo} from "react";
 import { useCards } from "@/hooks/useCards";
+import { useCardHistory } from "@/hooks/useCardHistory";
 import { OnePieceCard, OnePieceCardHistory } from "@/lib/types";
 
 
@@ -61,25 +62,13 @@ export default function Page() {
 
   const [deck, setDeck] = useState<OnePieceCard[]>([]);
   const [previewCard, setPreviewCard] = useState<OnePieceCard | null>(null);
-  const [cardPriceHistory, setCardPriceHistory] = useState<Map<string, number>>(
-    new Map([])
-  );
+  const { history, isLoading } = useCardHistory(previewCard?.id);
 
   const previewTarget = previewCard;
 
   const handleRightClick = (card: OnePieceCard) => {
     setPreviewCard((prev) => (prev?.id === card.id ? null : card));
-    setCardPriceHistory((prev) => {
-      const newMap = new Map(prev);
-      
-
-
-      // const newMap = new Map(prev);
-      // const key = String(card.cost ?? "0"); // normalize nulls
-      // newMap.set(key, (newMap.get(key) ?? 0) + 1);
-      // return newMap;
-    })
-
+    console.log(history)
   };
 
   const [deckPrice, setDeckPrice] = useState<number>(0);
@@ -279,7 +268,8 @@ export default function Page() {
             deckPrice={deckPrice}
             costData={costData}
             rarityData={rarityData}
-            cardPriceHistoryData={[]}
+            cardPriceHistoryData={history}
+            isLoading={isLoading}
           />
         </div>
       </div>

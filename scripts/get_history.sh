@@ -3,7 +3,7 @@ set -euo pipefail
 # Config
 BASE_URL="https://tcgcsv.com/archive/tcgplayer"
 TARGET_DIR="$HOME/bountyhunter/backend/prices/prev"
-DAYS_BACK=7  # change this if you want more/less
+DAYS_BACK=14  # change this if you want more/less
 BACKEND_DIR="$HOME/bountyhunter/backend"
 
 for i in $(seq 1 $((DAYS_BACK))); do
@@ -13,11 +13,7 @@ for i in $(seq 1 $((DAYS_BACK))); do
 
     echo "========== $DATE =========="
 
-    if [ -d "$TARGET_DIR/bak/jsons/$DATE" ]; then
-        echo "  Skipping (already exists)"
-        continue
-    fi
-    if [ -d "$TARGET_DIR/bak/csvs/$DATE" ]; then
+    if [ -d "$TARGET_DIR/bak/$DATE" ]; then
         echo "  Skipping (already exists)"
         continue
     fi
