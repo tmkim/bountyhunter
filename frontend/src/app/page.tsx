@@ -5,7 +5,7 @@ import DetailsPanel from "@/components/DetailsPanel";
 import {useState, useRef, useEffect, useMemo} from "react";
 import { useCards } from "@/hooks/useCards";
 import { useCardHistory } from "@/hooks/useCardHistory";
-import { OnePieceCard, OnePieceCardHistory } from "@/lib/types";
+import { OnePieceCard, OnePieceCardHistory } from "@/bh_lib/types";
 
 
 export default function Page() {

@@ -1,7 +1,7 @@
 // frontend/hooks/useCards.ts
 import { useEffect, useState } from "react";
-import { OnePieceCard } from "@/lib/types";
-import { getAllCards, saveCards } from "../lib/indexedDB";
+import { OnePieceCard } from "@/bh_lib/types";
+import { getAllCards, saveCards } from "../bh_lib/indexedDB";
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
 

@@ -1,5 +1,5 @@
 "use client";
-import { OnePieceCard, HistoryData } from "@/lib/types";
+import { OnePieceCard, HistoryData } from "@/bh_lib/types";
 import Image from "next/image";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, LineChart, Line } from "recharts";
 

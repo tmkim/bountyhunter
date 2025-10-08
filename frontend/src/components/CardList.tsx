@@ -1,5 +1,5 @@
 "use client";
-import { OnePieceCard } from "@/lib/types";
+import { OnePieceCard } from "@/bh_lib/types";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import ColorFilter from "./ColorFilter";
