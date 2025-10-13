@@ -4,6 +4,7 @@ import CardList from "@/components/CardList";
 import DetailsPanel from "@/components/DetailsPanel";
 import {useState, useRef, useEffect, useMemo} from "react";
 import { useCards } from "@/hooks/useCards";
+import { useCardHistory } from "@/hooks/useCardHistory";
 import { OnePieceCard, OnePieceCardHistory } from "@/bh_lib/types";
 
 
@@ -61,12 +62,13 @@ export default function Page() {
 
   const [deck, setDeck] = useState<OnePieceCard[]>([]);
   const [previewCard, setPreviewCard] = useState<OnePieceCard | null>(null);
+  const { history, isLoading } = useCardHistory(previewCard?.id);
 
   const previewTarget = previewCard;
 
   const handleRightClick = (card: OnePieceCard) => {
     setPreviewCard((prev) => (prev?.id === card.id ? null : card));
-    // console.log(history)
+    console.log(history)
   };
 
   const [deckPrice, setDeckPrice] = useState<number>(0);
@@ -285,12 +287,13 @@ export default function Page() {
         <div className="flex-[3] flex"
         style={{ width: `${100 - leftWidth}%` }}>
           <DetailsPanel
-            onCloseModal={handleRightClick}
             card={previewTarget}
             deck={deck}
             deckPrice={deckPrice}
             costData={costData}
             rarityData={rarityData}
+            cardPriceHistoryData={history}
+            isLoading={isLoading}
           />
         </div>
       </div>

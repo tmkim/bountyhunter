@@ -23,5 +23,5 @@ export function useCardHistory(cardId?: number) {
         price: entry.market_price!, // or whichever price you want to plot
     }));
 
-    return { history: history, isLoading, error };
+    return { priceHistory: history, isLoading, error };
 }
