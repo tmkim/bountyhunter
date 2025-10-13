@@ -203,6 +203,30 @@ export default function Page() {
   const clearDeck = () => {
     setDeck([])
     setDeckPrice(0)
+    setCostMap(new Map([
+      ['0',0],
+      ['1',0],
+      ['2',0],
+      ['3',0],
+      ['4',0],
+      ['5',0],
+      ['6',0],
+      ['7',0],
+      ['8',0],
+      ['9',0],
+      ['10',0],
+    ]))
+    setRarityMap(new Map([
+      ['L', 0],
+      ['C', 0],
+      ['UC', 0],
+      ['R', 0],
+      ['SR', 0],
+      ['SEC', 0],
+      ['PR', 0],
+      ['TR', 0],
+      ['DON', 0],
+    ]))
   }
 
   const costData = useMemo(() => {
