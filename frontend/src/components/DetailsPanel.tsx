@@ -21,7 +21,7 @@ export default function DetailsPanel({ card, deck, deckPrice, costData, rarityDa
   }: Props) {
 
   return (
-    <section className="flex-1 flex flex-col row-span-2 rounded-lg bg-lapis shadow p-4">
+    <section className="flex-1 flex flex-col row-span-2 rounded-lg bg-lapis shadow p-4 min-w-[320px] min-h-[865px] overflow-x-auto">
       <h2 className="mb-2 font-semibold text-tangerine">Details</h2>
       {/* Details view content */}
       <div className="flex-1 rounded-lg bg-maya shadow p-4 max-h-full overflow-auto relative">

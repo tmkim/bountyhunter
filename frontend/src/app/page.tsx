@@ -251,7 +251,7 @@ export default function Page() {
   if (loading) return <p>Loading cards…</p>;
 
   return (
-      <div className="h-full px-10 py-6 flex flex-1 gap-4">
+      <div className="h-full px-10 py-6 flex flex-1 gap-4 overflow-auto">
         {/* Left Column (Active Deck + Available Cards) */}
         <div className="flex flex-col gap-4"
         style={{ width: `${leftWidth}%` }}>
@@ -282,7 +282,7 @@ export default function Page() {
         />
 
         {/* Right Column (#3 Card/Deck Details) */}
-        <div className="flex-[3] flex"
+        <div className="flex-[3] flex min-w-[420px]"
         style={{ width: `${100 - leftWidth}%` }}>
           <DetailsPanel
             onCloseModal={handleRightClick}

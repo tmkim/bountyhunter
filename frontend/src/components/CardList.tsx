@@ -32,9 +32,9 @@ export default function CardList({ allCards, deck, search, filters,
     };
 
     return (
-        <section className="basis-[65%] rounded-lg bg-lapis 
+        <section className="basis-[65%] rounded-lg bg-lapis min-h-[500px]
                             overflow-x-auto shadow p-4 flex flex-col">
-            <h2 className="mb-2 font-semibold text-tangerine">Card List</h2>
+            {/* <h2 className="mb-2 font-semibold text-tangerine">Card List</h2> */}
             <div className="flex items-center gap-6 overflow-x-auto pb-2">
                 <div className="min-w-[436px]">
                     <CheckboxFilter

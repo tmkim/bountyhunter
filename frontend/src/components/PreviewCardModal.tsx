@@ -120,23 +120,20 @@ const PreviewCardModal: React.FC<PreviewCardModalProps> = ({ card, onClose }) =>
                       data={priceHistory}
                       margin={{ top: 10, right: 0, left: getLeftMargin(priceHistory), bottom: 0 }}
                     >
-                      <defs>
-                        <linearGradient id="priceLine" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.8} />
-                          <stop offset="100%" stopColor="#4f46e5" stopOpacity={0.1} />
-                        </linearGradient>
-                      </defs>
-
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                       <XAxis
                         dataKey="date"
                         scale="point"
-                        interval={2}
+                        // interval={2}
                         tickFormatter={(d) => {
                           const date = new Date(d);
                           return date.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit" });
                         }}
                         tick={{ fill: "#000", fontSize: 12 }}
+                        ticks={priceHistory
+                              .map(d => d.date)
+                              .filter((_, i) => i % Math.ceil(priceHistory.length / 7) === 0)
+                            }
                       />
                       <YAxis
                         domain={["auto", "auto"]}
@@ -158,9 +155,9 @@ const PreviewCardModal: React.FC<PreviewCardModalProps> = ({ card, onClose }) =>
                       <Line
                         type="monotone"
                         dataKey="price"
-                        stroke="url(#priceLine)"
+                        // stroke="url(#priceLine)"
                         strokeWidth={3}
-                        dot={false}
+                        dot={true}
                         activeDot={{ r: 5 }}
                       />
                     </LineChart>

@@ -28,9 +28,8 @@ function groupDeck(deck: OnePieceCard[]): GroupedDeck[] {
 export default function ActiveDeck({ deck, onRightClick, onClear, onRemove }: Props) {
     return (
         <section className="basis-[35%] flex flex-col rounded-lg 
-                            overflow-x bg-lapis shadow p-4">
+                            overflow-x bg-lapis shadow p-4 min-h-[350px]">
             <div className="mb-2 flex items-center justify-between">
-                <span className="font-bold text-lg text-tangerine">Active Deck</span>
                 <button
                     // onClick={onClear}
                     className="px-2 py-1 font-medium bg-rosso text-white rounded 
@@ -38,6 +37,9 @@ export default function ActiveDeck({ deck, onRightClick, onClear, onRemove }: Pr
                 >
                     Save
                 </button>
+                
+                <span className="font-bold text-lg text-tangerine">Active Deck</span>
+                
                 <button
                     onClick={onClear}
                     className="px-2 py-1 font-medium bg-rosso text-white rounded 
@@ -46,10 +48,8 @@ export default function ActiveDeck({ deck, onRightClick, onClear, onRemove }: Pr
                     Clear
                 </button>
             </div>
-
-
             <div className={
-                `max-h-[30vh] flex-1 rounded-lg overflow-y-auto 
+                `flex-1 rounded-lg overflow-y-auto 
                 bg-maya shadow pt-4 pb-8 px-4
                 ${deck.length === 0 ? "flex items-center justify-center" : ""}`
             }>
@@ -67,8 +67,8 @@ export default function ActiveDeck({ deck, onRightClick, onClear, onRemove }: Pr
                         <div
                             key={card.product_id}
                             className="relative cursor-pointer
-                                       w-[90px] md:w-[110px] lg:w-[130px] xl:w-[150px]
-                                       h-[135px] md:h-[165px] lg:h-[195px] xl:h-[225px]"
+                                       w-[90px] md:w-[110px] lg:w-[130px] 
+                                       h-[135px] md:h-[165px] lg:h-[195px] "
                             onClick={() => onRemove(card)}
                             onContextMenu={(e) => {
                                 e.preventDefault();        // stop browser context menu
