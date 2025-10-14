@@ -12,6 +12,23 @@ interface PreviewCardModalProps {
 
 const PreviewCardModal: React.FC<PreviewCardModalProps> = ({ card, onClose }) => {
   const { priceHistory, isLoading } = useCardHistory(card?.id);
+  const prices = priceHistory?.map(p => p.price) ?? [];
+  const minPrice = prices.length ? Math.min(...prices) : null;
+  const maxPrice = prices.length ? Math.max(...prices) : null;
+
+  const info = [
+    { label: "Card ID", value: card?.card_id },
+    { label: "Color", value: card?.color },
+    { label: "Type", value: card?.card_type },
+    { label: "Subtype", value: card?.subtype },
+    { label: "Rarity", value: card?.rarity },
+    { label: "Foil", value: card?.foil_type },
+  ].filter(d => d.value && d.value !== "<NA>");
+  const chunkSize = 3;
+  const infoChunks = [];
+  for (let i = 0; i < info.length; i += chunkSize) {
+    infoChunks.push(info.slice(i, i + chunkSize));
+  }
 
   const getLeftMargin = (data: HistoryData[]) => {
     if (!data || data.length === 0) return 30;
@@ -61,34 +78,43 @@ const PreviewCardModal: React.FC<PreviewCardModalProps> = ({ card, onClose }) =>
               {/* Header */}
               <div className="mb-4 text-center">
                 <h2 className="text-2xl font-semibold">{card.name}</h2>
-                <p className="text-sm text-gray-600">
-                  {card.color} • {card.rarity} • {card.foil_type}
+                {infoChunks.map((chunk, i) => (
+                  <p key={i} className="text-sm">
+                    {chunk.map(d => d.value).join(" • ")}
+                  </p>
+                ))}
+                {/* <p className="text-sm">
+                  {card.card_id} • {card.color} • {card.card_type}
                 </p>
-              </div>
-
-              {/* Info Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6 text-sm text-center">
-                <div>
-                  <p className="text-gray-600">Market Price</p>
-                  <p className="font-medium">${card.market_price ?? "N/A"}</p>
-                </div>
-                <div>
-                  <p className="text-gray-600">Power</p>
-                  <p className="font-medium">{card.power ?? "—"}</p>
-                </div>
-                <div>
-                  <p className="text-gray-600">Cost</p>
-                  <p className="font-medium">{card.cost ?? "—"}</p>
-                </div>
+                <p className="text-sm">
+                  {card.subtype} • {card.rarity} • {card.foil_type}
+                </p> */}
               </div>
 
               {/* Description */}
               {card.description && (
                 <p
-                  className="mb-6 text-sm leading-relaxed text-gray-700"
+                  className="mb-6 text-sm leading-relaxed"
                   dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(card.description) }}
                 />
               )}
+
+              {/* Info Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6 text-sm text-center">
+                <div>
+                  <p className="text-black">Market Price</p>
+                  <p className="font-medium">${card.market_price ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-black">1 Month Low</p>
+                  <p className="font-medium">${minPrice?.toFixed(2) ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-black">1 Month High</p>
+                  <p className="font-medium">${maxPrice?.toFixed(2) ?? "—"}</p>
+                </div>
+              </div>
+
 
               {/* Chart */}
               <div className="bg-gradient-to-b from-gray-50 to-white border border-gray-200 rounded-xl p-4 shadow-inner h-[320px]">
@@ -114,7 +140,7 @@ const PreviewCardModal: React.FC<PreviewCardModalProps> = ({ card, onClose }) =>
                         interval={2}
                         tickFormatter={(d) => {
                           const date = new Date(d);
-                          return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                          return date.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit" });
                         }}
                         tick={{ fill: "#000", fontSize: 12 }}
                       />
