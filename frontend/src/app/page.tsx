@@ -123,7 +123,7 @@ export default function Page() {
     const matchesColor =
     filters.colors.size > 0 && card.color
       ? card.color
-          .split(";")
+          .split("/")
           .map(c => c.trim())
           .some(c => filters.colors.has(c))
       : false;

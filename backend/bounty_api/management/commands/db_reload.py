@@ -112,6 +112,9 @@ class Command(BaseCommand):
                 if col not in df.columns:
                     df[col] = pd.NA
 
+            df["extSubtypes"] = df["extSubtypes"].str.replace(";", "/", regex=False)
+            df["extColor"] = df["extColor"].str.replace(";", "/", regex=False)
+
             df = df.rename(columns={
                 "productId": "product_id",
                 "name": "name",
@@ -131,6 +134,7 @@ class Command(BaseCommand):
                 "extCost": "cost",
                 "extCounterplus": "counter",
             })
+    
             df_list.append(self.clean_df(df))
 
         print("Dataframe cleaning complete")

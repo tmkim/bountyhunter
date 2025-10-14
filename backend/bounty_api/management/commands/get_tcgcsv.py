@@ -158,6 +158,9 @@ class Command(BaseCommand):
                 if col not in df.columns:
                     df[col] = pd.NA
 
+            df["extSubtypes"] = df["extSubtypes"].str.replace(";", "/", regex=False)
+            df["extColor"] = df["extColor"].str.replace(";", "/", regex=False)
+
             df = df.rename(columns={
                 "productId": "product_id",
                 "name": "name",
@@ -177,12 +180,13 @@ class Command(BaseCommand):
                 "extCost": "cost",
                 "extCounterplus": "counter",
             })
+
             df_list.append(self.clean_df(df))
 
         print("Dataframe cleaning complete")
         logging.info("Dataframe cleaning complete")
         df_all = pd.concat(df_list, ignore_index=True)
-        
+
         # Separate new vs existing cards
         existing_pairs = set(
             OnePieceCard.objects.values_list("product_id", "foil_type")

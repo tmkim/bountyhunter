@@ -83,12 +83,6 @@ const PreviewCardModal: React.FC<PreviewCardModalProps> = ({ card, onClose }) =>
                     {chunk.map(d => d.value).join(" • ")}
                   </p>
                 ))}
-                {/* <p className="text-sm">
-                  {card.card_id} • {card.color} • {card.card_type}
-                </p>
-                <p className="text-sm">
-                  {card.subtype} • {card.rarity} • {card.foil_type}
-                </p> */}
               </div>
 
               {/* Description */}
