@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import ColorFilter from "./ColorFilter";
 import CheckboxFilter from "./CheckboxFilter";
+import RangeFilter from "./RangeFilter";
 
 type Props = {
   allCards: OnePieceCard[];
@@ -18,6 +19,7 @@ type Props = {
 
 export default function CardList({ allCards, deck, search, filters,
                         setSearch, updateFilter, onAdd, onRightClick }: Props) {
+
     // draftSearch updates on every keystroke locally
     const [draftSearch, setDraftSearch] = useState<string>(search ?? "");
 
@@ -30,6 +32,9 @@ export default function CardList({ allCards, deck, search, filters,
     const applySearch = () => {
         setSearch(draftSearch.trim());
     };
+
+    const [showMoreFilters, setShowMoreFilters] = useState(false);
+
 
     return (
         <section className="basis-[65%] rounded-lg bg-lapis min-h-[500px]
@@ -57,6 +62,56 @@ export default function CardList({ allCards, deck, search, filters,
                 </div>
             </div>
 
+            {showMoreFilters && (
+            <div>
+                <div className="flex gap-6 overflow-x-auto">
+                    <div className="min-w-[228px]">
+                        <CheckboxFilter
+                            label="Rarities"
+                            group="rarities"
+                            options={["L", "C", "UC", "R", "SR", "SEC", "PR", "TR"]}
+                            filters={filters}
+                            updateFilter={updateFilter}
+                        />
+                    </div>
+                    <div className="w-px bg-tangerine h-1/2 mx-2 flex-shrink-0" />
+                    <div className="min-w-[228px]">
+                        <CheckboxFilter
+                            label="Counter"
+                            group="counter"
+                            options={["0", "1000", "2000"]}
+                            filters={filters}
+                            updateFilter={updateFilter}
+                        />
+                    </div>
+                </div>
+                <div className="flex gap-6 overflow-x-auto">
+                    <div className="min-w-[228px]">
+                        <RangeFilter
+                            label="Power Range"
+                            group="power"
+                            min={0}
+                            max={12000}
+                            step={1000}
+                            filters={filters}
+                            updateFilter={updateFilter}
+                        />
+                    </div>
+                    <div className="min-w-[228px]">
+                        <RangeFilter
+                            label="Price Range"
+                            group="power"
+                            min={0}
+                            max={15000}
+                            step={1000}
+                            filters={filters}
+                            updateFilter={updateFilter}
+                        />
+                    </div>
+                </div>
+            </div>
+            )}
+
             {/* 2a Filter + Search */}
             <form
                 className="mb-4 flex items-center gap-2"
@@ -72,13 +127,15 @@ export default function CardList({ allCards, deck, search, filters,
                     onChange={(e) => setDraftSearch(e.target.value)}
                     className="flex-grow bg-white text-black rounded border px-2 py-1"
                 />
-                <button 
-                    type="submit"
+                <button
+                    type="button"
+                    onClick={() => setShowMoreFilters((prev) => !prev)}
                     className="rounded bg-rosso text-white px-3 py-1 font-medium 
-                    hover:text-tangerine hover:cursor-pointer"
-                >
-                    Advanced Filter
+                                hover:text-tangerine hover:cursor-pointer"
+                    >
+                    {showMoreFilters ? "Hide Filters" : "More Filters"}
                 </button>
+
             </form>
 
             {/* Card pool goes here */}
