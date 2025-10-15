@@ -10,13 +10,14 @@ type Props = {
   deck: OnePieceCard[];
   deckPrice: number;
   costData: { cost: string; count: number; }[]
+  counterData: { counter: string; count: number; }[]
   rarityData: { rarity: string; count: number; }[]
   onCloseModal: (card: OnePieceCard) => void;
   // cardPriceHistoryData?: HistoryData[]
   // isLoading: boolean;
 };
 
-export default function DetailsPanel({ card, deck, deckPrice, costData, rarityData, onCloseModal
+export default function DetailsPanel({ card, deck, deckPrice, costData, counterData, rarityData, onCloseModal
   //  cardPriceHistoryData, isLoading 
   }: Props) {
 
@@ -51,6 +52,45 @@ export default function DetailsPanel({ card, deck, deckPrice, costData, rarityDa
                 {/* X Axis */}
                 <XAxis
                   dataKey="cost"
+                  tick={{ fill: "black", fontSize: 12 }}
+                  label={{
+                    value: "Cost",
+                    position: "insideBottom",
+                    offset: -5,
+                    fill: "black",
+                    fontSize: 14,
+                  }}
+                  axisLine={{ stroke: "black" }}
+                  tickLine={{ stroke: "black" }}
+                />
+
+                {/* Y Axis */}
+                <YAxis
+                  allowDecimals={false}
+                  tick={{ fill: "black", fontSize: 12 }}
+                  axisLine={{ stroke: "black" }}
+                  tickLine={{ stroke: "black" }}
+                />
+
+                {/* Bars */}
+                <Bar
+                  dataKey="count"
+                  fill="#D70000"
+                  radius={[6, 6, 0, 0]} // rounded tops
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="w-full h-64 py-4">
+            <ResponsiveContainer>
+              <BarChart data={counterData}
+                margin={{ top: 0, right: 0, left: -30, bottom: 10 }}>
+                {/* Grid lines */}
+                <CartesianGrid stroke="#ffffff22" strokeDasharray="3 3" />
+
+                {/* X Axis */}
+                <XAxis
+                  dataKey="counter"
                   tick={{ fill: "black", fontSize: 12 }}
                   label={{
                     value: "Cost",

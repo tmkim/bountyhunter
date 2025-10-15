@@ -29,7 +29,7 @@ export default function CheckboxFilter({
 
   return (
     <div className="mb-4">
-      <p className="font-semibold mb-2">{label}</p>
+      <p className="font-semibold mb-2 text-tangerine">{label}</p>
       <div className="flex flex-wrap gap-4">
         {options.map((option) => (
           <label key={option} className="flex items-center gap-1">

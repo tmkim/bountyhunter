@@ -99,6 +99,14 @@ export default function Page() {
     ])
   );
 
+  const [counterMap, setCounterMap] = useState<Map<string, number>>(
+    new Map([
+      ['0', 0],
+      ['1000', 0],
+      ['2000', 0]
+    ])
+  )
+
   // The active search string that actually filters cards
   const [activeSearch, setActiveSearch] = useState<string>("");
   const [filters, setFilters] = useState<Record<string, Set<string>>>({
@@ -165,7 +173,13 @@ export default function Page() {
         const key = String(card.cost ?? "0"); // normalize nulls
         newMap.set(key, (newMap.get(key) ?? 0) + 1);
         return newMap;
-      });
+      })
+      setCounterMap(prev => {
+        const newMap = new Map(prev);
+        const key = String(card.counter ?? "0");
+        newMap.set(key, (newMap.get(key) ?? 0) + 1);
+        return newMap;
+      })
       setRarityMap(prev => {
         const newMap = new Map(prev);
         const key = card.rarity === "DON!!" ? "DON" : String(card.rarity ?? "0"); // normalize nulls
@@ -185,6 +199,13 @@ export default function Page() {
     setCostMap(prev => {
       const newMap = new Map(prev);
       const key = String(card.cost ?? "0");
+      const current = newMap.get(key) ?? 0;
+      newMap.set(key, Math.max(0, current - 1)); // avoid negatives
+      return newMap;
+    });
+    setCounterMap(prev => {
+      const newMap = new Map(prev);
+      const key = String(card.counter ?? "0");
       const current = newMap.get(key) ?? 0;
       newMap.set(key, Math.max(0, current - 1)); // avoid negatives
       return newMap;
@@ -213,6 +234,11 @@ export default function Page() {
       ['8',0],
       ['9',0],
       ['10',0],
+    ]))
+    setCounterMap(new Map([
+      ['0', 0],
+      ['1000', 0],
+      ['2000', 0]
     ]))
     setRarityMap(new Map([
       ['L', 0],
@@ -246,6 +272,16 @@ export default function Page() {
           (b.rarity === "none" ? 999 : +b.rarity)
       );
   }, [rarityMap]);
+
+  const counterData = useMemo(() => {
+    return Array.from(counterMap.entries())
+    .map(([counter, count]) => ({counter, count }))
+    .sort(
+      (a,b) =>
+        (a.counter === "none" ? 999 : +a.counter) -
+        (b.counter === "none" ? 999 : +b.counter)
+    )
+  }, [counterMap])
   // #endregion
 
   if (loading) return <p>Loading cards…</p>;
@@ -290,6 +326,7 @@ export default function Page() {
             deck={deck}
             deckPrice={deckPrice}
             costData={costData}
+            counterData={counterData}
             rarityData={rarityData}
           />
         </div>
