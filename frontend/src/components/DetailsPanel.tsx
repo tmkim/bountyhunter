@@ -2,7 +2,7 @@
 import { OnePieceCard, HistoryData } from "@/bh_lib/types";
 import Image from "next/image";
 import { useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, TooltipProps } from "recharts";
 import PreviewCardModal from "@/components/PreviewCardModal";
 
 type Props = {
@@ -20,6 +20,23 @@ type Props = {
 export default function DetailsPanel({ card, deck, deckPrice, costData, counterData, rarityData, onCloseModal
   //  cardPriceHistoryData, isLoading 
   }: Props) {
+
+  const CustomCursor = (props: TooltipProps<any, any>["cursor"]) => {
+    const { x, y, width, height } = props as any;
+    return (
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        stroke="#FFCE00"
+        strokeWidth={4}
+        fill="none"
+        rx={6}
+        ry={6}
+      />
+    );
+  };
 
   return (
     <section className="flex-1 flex flex-col row-span-2 rounded-lg bg-lapis shadow p-4 min-w-[320px] min-h-[865px] overflow-x-auto">
@@ -45,7 +62,7 @@ export default function DetailsPanel({ card, deck, deckPrice, costData, counterD
           <div className="w-full h-64 py-4">
             <ResponsiveContainer>
               <BarChart data={costData}
-                margin={{ top: 0, right: 0, left: -30, bottom: 10 }}>
+                margin={{ top: 0, right: 5, left: -30, bottom: 10 }}>
                 {/* Grid lines */}
                 <CartesianGrid stroke="#ffffff22" strokeDasharray="3 3" />
 
@@ -78,13 +95,24 @@ export default function DetailsPanel({ card, deck, deckPrice, costData, counterD
                   fill="#D70000"
                   radius={[6, 6, 0, 0]} // rounded tops
                 />
+
+                <Tooltip
+                  cursor={<CustomCursor />}
+                  contentStyle={{
+                    backgroundColor: "white",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "0.5rem",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+                  }}
+                  formatter={(value) => [`${Number(value)}`, "Count"]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
           <div className="w-full h-64 py-4">
             <ResponsiveContainer>
               <BarChart data={counterData}
-                margin={{ top: 0, right: 0, left: -30, bottom: 10 }}>
+                margin={{ top: 0, right: 5, left: -30, bottom: 10 }}>
                 {/* Grid lines */}
                 <CartesianGrid stroke="#ffffff22" strokeDasharray="3 3" />
 
@@ -117,13 +145,24 @@ export default function DetailsPanel({ card, deck, deckPrice, costData, counterD
                   fill="#D70000"
                   radius={[6, 6, 0, 0]} // rounded tops
                 />
+
+                <Tooltip
+                  cursor={<CustomCursor />}
+                  contentStyle={{
+                    backgroundColor: "white",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "0.5rem",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+                  }}
+                  formatter={(value) => [`${Number(value)}`, "Count"]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
           <div className="w-full h-64 py-2">
             <ResponsiveContainer>
               <BarChart data={rarityData}
-                margin={{ top: 0, right: 0, left: -30, bottom: 10 }}>
+                margin={{ top: 0, right: 5, left: -30, bottom: 10 }}>
                 {/* Grid lines */}
                 <CartesianGrid stroke="#ffffff22" strokeDasharray="3 3" />
 
@@ -155,7 +194,20 @@ export default function DetailsPanel({ card, deck, deckPrice, costData, counterD
                   dataKey="count"
                   fill="#D70000"
                   radius={[6, 6, 0, 0]} // rounded tops
+                  activeBar={false}
                 />
+
+                <Tooltip
+                  cursor={<CustomCursor />}
+                  contentStyle={{
+                    backgroundColor: "white",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "0.5rem",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+                  }}
+                  formatter={(value) => [`${Number(value)}`, "Count"]}
+                />
+
               </BarChart>
             </ResponsiveContainer>
           </div>
