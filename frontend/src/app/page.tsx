@@ -4,8 +4,7 @@ import CardList from "@/components/CardList";
 import DetailsPanel from "@/components/DetailsPanel";
 import {useState, useRef, useEffect, useMemo} from "react";
 import { useCards } from "@/hooks/useCards";
-import { OnePieceCard, OnePieceCardHistory } from "@/bh_lib/types";
-
+import { OnePieceCard, OnePieceCardHistory, FilterValue } from "@/bh_lib/types";
 
 export default function Page() {
 
@@ -109,53 +108,133 @@ export default function Page() {
 
   // The active search string that actually filters cards
   const [activeSearch, setActiveSearch] = useState<string>("");
-  const [filters, setFilters] = useState<Record<string, Set<string>>>({
-    colors: new Set(),
-    types: new Set(),
+
+  const [filters, setFilters] = useState<Record<string, FilterValue>>({
+    // colors: new Set(),
+    // types: new Set(),
     // rarity: new Set(), etc
   });
-  const updateFilter = (group: string, updater: (prev: Set<string>) => Set<string>) => {
+
+  const updateFilter = (
+    group: string,
+    valueOrUpdater: FilterValue | ((prev: FilterValue | undefined) => FilterValue)
+  ) => {
     setFilters((prev) => ({
       ...prev,
-      [group]: updater(prev[group] ?? new Set()),
+      [group]:
+        typeof valueOrUpdater === "function"
+          ? valueOrUpdater(prev[group])
+          : valueOrUpdater,
     }));
   };
 
-  // Filter using the active search (only updated on Filter/Enter)
   const filteredCards = allCards.filter((card: OnePieceCard) => {
-    const matchesSearch = card.name.toLowerCase().includes(activeSearch.toLowerCase());
+    const matchesSearch = card.name
+      .toLowerCase()
+      .includes(activeSearch.toLowerCase());
 
-    const hasAnyFilters = Object.values(filters).some(set => set.size > 0);
+    // Read filter values into locals (so narrowing works reliably)
+    const colorsVal = filters.colors;
+    const typesVal = filters.types;
+    const priceVal = filters.price;
+
+    // --- Check if any filters are active ---
+    const hasAnyFilters = Object.values(filters).some((value) => {
+      if (value instanceof Set) return value.size > 0;
+      if (Array.isArray(value)) return value.length === 2; // a range is active
+      return false;
+    });
+
     if (!hasAnyFilters) return false;
 
+    // --- Colors ---
     const matchesColor =
-    filters.colors.size > 0 && card.color
-      ? card.color
-          .split("/")
-          .map(c => c.trim())
-          .some(c => filters.colors.has(c))
-      : false;
-
-    const matchesType =
-      filters.types.size > 0 && card.card_type
-        ? filters.types.has(card.card_type)
+      colorsVal instanceof Set &&
+      colorsVal.size > 0 &&
+      card.color
+        ? card.color
+            .split("/")
+            .map((c) => c.trim())
+            .some((c) => colorsVal.has(c)) // use the local var we narrowed
         : false;
 
+    // --- Types ---
+    const matchesType =
+      typesVal instanceof Set &&
+      typesVal.size > 0 &&
+      card.card_type
+        ? typesVal.has(card.card_type)
+        : false;
+
+    // --- Price range ---
+    const matchesPrice =
+      Array.isArray(priceVal) && priceVal.length === 2
+        ? // ensure card.price exists and compare
+          typeof card.market_price === "number" &&
+          card.market_price >= priceVal[0] &&
+          card.market_price <= priceVal[1]
+        : true; // no price filter => don't block results
+
     // --- Special logic ---
-    // If card has no color (like DON!!), ignore color and only check type
     if (!card.color) {
-      return matchesType;
+      // If card has no color (like DON!!), ignore color and only check type + price
+      return matchesType && matchesPrice && matchesSearch;
     }
 
-    // If card has a color and also has a type that’s being filtered,
-    // require BOTH to match (e.g. "red leaders only")
-    if (filters.colors.size > 0 && filters.types.size > 0) {
-      return matchesColor && matchesType && matchesSearch;
+    if (
+      colorsVal instanceof Set &&
+      colorsVal.size > 0 &&
+      typesVal instanceof Set &&
+      typesVal.size > 0
+    ) {
+      // Require BOTH color and type when both are active
+      return matchesColor && matchesType && matchesPrice && matchesSearch;
     }
 
-    // Otherwise fall back to OR logic
-    return (matchesColor || matchesType) && matchesSearch;
+    // Otherwise OR logic (color OR type) plus price + search
+    return (matchesColor || matchesType) && matchesPrice && matchesSearch;
   });
+
+  useEffect(() => {
+    console.log("Filters updated:", filters);
+  }, [filters]);
+
+
+  // Filter using the active search (only updated on Filter/Enter)
+  // const filteredCards = allCards.filter((card: OnePieceCard) => {
+  //   const matchesSearch = card.name.toLowerCase().includes(activeSearch.toLowerCase());
+
+  //   const hasAnyFilters = Object.values(filters).some(set => set.size > 0);
+  //   if (!hasAnyFilters) return false;
+
+  //   const matchesColor =
+  //   filters.colors.size > 0 && card.color
+  //     ? card.color
+  //         .split("/")
+  //         .map(c => c.trim())
+  //         .some(c => filters.colors.has(c))
+  //     : false;
+
+  //   const matchesType =
+  //     filters.types.size > 0 && card.card_type
+  //       ? filters.types.has(card.card_type)
+  //       : false;
+
+  //   // --- Special logic ---
+  //   // If card has no color (like DON!!), ignore color and only check type
+  //   if (!card.color) {
+  //     return matchesType;
+  //   }
+
+  //   // If card has a color and also has a type that’s being filtered,
+  //   // require BOTH to match (e.g. "red leaders only")
+  //   if (filters.colors.size > 0 && filters.types.size > 0) {
+  //     return matchesColor && matchesType && matchesSearch;
+  //   }
+
+  //   // Otherwise fall back to OR logic
+  //   return (matchesColor || matchesType) && matchesSearch;
+  // });
 
   // #endregion
   

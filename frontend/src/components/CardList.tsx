@@ -1,5 +1,5 @@
 "use client";
-import { OnePieceCard } from "@/bh_lib/types";
+import { OnePieceCard, FilterValue } from "@/bh_lib/types";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import ColorFilter from "./ColorFilter";
@@ -10,9 +10,10 @@ type Props = {
   allCards: OnePieceCard[];
   deck: OnePieceCard[];
   search: string;
-  filters: Record<string, Set<string>>;
+  filters: Record<string, FilterValue>;
   setSearch: (value: string) => void;
-  updateFilter: (group: string, updater: (prev: Set<string>) => Set<string>) => void;
+//   updateFilter: (group: string, updater: (prev: Set<string>) => Set<string>) => void;
+  updateFilter: (group: string, valueOrUpdater: FilterValue | ((prev: FilterValue | undefined) => FilterValue)) => void
   onAdd: (card: OnePieceCard) => void;
   onRightClick: (c: OnePieceCard) => void;   
 };
@@ -100,10 +101,10 @@ export default function CardList({ allCards, deck, search, filters,
                     <div className="min-w-[228px]">
                         <RangeFilter
                             label="Price Range"
-                            group="power"
+                            group="price"
                             min={0}
-                            max={15000}
-                            step={1000}
+                            max={500}
+                            step={50}
                             filters={filters}
                             updateFilter={updateFilter}
                         />

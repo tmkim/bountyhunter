@@ -1,10 +1,13 @@
 // frontend/tailwind.config.js
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./src/**/*.{js,ts,jsx,tsx}", // 👈 includes all your code under src
-    "./public/index.html",        // optional if you use static HTML
-  ],
+content: [
+  "./pages/**/*.{ts,tsx}",
+  "./components/**/*.{ts,tsx}",
+  "./app/**/*.{ts,tsx}",
+  "./src/**/*.{ts,tsx}",
+],
+
   theme: {
     extend: {
       colors: {
@@ -17,5 +20,5 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [require("tailwindcss-animate")],
 };

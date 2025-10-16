@@ -35,3 +35,5 @@ export interface HistoryData{
     date: string;
     price: number;
 }
+
+export type FilterValue = Set<string> | [number, number]
