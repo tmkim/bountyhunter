@@ -143,21 +143,23 @@ export default function CardList({ allCards, deck, search, filters,
             <div className="flex-1 rounded-lg overflow-auto bg-maya shadow p-4">
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
                     {allCards.map((card) => (
-                    <Image
-                        key={card.id}
-                        src={card.image_url || ""}
-                        alt={card.name}
-                        width={150}       // expected display width (px)
-                        height={210}      // keep aspect ratio close to real card proportions
-                        className="cursor-pointer rounded hover:ring-2 hover:ring-green-400"
-                        onClick={() => onAdd(card)}
-                        onContextMenu={(e) => {
-                            e.preventDefault();        // stop browser context menu
-                            onRightClick(card);        // call the prop
-                        }}
-                        loading="lazy"    // optional (Next does this automatically)
-                        unoptimized // optional to skip Next’s proxy and just get lazy loading
-                    />
+                        <div className="relative w-[150px] h-[210px]">
+                            <Image
+                            src={card.image_url || ""}
+                            alt={card.name}
+                            fill
+                            sizes="150px"
+                            style={{ objectFit: "contain" }}
+                            className="cursor-pointer rounded hover:ring-2 hover:ring-green-400"
+                            onClick={() => onAdd(card)}
+                            onContextMenu={(e) => {
+                            e.preventDefault();
+                            onRightClick(card);
+                            }}
+                            loading="lazy"
+                            unoptimized
+                            />
+                        </div>
                     ))}
                 </div>
             </div>
