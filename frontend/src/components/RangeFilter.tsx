@@ -133,7 +133,7 @@ export default function RangeFilter({
       <Label className="block mb-2 text-sm font-medium text-tangerine">
         {label}:{" "}
         {group === "price" ? (
-          <>${range[0].toLocaleString()} – ${range[1].toLocaleString()}</>
+          <>${range[0].toLocaleString()} – ${range[1] === max ? `${range[1].toLocaleString()}+` : range[1].toLocaleString()}</>
         ) : (
           <>{range[0].toLocaleString()} – {range[1].toLocaleString()}</>
         )}

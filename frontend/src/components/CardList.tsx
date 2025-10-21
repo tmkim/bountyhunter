@@ -44,8 +44,8 @@ export default function CardList({ allCards, deck, search, filters,
             <div className="flex items-center gap-6 overflow-x-auto pb-2">
                 <div className="min-w-[436px]">
                     <CheckboxFilter
-                        label="Colors"
-                        group="colors"
+                        label="Color"
+                        group="color"
                         options={["Red", "Green", "Blue", "Purple", "Black", "Yellow"]}
                         filters={filters}
                         updateFilter={updateFilter}
@@ -54,8 +54,8 @@ export default function CardList({ allCards, deck, search, filters,
                 <div className="w-px bg-tangerine h-1/2 mx-2 flex-shrink-0" />
                 <div className="min-w-[228px]">
                     <CheckboxFilter
-                        label="Types"
-                        group="types"
+                        label="Type"
+                        group="type"
                         options={["DON!!", "Leader", "Stage"]}
                         filters={filters}
                         updateFilter={updateFilter}
@@ -68,8 +68,8 @@ export default function CardList({ allCards, deck, search, filters,
                 <div className="flex gap-6 overflow-x-auto">
                     <div className="min-w-[228px]">
                         <CheckboxFilter
-                            label="Rarities"
-                            group="rarities"
+                            label="Rarity"
+                            group="rarity"
                             options={["L", "C", "UC", "R", "SR", "SEC", "PR", "TR"]}
                             filters={filters}
                             updateFilter={updateFilter}

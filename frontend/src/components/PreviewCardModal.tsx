@@ -23,7 +23,9 @@ const PreviewCardModal: React.FC<PreviewCardModalProps> = ({ card, onClose }) =>
     { label: "Subtype", value: card?.subtype },
     { label: "Rarity", value: card?.rarity },
     { label: "Foil", value: card?.foil_type },
+    { label: "Counter", value: card?.counter }
   ].filter(d => d.value && d.value !== "<NA>");
+  
   const chunkSize = 3;
   const infoChunks = [];
   for (let i = 0; i < info.length; i += chunkSize) {

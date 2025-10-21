@@ -129,71 +129,113 @@ export default function Page() {
   };
 
   const filteredCards = allCards.filter((card: OnePieceCard) => {
-    const matchesSearch = card.name
+    const matchesName = card.name
       .toLowerCase()
       .includes(activeSearch.toLowerCase());
+    // const matchesID = card.card_id
+    //   .toLowerCase()
+    //   .includes(activeSearch.toLowerCase());
 
     // Read filter values into locals (so narrowing works reliably)
-    const colorsVal = filters.colors;
-    const typesVal = filters.types;
+    const colorVal = filters.color;
+    const typeVal = filters.type;
+    const rarityVal = filters.rarity;
+    const counterVal = filters.counter;
     const priceVal = filters.price;
+    const powerVal = filters.power;
 
     // --- Check if any filters are active ---
-    const hasAnyFilters = Object.values(filters).some((value) => {
-      if (value instanceof Set) return value.size > 0;
-      if (Array.isArray(value)) return value.length === 2; // a range is active
-      return false;
-    });
+    // const hasAnyFilters = Object.values(filters).some((value) => {
+    //   if (value instanceof Set) return value.size > 0;
+    //   if (Array.isArray(value)) return value.length === 2; // a range is active
+    //   return false;
+    // });
 
-    if (!hasAnyFilters) return false;
+    // if (!hasAnyFilters) return false;
 
     // --- Colors ---
     const matchesColor =
-      colorsVal instanceof Set &&
-      colorsVal.size > 0 &&
+      colorVal instanceof Set &&
+      colorVal.size > 0 &&
       card.color
         ? card.color
             .split("/")
             .map((c) => c.trim())
-            .some((c) => colorsVal.has(c)) // use the local var we narrowed
+            .some((c) => colorVal.has(c)) // use the local var we narrowed
         : false;
 
     // --- Types ---
     const matchesType =
-      typesVal instanceof Set &&
-      typesVal.size > 0 &&
+      typeVal instanceof Set &&
+      typeVal.size > 0 &&
       card.card_type
-        ? typesVal.has(card.card_type)
+        ? typeVal.has(card.card_type)
         : false;
 
+    // Check for Primary Filters
+    const primaryMatch =
+      (colorVal instanceof Set && colorVal.size > 0) 
+      && (typeVal instanceof Set && typeVal.size > 0)
+        ? matchesColor && matchesType
+        : matchesColor || matchesType;
+
+    if (!primaryMatch) return false;
+
+    // --- Rarity ---
+    const matchesRarity = 
+      rarityVal instanceof Set &&
+      rarityVal.size > 0 &&
+      card.rarity
+        ? rarityVal.has(card.rarity)
+        : true; // no filter => don't block results
+
+    // --- Counter ---
+    const matchesCounter =
+      counterVal instanceof Set && counterVal.size > 0
+        ? counterVal.has(card.counter?.toString() ?? "")
+        : true;
+
     // --- Price range ---
-    const matchesPrice =
-      Array.isArray(priceVal) && priceVal.length === 2
-        ? // ensure card.price exists and compare
-          typeof card.market_price === "number" &&
-          card.market_price >= priceVal[0] &&
-          card.market_price <= priceVal[1]
-        : true; // no price filter => don't block results
+  const matchesPrice =
+  Array.isArray(priceVal) && priceVal.length === 2
+    ? (() => {
+        const price = typeof card.market_price === "number"
+          ? card.market_price
+          : Number(card.market_price ?? NaN);
 
-    // --- Special logic ---
-    if (!card.color) {
-      // If card has no color (like DON!!), ignore color and only check type + price
-      return matchesType && matchesPrice && matchesSearch;
-    }
+        if (isNaN(price)) return false;
 
-    if (
-      colorsVal instanceof Set &&
-      colorsVal.size > 0 &&
-      typesVal instanceof Set &&
-      typesVal.size > 0
-    ) {
-      // Require BOTH color and type when both are active
-      return matchesColor && matchesType && matchesPrice && matchesSearch;
-    }
+        const [minVal, maxVal] = priceVal;
+        return (
+          price >= minVal &&
+          (maxVal === 500 ? true : price <= maxVal)
+        );
+      })()
+    : true;
+        
+    // --- Power range ---
+    const matchesPower =
+      Array.isArray(powerVal) && powerVal.length === 2
+        ? card.power != null &&
+          typeof card.power === "number" &&
+          card.power >= powerVal[0] &&
+          card.power <= powerVal[1]
+        : true; // no filter => don't block results
 
-    // Otherwise OR logic (color OR type) plus price + search
-    return (matchesColor || matchesType) && matchesPrice && matchesSearch;
+    return (
+      primaryMatch &&
+      matchesRarity &&
+      matchesCounter &&
+      matchesPower &&
+      matchesPrice &&
+      matchesName
+      // && matchesID
+    );
   });
+
+  useEffect(() => {
+    console.log("Filtered Cards: ", filteredCards.length)
+  }, [filteredCards]);
 
   useEffect(() => {
     console.log("Filters updated:", filters);
