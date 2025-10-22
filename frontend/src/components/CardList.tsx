@@ -56,7 +56,7 @@ export default function CardList({ allCards, deck, search, filters,
                     <CheckboxFilter
                         label="Type"
                         group="type"
-                        options={["DON!!", "Leader", "Stage", "Character", "Event", "<NA>"]}
+                        options={["DON!!", "Leader", "Stage", "Character", "Event", "Packs"]}
                         filters={filters}
                         updateFilter={updateFilter}
                     />

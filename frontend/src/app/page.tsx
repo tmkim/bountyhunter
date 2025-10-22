@@ -169,7 +169,11 @@ export default function Page() {
       typeVal instanceof Set &&
       typeVal.size > 0 &&
       card.card_type
-        ? typeVal.has(card.card_type)
+        ? (
+            typeVal.has(card.card_type) 
+            // normalize card type and handle "Packs" special case
+            || (typeVal.has("Packs") && card.card_type === "<NA>")
+          )
         : false;
 
     // Check for Primary Filters
