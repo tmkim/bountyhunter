@@ -12,14 +12,14 @@ type Props = {
   search: string;
   filters: Record<string, FilterValue>;
   setSearch: (value: string) => void;
-//   updateFilter: (group: string, updater: (prev: Set<string>) => Set<string>) => void;
+  clearFilter: () => void;
   updateFilter: (group: string, valueOrUpdater: FilterValue | ((prev: FilterValue | undefined) => FilterValue)) => void
   onAdd: (card: OnePieceCard) => void;
   onRightClick: (c: OnePieceCard) => void;   
 };
 
 export default function CardList({ allCards, deck, search, filters,
-                        setSearch, updateFilter, onAdd, onRightClick }: Props) {
+                        setSearch, clearFilter, updateFilter, onAdd, onRightClick }: Props) {
 
     // draftSearch updates on every keystroke locally
     const [draftSearch, setDraftSearch] = useState<string>(search ?? "");
@@ -52,7 +52,7 @@ export default function CardList({ allCards, deck, search, filters,
                     />
                 </div>
                 <div className="w-px bg-tangerine h-1/2 mx-2 flex-shrink-0" />
-                <div className="min-w-[228px]">
+                <div className="min-w-[492px]">
                     <CheckboxFilter
                         label="Type"
                         group="type"
@@ -64,13 +64,13 @@ export default function CardList({ allCards, deck, search, filters,
             </div>
 
             {showMoreFilters && (
-            <div>
-                <div className="flex gap-6 overflow-x-auto">
-                    <div className="min-w-[228px]">
+            <div className="overflow-x-auto">
+                <div className="flex gap-6">
+                    <div className="min-w-[436px]">
                         <CheckboxFilter
                             label="Rarity"
                             group="rarity"
-                            options={["L", "C", "UC", "R", "SR", "SEC", "PR", "TR"]}
+                            options={["C", "UC", "R", "SR", "SEC", "PR", "TR"]}
                             filters={filters}
                             updateFilter={updateFilter}
                         />
@@ -86,7 +86,7 @@ export default function CardList({ allCards, deck, search, filters,
                         />
                     </div>
                 </div>
-                <div className="flex gap-6 overflow-x-auto">
+                <div className="flex gap-6">
                     <div className="min-w-[228px]">
                         <RangeFilter
                             label="Power Range"
@@ -123,18 +123,26 @@ export default function CardList({ allCards, deck, search, filters,
             >
                 <input
                     type="text"
-                    placeholder="Search cards..."
+                    placeholder="Search cards by name or card id..."
                     value={draftSearch}
                     onChange={(e) => setDraftSearch(e.target.value)}
-                    className="flex-grow bg-white text-black rounded border px-2 py-1"
+                    className="flex-grow bg-white text-black rounded border px-2 py-1 min-w-[420px]"
                 />
                 <button
                     type="button"
                     onClick={() => setShowMoreFilters((prev) => !prev)}
                     className="rounded bg-rosso text-white px-3 py-1 font-medium 
-                                hover:text-tangerine hover:cursor-pointer"
+                                hover:text-tangerine hover:cursor-pointer min-w-[115px]"
                     >
                     {showMoreFilters ? "Hide Filters" : "More Filters"}
+                </button>
+                <button
+                    type="button"
+                    onClick={clearFilter}
+                    className="rounded bg-rosso text-white px-3 py-1 font-medium 
+                                hover:text-tangerine hover:cursor-pointer min-w-[115px]"
+                    >
+                    Clear Filters
                 </button>
 
             </form>

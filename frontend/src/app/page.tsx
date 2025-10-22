@@ -105,15 +105,18 @@ export default function Page() {
       ['2000', 0]
     ])
   )
+  // #endregion
+
+  // #region -- Filters
 
   // The active search string that actually filters cards
   const [activeSearch, setActiveSearch] = useState<string>("");
 
-  const [filters, setFilters] = useState<Record<string, FilterValue>>({
-    // colors: new Set(),
-    // types: new Set(),
-    // rarity: new Set(), etc
-  });
+  const [filters, setFilters] = useState<Record<string, FilterValue>>({});
+
+  const clearAllFilters = () => {
+    setFilters({});
+  };
 
   const updateFilter = (
     group: string,
@@ -132,9 +135,10 @@ export default function Page() {
     const matchesName = card.name
       .toLowerCase()
       .includes(activeSearch.toLowerCase());
-    // const matchesID = card.card_id
-    //   .toLowerCase()
-    //   .includes(activeSearch.toLowerCase());
+    const matchesID =
+      (card.card_id?.toLowerCase() || "")
+      .includes(activeSearch.toLowerCase());
+
 
     // Read filter values into locals (so narrowing works reliably)
     const colorVal = filters.color;
@@ -143,15 +147,6 @@ export default function Page() {
     const counterVal = filters.counter;
     const priceVal = filters.price;
     const powerVal = filters.power;
-
-    // --- Check if any filters are active ---
-    // const hasAnyFilters = Object.values(filters).some((value) => {
-    //   if (value instanceof Set) return value.size > 0;
-    //   if (Array.isArray(value)) return value.length === 2; // a range is active
-    //   return false;
-    // });
-
-    // if (!hasAnyFilters) return false;
 
     // --- Colors ---
     const matchesColor =
@@ -232,22 +227,30 @@ export default function Page() {
       matchesCounter &&
       matchesPower &&
       matchesPrice &&
-      matchesName
+      (matchesName || matchesID)
       // && matchesID
     );
   }).sort((a, b) => {
-    // --- 1️⃣ Sort by color first ---
+    // --- Sort by color first ---
     const colorA = a.color?.toLowerCase() || "";
     const colorB = b.color?.toLowerCase() || "";
 
     if (colorA < colorB) return -1;
     if (colorA > colorB) return 1;
 
-    // --- 2️⃣ If colors are equal, sort by cost ---
+    // --- If colors are equal, sort by cost ---
     const costA = a.cost ?? Infinity; // handle undefined
     const costB = b.cost ?? Infinity;
 
-    return costA - costB;
+    if (costA < costB) return -1;
+    if (costA > costB) return 1;
+
+    // --- If costs are equal, sort by name ---
+    const nameA = a.name?.toLowerCase() || "";
+    const nameB = b.name?.toLowerCase() || "";
+
+    if (nameA < nameB) return -1;
+    else return 1;
   });
 
   useEffect(() => {
@@ -257,44 +260,6 @@ export default function Page() {
   useEffect(() => {
     console.log("Filters updated:", filters);
   }, [filters]);
-
-
-  // Filter using the active search (only updated on Filter/Enter)
-  // const filteredCards = allCards.filter((card: OnePieceCard) => {
-  //   const matchesSearch = card.name.toLowerCase().includes(activeSearch.toLowerCase());
-
-  //   const hasAnyFilters = Object.values(filters).some(set => set.size > 0);
-  //   if (!hasAnyFilters) return false;
-
-  //   const matchesColor =
-  //   filters.colors.size > 0 && card.color
-  //     ? card.color
-  //         .split("/")
-  //         .map(c => c.trim())
-  //         .some(c => filters.colors.has(c))
-  //     : false;
-
-  //   const matchesType =
-  //     filters.types.size > 0 && card.card_type
-  //       ? filters.types.has(card.card_type)
-  //       : false;
-
-  //   // --- Special logic ---
-  //   // If card has no color (like DON!!), ignore color and only check type
-  //   if (!card.color) {
-  //     return matchesType;
-  //   }
-
-  //   // If card has a color and also has a type that’s being filtered,
-  //   // require BOTH to match (e.g. "red leaders only")
-  //   if (filters.colors.size > 0 && filters.types.size > 0) {
-  //     return matchesColor && matchesType && matchesSearch;
-  //   }
-
-  //   // Otherwise fall back to OR logic
-  //   return (matchesColor || matchesType) && matchesSearch;
-  // });
-
   // #endregion
   
   // #region Actions
@@ -427,7 +392,7 @@ export default function Page() {
   return (
       <div className="h-full px-10 py-6 flex flex-1 gap-4 overflow-auto">
         {/* Left Column (Active Deck + Available Cards) */}
-        <div className="flex flex-col gap-4"
+        <div className="flex flex-col gap-4 flex-shrink-0 min-w-[700px]" 
         style={{ width: `${leftWidth}%` }}>
           {/* #1 Active Deck */}
           <ActiveDeck
@@ -443,6 +408,7 @@ export default function Page() {
             search={activeSearch}
             setSearch={setActiveSearch}
             filters={filters}
+            clearFilter={clearAllFilters}
             updateFilter={updateFilter}
             onAdd={addToDeck}
             onRightClick={handleRightClick}
@@ -451,12 +417,12 @@ export default function Page() {
 
         {/* Divider */}
         <div
-          className="w-2 cursor-col-resize bg-gray-300 hover:bg-gray-400"
+          className="flex flex-shrink-0 w-2 cursor-col-resize bg-gray-300 hover:bg-gray-400"
           onMouseDown={handleMouseDown}
         />
 
         {/* Right Column (#3 Card/Deck Details) */}
-        <div className="flex-[3] flex min-w-[420px]"
+        <div className="flex-[3] flex min-w-[420px] flex-shrink-0 "
         style={{ width: `${100 - leftWidth}%` }}>
           <DetailsPanel
             onCloseModal={handleRightClick}

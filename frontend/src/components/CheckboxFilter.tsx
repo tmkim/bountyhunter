@@ -7,9 +7,12 @@ type CheckboxFilterProps = {
   group: string;
   options: string[];
   filters: Record<string, FilterValue>;
-  // updateFilter: (group: string, value: FilterValue) => void;
-  updateFilter: (group: string, valueOrUpdater: FilterValue | ((prev: FilterValue | undefined) => FilterValue)) => void
-  // updateFilter: (group: string, updater: (prev: Set<string>) => Set<string>) => void;
+  updateFilter: (
+    group: string, 
+    valueOrUpdater: 
+      FilterValue | 
+      ((prev: FilterValue | undefined) => FilterValue)
+  ) => void
 };
 
 export default function CheckboxFilter({
@@ -19,22 +22,16 @@ export default function CheckboxFilter({
   filters,
   updateFilter,
 }: CheckboxFilterProps) {
+
   const active = filters[group] ?? new Set();
 
   const toggle = (value: string) => {
-    // updateFilter(group, (prev) => {
-    //   const next = new Set(prev);
-    //   if (next.has(value)) next.delete(value);
-    //   else next.add(value);
-    //   return next;
-    // });
     updateFilter(group, (prev: any) => {
       const set = prev instanceof Set ? new Set(prev) : new Set<string>();
       if (set.has(value)) set.delete(value);
       else set.add(value);
       return set;
-});
-
+    });
   };
 
   return (
