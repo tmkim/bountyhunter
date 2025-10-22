@@ -46,7 +46,7 @@ export default function CardList({ allCards, deck, search, filters,
                     <CheckboxFilter
                         label="Color"
                         group="color"
-                        options={["Red", "Green", "Blue", "Purple", "Black", "Yellow"]}
+                        options={["Black", "Blue", "Green", "Purple", "Red", "Yellow"]}
                         filters={filters}
                         updateFilter={updateFilter}
                     />
@@ -56,7 +56,7 @@ export default function CardList({ allCards, deck, search, filters,
                     <CheckboxFilter
                         label="Type"
                         group="type"
-                        options={["DON!!", "Leader", "Stage"]}
+                        options={["DON!!", "Leader", "Stage", "Character", "Event", "<NA>"]}
                         filters={filters}
                         updateFilter={updateFilter}
                     />
@@ -141,28 +141,35 @@ export default function CardList({ allCards, deck, search, filters,
 
             {/* Card pool goes here */}
             <div className="flex-1 rounded-lg overflow-auto bg-maya shadow p-4">
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
-                    {allCards.map((card) => (
-                        <div className="relative w-[150px] h-[210px]">
-                            <Image
-                            src={card.image_url || ""}
-                            alt={card.name}
-                            fill
-                            sizes="150px"
-                            style={{ objectFit: "contain" }}
-                            className="cursor-pointer rounded hover:ring-2 hover:ring-green-400"
-                            onClick={() => onAdd(card)}
-                            onContextMenu={(e) => {
-                            e.preventDefault();
-                            onRightClick(card);
-                            }}
-                            loading="lazy"
-                            unoptimized
-                            />
-                        </div>
-                    ))}
+            {allCards.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-2xl">
+                Right-click a card to preview 
                 </div>
+            ) : (
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
+                {allCards.map((card) => (
+                    <div key={card.id} className="relative w-[150px] h-[210px]">
+                    <Image
+                        src={card.image_url || ""}
+                        alt={card.name}
+                        fill
+                        sizes="150px"
+                        style={{ objectFit: "contain" }}
+                        className="cursor-pointer rounded hover:ring-2 hover:ring-green-400"
+                        onClick={() => onAdd(card)}
+                        onContextMenu={(e) => {
+                        e.preventDefault();
+                        onRightClick(card);
+                        }}
+                        loading="lazy"
+                        unoptimized
+                    />
+                    </div>
+                ))}
+                </div>
+            )}
             </div>
+
         </section>
     );
 }

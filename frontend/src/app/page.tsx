@@ -231,6 +231,19 @@ export default function Page() {
       matchesName
       // && matchesID
     );
+  }).sort((a, b) => {
+    // --- 1️⃣ Sort by color first ---
+    const colorA = a.color?.toLowerCase() || "";
+    const colorB = b.color?.toLowerCase() || "";
+
+    if (colorA < colorB) return -1;
+    if (colorA > colorB) return 1;
+
+    // --- 2️⃣ If colors are equal, sort by cost ---
+    const costA = a.cost ?? Infinity; // handle undefined
+    const costB = b.cost ?? Infinity;
+
+    return costA - costB;
   });
 
   useEffect(() => {

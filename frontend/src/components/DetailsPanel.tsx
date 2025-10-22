@@ -44,9 +44,6 @@ export default function DetailsPanel({ card, deck, deckPrice, costData, counterD
       {/* Details view content */}
       <div className="flex-1 rounded-lg bg-maya shadow p-4 max-h-full overflow-auto relative">
         {/* Top half: selected image */}
-        <p className="text-2xl text-black text-center">
-          Right-click a card to preview
-        </p>
         {card && (
           <PreviewCardModal 
           onClose={() => onCloseModal(card)} 
@@ -55,8 +52,9 @@ export default function DetailsPanel({ card, deck, deckPrice, costData, counterD
       }
 
         {/* Bottom half: selected image */}
-        <div className="flex-1 border rounded p-2 mt-2 text-black">
+        <div className="flex-1 rounded text-black">
           <h2 className="font-bold mb-2">Deck Details</h2>
+          <p>Leader: Color/Color Name</p>
           <p>Total cards: {deck.length}</p>
           <p>Total price: ${deckPrice.toFixed(2)}</p>
           <div className="w-full h-64 py-4">
