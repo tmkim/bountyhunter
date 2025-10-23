@@ -1,5 +1,5 @@
 "use client";
-import { OnePieceCard, HistoryData } from "@/bh_lib/types";
+import { OnePieceCard, HistoryData, OnePieceDeck } from "@/bh_lib/types";
 import Image from "next/image";
 import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, TooltipProps } from "recharts";
@@ -7,8 +7,7 @@ import PreviewCardModal from "@/components/PreviewCardModal";
 
 type Props = {
   card: OnePieceCard | null;
-  deck: OnePieceCard[];
-  deckPrice: number;
+  deck: OnePieceDeck;
   costData: { cost: string; count: number; }[]
   counterData: { counter: string; count: number; }[]
   rarityData: { rarity: string; count: number; }[]
@@ -17,7 +16,7 @@ type Props = {
   // isLoading: boolean;
 };
 
-export default function DetailsPanel({ card, deck, deckPrice, costData, counterData, rarityData, onCloseModal
+export default function DetailsPanel({ card, deck, costData, counterData, rarityData, onCloseModal
   //  cardPriceHistoryData, isLoading 
   }: Props) {
 
@@ -54,9 +53,9 @@ export default function DetailsPanel({ card, deck, deckPrice, costData, counterD
         {/* Bottom half: selected image */}
         <div className="flex-1 rounded text-black">
           <h2 className="font-bold mb-2">Deck Details</h2>
-          <p>Leader: Color/Color Name</p>
-          <p>Total cards: {deck.length}</p>
-          <p>Total price: ${deckPrice.toFixed(2)}</p>
+          <p>Leader: {deck.leader?.color} {deck.leader?.name}</p>
+          <p>Total cards: {deck.cards.length}</p>
+          <p>Total price: ${deck.total_price.toFixed(2)}</p>
           <div className="w-full h-64 py-4">
             <ResponsiveContainer>
               <BarChart data={costData}

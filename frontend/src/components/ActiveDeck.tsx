@@ -1,9 +1,9 @@
 "use client";
-import { OnePieceCard } from "@/bh_lib/types";
+import { OnePieceCard, OnePieceDeck } from "@/bh_lib/types";
 import Image from "next/image";
 
 type Props = {
-  deck: OnePieceCard[];
+  deck: OnePieceDeck;
   onClear: () => void;
   onRemove: (card: OnePieceCard) => void;
   onRightClick: (c: OnePieceCard) => void;   
@@ -13,9 +13,9 @@ type GroupedDeck = {
   count: number;
 };
 
-function groupDeck(deck: OnePieceCard[]): GroupedDeck[] {
+function groupDeck(deck: OnePieceDeck): GroupedDeck[] {
   const map = new Map<string, GroupedDeck>();
-  for (const card of deck) {
+  for (const card of deck.cards) {
     const key = card.product_id.toString(); // or some unique ID
     if (!map.has(key)) {
       map.set(key, { card, count: 0 });
@@ -51,9 +51,9 @@ export default function ActiveDeck({ deck, onRightClick, onClear, onRemove }: Pr
             <div className={
                 `flex-1 rounded-lg overflow-y-auto 
                 bg-maya shadow pt-4 pb-8 px-4
-                ${deck.length === 0 ? "flex items-center justify-center" : ""}`
+                ${deck.cards.length === 0 ? "flex items-center justify-center" : ""}`
             }>
-                {deck.length>0 ? (
+                {deck.cards.length>0 ? (
                     <div className="grid gap-x-2 gap-y-6
                         grid-cols-[repeat(auto-fill,minmax(90px,1fr))]
                         md:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]          

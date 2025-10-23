@@ -1,14 +1,12 @@
 "use client";
-import { OnePieceCard, FilterValue } from "@/bh_lib/types";
+import { OnePieceCard, FilterValue, OnePieceDeck } from "@/bh_lib/types";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import ColorFilter from "./ColorFilter";
 import CheckboxFilter from "./CheckboxFilter";
 import RangeFilter from "./RangeFilter";
 
 type Props = {
   allCards: OnePieceCard[];
-  deck: OnePieceCard[];
   search: string;
   filters: Record<string, FilterValue>;
   setSearch: (value: string) => void;
@@ -18,7 +16,7 @@ type Props = {
   onRightClick: (c: OnePieceCard) => void;   
 };
 
-export default function CardList({ allCards, deck, search, filters,
+export default function CardList({ allCards, search, filters,
                         setSearch, clearFilter, updateFilter, onAdd, onRightClick }: Props) {
 
     // draftSearch updates on every keystroke locally

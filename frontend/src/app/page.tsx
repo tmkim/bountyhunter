@@ -280,15 +280,19 @@ export default function Page() {
       }
 
       if (!validLeader) {
-        alert("You can only have one Leader card in your deck.");
+        // alert("You can only have one Leader card in your deck.");
         return prev;
       }
 
       // ===== Leader Case =====
       if (card.card_type === "Leader") {
         // Leader should affect total_price but not other stats
+        const newCards = [card, ...cards];
         const newPrice = Math.round((total_price + Number(card.market_price ?? 0)) * 100) / 100;
-        return { ...prev, leader: card, total_price: newPrice };
+        return { ...prev, 
+          leader: card, 
+          cards: newCards,
+          total_price: newPrice };
       }
 
       // ===== Normal Card Case =====
@@ -327,8 +331,18 @@ export default function Page() {
 
       // ===== Leader Case =====
       if (card.card_type === "Leader" && leader?.id === card.id) {
+        const indexToRemove = cards.findLastIndex(c => c.id === card.id);
+        if (indexToRemove === -1) return prev;
+        const newCards = [...cards];
+        const removedCard = newCards.splice(indexToRemove, 1)[0];
+        
         const newPrice = Math.round((total_price - Number(card.market_price ?? 0)) * 100) / 100;
-        return { ...prev, leader: null, total_price: Math.max(newPrice, 0) };
+        return {
+           ...prev, 
+           leader: null, 
+           cards: newCards,
+           total_price: Math.max(newPrice, 0) 
+          };
       }
 
       // ===== Normal Card Case =====
@@ -418,7 +432,6 @@ export default function Page() {
         />
         <CardList
           allCards={filteredCards}
-          deck={deck}
           search={activeSearch}
           setSearch={setActiveSearch}
           filters={filters}
