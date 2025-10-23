@@ -23,6 +23,13 @@ export type OnePieceCard = {
   last_update: string; // could be Date if you parse it on the frontend
 };
 
+export type OnePieceDeck = {
+  id?: number;
+  name: string;
+  leader: OnePieceCard | null;
+  cards: OnePieceCard[];
+};
+
 export type OnePieceCardHistory = {
   // card: OnePieceCard;
   id: number;
