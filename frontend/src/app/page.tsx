@@ -2,7 +2,7 @@
 import ActiveDeck from "@/components/ActiveDeck";
 import CardList from "@/components/CardList";
 import DetailsPanel from "@/components/DetailsPanel";
-import {useState, useRef, useEffect, useMemo} from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useCards } from "@/hooks/useCards";
 import { OnePieceCard, OnePieceCardHistory, FilterValue } from "@/bh_lib/types";
 
@@ -10,7 +10,7 @@ export default function Page() {
 
   // #region -- resizable column layout
   const isDragging = useRef(false);
-  const [leftWidth, setLeftWidth] = useState(70);
+  const [leftWidth, setLeftWidth] = useState(60);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -71,17 +71,17 @@ export default function Page() {
   const [deckPrice, setDeckPrice] = useState<number>(0);
   const [costMap, setCostMap] = useState<Map<string, number>>(
     new Map([
-    ['0',0],
-    ['1',0],
-    ['2',0],
-    ['3',0],
-    ['4',0],
-    ['5',0],
-    ['6',0],
-    ['7',0],
-    ['8',0],
-    ['9',0],
-    ['10',0],
+      ['0', 0],
+      ['1', 0],
+      ['2', 0],
+      ['3', 0],
+      ['4', 0],
+      ['5', 0],
+      ['6', 0],
+      ['7', 0],
+      ['8', 0],
+      ['9', 0],
+      ['10', 0],
     ])
   );
   const [rarityMap, setRarityMap] = useState<Map<string, number>>(
@@ -137,7 +137,7 @@ export default function Page() {
       .includes(activeSearch.toLowerCase());
     const matchesID =
       (card.card_id?.toLowerCase() || "")
-      .includes(activeSearch.toLowerCase());
+        .includes(activeSearch.toLowerCase());
 
 
     // Read filter values into locals (so narrowing works reliably)
@@ -151,40 +151,40 @@ export default function Page() {
     // --- Colors ---
     const matchesColor =
       colorVal instanceof Set &&
-      colorVal.size > 0 &&
-      card.color
+        colorVal.size > 0 &&
+        card.color
         ? card.color
-            .split("/")
-            .map((c) => c.trim())
-            .some((c) => colorVal.has(c)) // use the local var we narrowed
+          .split("/")
+          .map((c) => c.trim())
+          .some((c) => colorVal.has(c)) // use the local var we narrowed
         : false;
 
     // --- Types ---
     const matchesType =
       typeVal instanceof Set &&
-      typeVal.size > 0 &&
-      card.card_type
+        typeVal.size > 0 &&
+        card.card_type
         ? (
-            typeVal.has(card.card_type) 
-            // normalize card type and handle "Packs" special case
-            || (typeVal.has("Packs") && card.card_type === "<NA>")
-          )
+          typeVal.has(card.card_type)
+          // normalize card type and handle "Packs" special case
+          || (typeVal.has("Packs") && card.card_type === "<NA>")
+        )
         : false;
 
     // Check for Primary Filters
     const primaryMatch =
-      (colorVal instanceof Set && colorVal.size > 0) 
-      && (typeVal instanceof Set && typeVal.size > 0)
+      (colorVal instanceof Set && colorVal.size > 0)
+        && (typeVal instanceof Set && typeVal.size > 0)
         ? matchesColor && matchesType
         : matchesColor || matchesType;
 
     if (!primaryMatch) return false;
 
     // --- Rarity ---
-    const matchesRarity = 
+    const matchesRarity =
       rarityVal instanceof Set &&
-      rarityVal.size > 0 &&
-      card.rarity
+        rarityVal.size > 0 &&
+        card.rarity
         ? rarityVal.has(card.rarity)
         : true; // no filter => don't block results
 
@@ -195,30 +195,30 @@ export default function Page() {
         : true;
 
     // --- Price range ---
-  const matchesPrice =
-  Array.isArray(priceVal) && priceVal.length === 2
-    ? (() => {
-        const price = typeof card.market_price === "number"
-          ? card.market_price
-          : Number(card.market_price ?? NaN);
+    const matchesPrice =
+      Array.isArray(priceVal) && priceVal.length === 2
+        ? (() => {
+          const price = typeof card.market_price === "number"
+            ? card.market_price
+            : Number(card.market_price ?? NaN);
 
-        if (isNaN(price)) return false;
+          if (isNaN(price)) return false;
 
-        const [minVal, maxVal] = priceVal;
-        return (
-          price >= minVal &&
-          (maxVal === 500 ? true : price <= maxVal)
-        );
-      })()
-    : true;
-        
+          const [minVal, maxVal] = priceVal;
+          return (
+            price >= minVal &&
+            (maxVal === 500 ? true : price <= maxVal)
+          );
+        })()
+        : true;
+
     // --- Power range ---
     const matchesPower =
       Array.isArray(powerVal) && powerVal.length === 2
         ? card.power != null &&
-          typeof card.power === "number" &&
-          card.power >= powerVal[0] &&
-          card.power <= powerVal[1]
+        typeof card.power === "number" &&
+        card.power >= powerVal[0] &&
+        card.power <= powerVal[1]
         : true; // no filter => don't block results
 
     return (
@@ -261,14 +261,14 @@ export default function Page() {
     console.log("Filters updated:", filters);
   }, [filters]);
   // #endregion
-  
+
   // #region Actions
   const addToDeck = (card: OnePieceCard) => {
     const count = deck.filter(c => c.product_id === card.product_id).length;
 
     if (count < 4) {
       setDeck([...deck, card]);
-      setDeckPrice(prev => 
+      setDeckPrice(prev =>
         Math.round((prev + Number(card.market_price)) * 100) / 100
       );
       setCostMap(prev => {
@@ -293,10 +293,10 @@ export default function Page() {
       console.warn(`${card.name} is already at the max of 4 copies.`);
     }
   };
-  
+
   const removeFromDeck = (card: OnePieceCard) => {
     setDeck(deck => deck.filter((c, idx) => !(c.id === card.id && idx === deck.findLastIndex(d => d.id === card.id))));
-    setDeckPrice(prev => 
+    setDeckPrice(prev =>
       Math.round((prev - Number(card.market_price)) * 100) / 100
     );
     setCostMap(prev => {
@@ -326,17 +326,17 @@ export default function Page() {
     setDeck([])
     setDeckPrice(0)
     setCostMap(new Map([
-      ['0',0],
-      ['1',0],
-      ['2',0],
-      ['3',0],
-      ['4',0],
-      ['5',0],
-      ['6',0],
-      ['7',0],
-      ['8',0],
-      ['9',0],
-      ['10',0],
+      ['0', 0],
+      ['1', 0],
+      ['2', 0],
+      ['3', 0],
+      ['4', 0],
+      ['5', 0],
+      ['6', 0],
+      ['7', 0],
+      ['8', 0],
+      ['9', 0],
+      ['10', 0],
     ]))
     setCounterMap(new Map([
       ['0', 0],
@@ -378,62 +378,65 @@ export default function Page() {
 
   const counterData = useMemo(() => {
     return Array.from(counterMap.entries())
-    .map(([counter, count]) => ({counter, count }))
-    .sort(
-      (a,b) =>
-        (a.counter === "none" ? 999 : +a.counter) -
-        (b.counter === "none" ? 999 : +b.counter)
-    )
+      .map(([counter, count]) => ({ counter, count }))
+      .sort(
+        (a, b) =>
+          (a.counter === "none" ? 999 : +a.counter) -
+          (b.counter === "none" ? 999 : +b.counter)
+      )
   }, [counterMap])
   // #endregion
 
   if (loading) return <p>Loading cards…</p>;
 
   return (
-      <div className="h-full px-10 py-6 flex flex-1 gap-4 overflow-auto">
-        {/* Left Column (Active Deck + Available Cards) */}
-        <div className="flex flex-col gap-4 flex-shrink-0 min-w-[700px]" 
-        style={{ width: `${leftWidth}%` }}>
-          {/* #1 Active Deck */}
-          <ActiveDeck
-            deck={deck}
-            onClear={clearDeck}
-            onRemove={removeFromDeck}
-            onRightClick={handleRightClick}
-          />
-          {/* #2 Available Cards + Filters */}
-          <CardList
-            allCards={filteredCards}
-            deck={deck}
-            search={activeSearch}
-            setSearch={setActiveSearch}
-            filters={filters}
-            clearFilter={clearAllFilters}
-            updateFilter={updateFilter}
-            onAdd={addToDeck}
-            onRightClick={handleRightClick}
-          />
-        </div>
-
-        {/* Divider */}
-        <div
-          className="flex flex-shrink-0 w-2 cursor-col-resize bg-gray-300 hover:bg-gray-400"
-          onMouseDown={handleMouseDown}
+    <div className="h-full w-full px-10 py-6 flex flex-1 gap-4 overflow-x-auto overflow-y-hidden">
+      {/* Left Column */}
+      <div
+        className="flex flex-col gap-4 flex-shrink min-w-[700px]"
+        style={{ flexBasis: `${leftWidth}%`, flexGrow: 0, flexShrink: 1 }}
+      >
+        <ActiveDeck
+          deck={deck}
+          onClear={clearDeck}
+          onRemove={removeFromDeck}
+          onRightClick={handleRightClick}
         />
-
-        {/* Right Column (#3 Card/Deck Details) */}
-        <div className="flex-[3] flex min-w-[420px] flex-shrink-0 "
-        style={{ width: `${100 - leftWidth}%` }}>
-          <DetailsPanel
-            onCloseModal={handleRightClick}
-            card={previewTarget}
-            deck={deck}
-            deckPrice={deckPrice}
-            costData={costData}
-            counterData={counterData}
-            rarityData={rarityData}
-          />
-        </div>
+        <CardList
+          allCards={filteredCards}
+          deck={deck}
+          search={activeSearch}
+          setSearch={setActiveSearch}
+          filters={filters}
+          clearFilter={clearAllFilters}
+          updateFilter={updateFilter}
+          onAdd={addToDeck}
+          onRightClick={handleRightClick}
+        />
       </div>
+
+      {/* Divider */}
+      <div
+        className="flex-shrink-0 w-2 cursor-col-resize bg-gray-300 hover:bg-gray-400"
+        onMouseDown={handleMouseDown}
+      />
+
+      {/* Right Column */}
+      <div
+        className="flex flex-col flex-shrink min-w-[420px]"
+        style={{ flexBasis: `${100 - leftWidth}%`, flexGrow: 1, flexShrink: 1 }}
+      >
+        <DetailsPanel
+          onCloseModal={handleRightClick}
+          card={previewTarget}
+          deck={deck}
+          deckPrice={deckPrice}
+          costData={costData}
+          counterData={counterData}
+          rarityData={rarityData}
+        />
+      </div>
+    </div>
+
   );
 }
