@@ -5,6 +5,36 @@ import DetailsPanel from "@/components/DetailsPanel";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useCards } from "@/hooks/useCards";
 import { OnePieceCard, OnePieceCardHistory, FilterValue } from "@/bh_lib/types";
+import { OnePieceDeck } from "@/bh_lib/types";
+
+const BASE_COST_MAP = new Map([
+  ['0', 0],
+  ['1', 0],
+  ['2', 0],
+  ['3', 0],
+  ['4', 0],
+  ['5', 0],
+  ['6', 0],
+  ['7', 0],
+  ['8', 0],
+  ['9', 0],
+  ['10', 0],
+]);
+const BASE_RARITY_MAP = new Map([
+  ['C', 0],
+  ['UC', 0],
+  ['R', 0],
+  ['SR', 0],
+  ['SEC', 0],
+  ['PR', 0],
+  ['TR', 0],
+  ['DON', 0],
+]);
+const BASE_COUNTER_MAP =  new Map([
+  ['0', 0],
+  ['1000', 0],
+  ['2000', 0]
+])
 
 export default function Page() {
 
@@ -58,53 +88,25 @@ export default function Page() {
   const { cards: allCards, loading } = useCards();
   const [search, setSearch] = useState("");
 
-  const [deck, setDeck] = useState<OnePieceCard[]>([]);
+  // const [deck, setDeck] = useState<OnePieceCard[]>([]);
+  const [deck, setDeck] = useState<OnePieceDeck>({ 
+    name: "", 
+    leader: null, 
+    cards: [],
+    total_price: 0,
+    cost_map: new Map(BASE_COST_MAP),
+    rarity_map: new Map(BASE_RARITY_MAP),
+    counter_map: new Map(BASE_COUNTER_MAP)
+  });
+
   const [previewCard, setPreviewCard] = useState<OnePieceCard | null>(null);
 
   const previewTarget = previewCard;
 
   const handleRightClick = (card: OnePieceCard) => {
     setPreviewCard((prev) => (prev?.id === card.id ? null : card));
-    // console.log(history)
   };
 
-  const [deckPrice, setDeckPrice] = useState<number>(0);
-  const [costMap, setCostMap] = useState<Map<string, number>>(
-    new Map([
-      ['0', 0],
-      ['1', 0],
-      ['2', 0],
-      ['3', 0],
-      ['4', 0],
-      ['5', 0],
-      ['6', 0],
-      ['7', 0],
-      ['8', 0],
-      ['9', 0],
-      ['10', 0],
-    ])
-  );
-  const [rarityMap, setRarityMap] = useState<Map<string, number>>(
-    new Map([
-      ['L', 0],
-      ['C', 0],
-      ['UC', 0],
-      ['R', 0],
-      ['SR', 0],
-      ['SEC', 0],
-      ['PR', 0],
-      ['TR', 0],
-      ['DON', 0],
-    ])
-  );
-
-  const [counterMap, setCounterMap] = useState<Map<string, number>>(
-    new Map([
-      ['0', 0],
-      ['1000', 0],
-      ['2000', 0]
-    ])
-  )
   // #endregion
 
   // #region -- Filters
@@ -264,127 +266,139 @@ export default function Page() {
 
   // #region Actions
   const addToDeck = (card: OnePieceCard) => {
-    const count = deck.filter(c => c.product_id === card.product_id).length;
+    setDeck(prev => {
+      const { cards, leader, cost_map, rarity_map, counter_map, total_price } = prev;
 
-    if (count < 4) {
-      setDeck([...deck, card]);
-      setDeckPrice(prev =>
-        Math.round((prev + Number(card.market_price)) * 100) / 100
-      );
-      setCostMap(prev => {
-        const newMap = new Map(prev);
-        const key = String(card.cost ?? "0"); // normalize nulls
-        newMap.set(key, (newMap.get(key) ?? 0) + 1);
-        return newMap;
-      })
-      setCounterMap(prev => {
-        const newMap = new Map(prev);
-        const key = String(card.counter ?? "0");
-        newMap.set(key, (newMap.get(key) ?? 0) + 1);
-        return newMap;
-      })
-      setRarityMap(prev => {
-        const newMap = new Map(prev);
-        const key = card.rarity === "DON!!" ? "DON" : String(card.rarity ?? "0"); // normalize nulls
-        newMap.set(key, (newMap.get(key) ?? 0) + 1);
-        return newMap;
-      });
-    } else {
-      console.warn(`${card.name} is already at the max of 4 copies.`);
-    }
+      // ===== Validity Checks =====
+      const count = cards.filter(c => c.product_id === card.product_id).length;
+      const leaderCount = leader ? 1 : 0;
+      const validLeader = card.card_type === "Leader" ? (leaderCount < 1) : true;
+
+      if (count >= 4) {
+        console.warn(`${card.name} is already at the max of 4 copies.`);
+        return prev;
+      }
+
+      if (!validLeader) {
+        alert("You can only have one Leader card in your deck.");
+        return prev;
+      }
+
+      // ===== Leader Case =====
+      if (card.card_type === "Leader") {
+        // Leader should affect total_price but not other stats
+        const newPrice = Math.round((total_price + Number(card.market_price ?? 0)) * 100) / 100;
+        return { ...prev, leader: card, total_price: newPrice };
+      }
+
+      // ===== Normal Card Case =====
+      const newCards = [...cards, card];
+      const newPrice = Math.round((total_price + Number(card.market_price ?? 0)) * 100) / 100;
+
+      // Copy Maps
+      const newCostMap = new Map(cost_map);
+      const newRarityMap = new Map(rarity_map);
+      const newCounterMap = new Map(counter_map);
+
+      // Normalize and increment keys
+      const costKey = String(card.cost ?? "0");
+      newCostMap.set(costKey, (newCostMap.get(costKey) ?? 0) + 1);
+
+      const counterKey = String(card.counter ?? "0");
+      newCounterMap.set(counterKey, (newCounterMap.get(counterKey) ?? 0) + 1);
+
+      const rarityKey = card.rarity === "DON!!" ? "DON" : String(card.rarity ?? "0");
+      newRarityMap.set(rarityKey, (newRarityMap.get(rarityKey) ?? 0) + 1);
+
+      // ===== Return New Deck Object =====
+      return {
+        ...prev,
+        cards: newCards,
+        total_price: newPrice,
+        cost_map: newCostMap,
+        rarity_map: newRarityMap,
+        counter_map: newCounterMap,
+      };
+    });
   };
-
   const removeFromDeck = (card: OnePieceCard) => {
-    setDeck(deck => deck.filter((c, idx) => !(c.id === card.id && idx === deck.findLastIndex(d => d.id === card.id))));
-    setDeckPrice(prev =>
-      Math.round((prev - Number(card.market_price)) * 100) / 100
-    );
-    setCostMap(prev => {
-      const newMap = new Map(prev);
-      const key = String(card.cost ?? "0");
-      const current = newMap.get(key) ?? 0;
-      newMap.set(key, Math.max(0, current - 1)); // avoid negatives
-      return newMap;
-    });
-    setCounterMap(prev => {
-      const newMap = new Map(prev);
-      const key = String(card.counter ?? "0");
-      const current = newMap.get(key) ?? 0;
-      newMap.set(key, Math.max(0, current - 1)); // avoid negatives
-      return newMap;
-    });
-    setRarityMap(prev => {
-      const newMap = new Map(prev);
-      const key = card.rarity === "DON!!" ? "DON" : String(card.rarity ?? "0"); // normalize nulls
-      const current = newMap.get(key) ?? 0;
-      newMap.set(key, Math.max(0, current - 1)); // avoid negatives
-      return newMap;
+    setDeck(prev => {
+      const { leader, cards, total_price, cost_map, rarity_map, counter_map } = prev;
+
+      // ===== Leader Case =====
+      if (card.card_type === "Leader" && leader?.id === card.id) {
+        const newPrice = Math.round((total_price - Number(card.market_price ?? 0)) * 100) / 100;
+        return { ...prev, leader: null, total_price: Math.max(newPrice, 0) };
+      }
+
+      // ===== Normal Card Case =====
+      const indexToRemove = cards.findLastIndex(c => c.id === card.id);
+      if (indexToRemove === -1) return prev;
+
+      const newCards = [...cards];
+      const removedCard = newCards.splice(indexToRemove, 1)[0];
+
+      // Update total price
+      const newPrice = Math.round((total_price - Number(removedCard.market_price ?? 0)) * 100) / 100;
+
+      // Copy Maps
+      const newCostMap = new Map(cost_map);
+      const newRarityMap = new Map(rarity_map);
+      const newCounterMap = new Map(counter_map);
+
+      // Normalize and decrement keys
+      const costKey = String(removedCard.cost ?? "0");
+      newCostMap.set(costKey, Math.max((newCostMap.get(costKey) ?? 0) - 1, 0));
+
+      const counterKey = String(removedCard.counter ?? "0");
+      newCounterMap.set(counterKey, Math.max((newCounterMap.get(counterKey) ?? 0) - 1, 0));
+
+      const rarityKey =
+        removedCard.rarity === "DON!!" ? "DON" : String(removedCard.rarity ?? "0");
+      newRarityMap.set(rarityKey, Math.max((newRarityMap.get(rarityKey) ?? 0) - 1, 0));
+
+      // ===== Return Updated Deck =====
+      return {
+        ...prev,
+        cards: newCards,
+        total_price: Math.max(newPrice, 0),
+        cost_map: newCostMap,
+        rarity_map: newRarityMap,
+        counter_map: newCounterMap,
+      };
     });
   };
 
   const clearDeck = () => {
-    setDeck([])
-    setDeckPrice(0)
-    setCostMap(new Map([
-      ['0', 0],
-      ['1', 0],
-      ['2', 0],
-      ['3', 0],
-      ['4', 0],
-      ['5', 0],
-      ['6', 0],
-      ['7', 0],
-      ['8', 0],
-      ['9', 0],
-      ['10', 0],
-    ]))
-    setCounterMap(new Map([
-      ['0', 0],
-      ['1000', 0],
-      ['2000', 0]
-    ]))
-    setRarityMap(new Map([
-      ['L', 0],
-      ['C', 0],
-      ['UC', 0],
-      ['R', 0],
-      ['SR', 0],
-      ['SEC', 0],
-      ['PR', 0],
-      ['TR', 0],
-      ['DON', 0],
-    ]))
-  }
+    setDeck(prev => ({
+      name: prev.name,
+      leader: null,
+      cards: [],
+      total_price: 0,
+      cost_map: new Map(BASE_COST_MAP),
+      rarity_map: new Map(BASE_RARITY_MAP),
+      counter_map: new Map(BASE_COUNTER_MAP),
+    }));
+  };
 
   const costData = useMemo(() => {
-    return Array.from(costMap.entries())
+    return Array.from(deck.cost_map.entries())
       .map(([cost, count]) => ({ cost, count }))
-      .sort(
-        (a, b) =>
-          (a.cost === "none" ? 999 : +a.cost) -
-          (b.cost === "none" ? 999 : +b.cost)
+      .sort((a, b) =>
+        (a.cost === "none" ? 999 : +a.cost) -
+        (b.cost === "none" ? 999 : +b.cost)
       );
-  }, [costMap]);
+  }, [deck.cost_map]);
 
   const rarityData = useMemo(() => {
-    return Array.from(rarityMap.entries())
-      .map(([rarity, count]) => ({ rarity, count }))
-      .sort(
-        (a, b) =>
-          (a.rarity === "none" ? 999 : +a.rarity) -
-          (b.rarity === "none" ? 999 : +b.rarity)
-      );
-  }, [rarityMap]);
+    return Array.from(deck.rarity_map.entries())
+      .map(([rarity, count]) => ({ rarity, count }));
+  }, [deck.rarity_map]);
 
   const counterData = useMemo(() => {
-    return Array.from(counterMap.entries())
-      .map(([counter, count]) => ({ counter, count }))
-      .sort(
-        (a, b) =>
-          (a.counter === "none" ? 999 : +a.counter) -
-          (b.counter === "none" ? 999 : +b.counter)
-      )
-  }, [counterMap])
+    return Array.from(deck.counter_map.entries())
+      .map(([counter, count]) => ({ counter, count }));
+  }, [deck.counter_map]);
   // #endregion
 
   if (loading) return <p>Loading cards…</p>;
@@ -430,7 +444,6 @@ export default function Page() {
           onCloseModal={handleRightClick}
           card={previewTarget}
           deck={deck}
-          deckPrice={deckPrice}
           costData={costData}
           counterData={counterData}
           rarityData={rarityData}

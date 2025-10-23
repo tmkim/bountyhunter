@@ -28,6 +28,10 @@ export type OnePieceDeck = {
   name: string;
   leader: OnePieceCard | null;
   cards: OnePieceCard[];
+  total_price: number;
+  cost_map: Map<string, number>;
+  rarity_map: Map<string, number>;
+  counter_map: Map<string, number>;
 };
 
 export type OnePieceCardHistory = {
