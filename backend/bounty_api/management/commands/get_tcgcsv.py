@@ -110,7 +110,7 @@ class Command(BaseCommand):
 
     def get_csvs(self, set_list):
         print("Fetching most recent price lists")
-        # curr_date = '2025-09-24'
+        # curr_date = '2025-10-23'
         curr_date = datetime.today().strftime("%Y-%m-%d")
         prices_dir = Path("prices") / curr_date
         prices_dir.mkdir(parents=True, exist_ok=True)
@@ -147,13 +147,18 @@ class Command(BaseCommand):
             "extAttribute", "extCost", "extCounterplus"
         ]
 
-        # curr_date = '2025-09-24'
+        # curr_date = '2025-10-23'
         curr_date = datetime.now()
         csv_list = list(csv_dir.iterdir())
         df_list = []
 
         for file in csv_list:
-            df = pd.read_csv(file)
+            logging.info(f'ETL for file: {file}')
+            try:
+                df = pd.read_csv(file)
+            except Exception as e:
+                continue
+
             for col in EXPECTED_INPUT:
                 if col not in df.columns:
                     df[col] = pd.NA
