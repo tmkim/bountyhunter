@@ -1,9 +1,11 @@
 "use client";
 import { OnePieceCard, OnePieceDeck } from "@/bh_lib/types";
 import Image from "next/image";
+import { useState } from "react";
 
 type Props = {
   deck: OnePieceDeck;
+  onRename: (name: string) => void;
   onClear: () => void;
   onRemove: (card: OnePieceCard) => void;
   onRightClick: (c: OnePieceCard) => void;   
@@ -25,7 +27,25 @@ function groupDeck(deck: OnePieceDeck): GroupedDeck[] {
   return Array.from(map.values());
 }
 
-export default function ActiveDeck({ deck, onRightClick, onClear, onRemove }: Props) {
+export default function ActiveDeck({ deck, onRename, onRightClick, onClear, onRemove }: Props) {
+
+    const [isEditing, setIsEditing] = useState(false);
+    const [tempName, setTempName] = useState(deck.name || "");
+
+    const handleBlur = () => {
+        setIsEditing(false);
+        onRename(tempName.trim() || "Untitled Deck")
+    };
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      (e.target as HTMLInputElement).blur(); // trigger blur to save
+    } else if (e.key === "Escape") {
+      setTempName(deck.name); // revert changes
+      setIsEditing(false);
+    }
+  };
+
     return (
         <section className="basis-[35%] flex flex-col rounded-lg 
                             overflow-auto bg-lapis shadow p-4 min-h-[350px]">
@@ -38,7 +58,25 @@ export default function ActiveDeck({ deck, onRightClick, onClear, onRemove }: Pr
                     Save
                 </button>
                 
-                <span className="font-bold text-lg text-tangerine">Active Deck</span>
+                {isEditing ? (
+                    <input
+                    type="text"
+                    autoFocus
+                    value={tempName}
+                    onChange={(e) => setTempName(e.target.value)}
+                    onBlur={handleBlur}
+                    onKeyDown={handleKeyDown}
+                    className="border-b-2 border-tangerine bg-transparent text-lg font-bold text-tangerine focus:outline-none focus:border-orange-500 text-center"
+                    />
+                ) : (
+                    <span
+                    className="cursor-pointer font-bold text-lg text-tangerine hover:opacity-80"
+                    onClick={() => setIsEditing(true)}
+                    title="Click to rename deck"
+                    >
+                    {deck.name || "Untitled Deck"}
+                    </span>
+                )}
                 
                 <button
                     onClick={onClear}

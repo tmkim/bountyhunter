@@ -48,6 +48,11 @@ export default function Page() {
     if (savedWidth) {
       setLeftWidth(parseFloat(savedWidth));
     }
+
+    // const savedDeck = localStorage.getItem("activeDeck");
+    // if (savedDeck) {
+    //   setDeck(JSON.parse(savedDeck));
+    // }
   }, []);
 
   // Save to localStorage whenever leftWidth changes
@@ -98,6 +103,40 @@ export default function Page() {
     rarity_map: new Map(BASE_RARITY_MAP),
     counter_map: new Map(BASE_COUNTER_MAP)
   });
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      // Convert Maps to arrays
+      const deckToSave = {
+        ...deck,
+        cost_map: Array.from(deck.cost_map.entries?.() || []),
+        rarity_map: Array.from(deck.rarity_map.entries?.() || []),
+        counter_map: Array.from(deck.counter_map.entries?.() || []),
+      };
+
+      localStorage.setItem("activeDeck", JSON.stringify(deckToSave));
+      }, 1000); // 500 ms debounce
+
+    return () => clearTimeout(handler); // cancel timeout on re-render
+  }, [deck]);
+
+useEffect(() => {
+  const saved = localStorage.getItem("activeDeck");
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+
+      parsed.cost_map = new Map(parsed.cost_map || []);
+      parsed.rarity_map = new Map(parsed.rarity_map || []);
+      parsed.counter_map = new Map(parsed.counter_map || []);
+
+      setDeck(parsed);
+    } catch {
+      console.warn("Failed to parse saved deck, clearing storage");
+      localStorage.removeItem("activeDeck");
+    }
+  }
+}, []);
 
   const [previewCard, setPreviewCard] = useState<OnePieceCard | null>(null);
 
@@ -265,6 +304,13 @@ export default function Page() {
   // #endregion
 
   // #region Deck Actions
+  const renameDeck = (newName: string) => {
+    setDeck(prev => ({
+      ...prev,
+      name: newName
+    }))
+  }
+
   const addToDeck = (card: OnePieceCard) => {
     setDeck(prev => {
       const { cards, leader, cost_map, rarity_map, counter_map, total_price } = prev;
@@ -384,6 +430,7 @@ export default function Page() {
   };
 
   const clearDeck = () => {
+    localStorage.removeItem("activeDeck");
     setDeck(prev => ({
       name: prev.name,
       leader: null,
@@ -427,6 +474,7 @@ export default function Page() {
       >
         <ActiveDeck
           deck={deck}
+          onRename={renameDeck}
           onClear={clearDeck}
           onRemove={removeFromDeck}
           onRightClick={handleRightClick}
