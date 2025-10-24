@@ -22,7 +22,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`flex flex-col  ${inter.className} h-screen bg-lapis text-black`}>
         <Navbar />
-        <main className="flex-1 overflow-hidden bg-brown">{children}</main>
+        <main className="flex-1 bg-brown">{children}</main>
       </body>
     </html>
   );

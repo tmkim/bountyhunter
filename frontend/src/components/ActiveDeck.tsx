@@ -28,7 +28,7 @@ function groupDeck(deck: OnePieceDeck): GroupedDeck[] {
 export default function ActiveDeck({ deck, onRightClick, onClear, onRemove }: Props) {
     return (
         <section className="basis-[35%] flex flex-col rounded-lg 
-                            overflow-x bg-lapis shadow p-4 min-h-[350px]">
+                            overflow-auto bg-lapis shadow p-4 min-h-[350px]">
             <div className="mb-2 flex items-center justify-between">
                 <button
                     // onClick={onClear}

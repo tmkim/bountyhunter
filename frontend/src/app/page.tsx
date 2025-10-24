@@ -264,7 +264,7 @@ export default function Page() {
   }, [filters]);
   // #endregion
 
-  // #region Actions
+  // #region Deck Actions
   const addToDeck = (card: OnePieceCard) => {
     setDeck(prev => {
       const { cards, leader, cost_map, rarity_map, counter_map, total_price } = prev;
@@ -415,14 +415,15 @@ export default function Page() {
   }, [deck.counter_map]);
   // #endregion
 
+  // #region -- Render
   if (loading) return <p>Loading cards…</p>;
 
   return (
-    <div className="h-full w-full px-10 py-6 flex flex-1 gap-4 overflow-x-auto overflow-y-hidden">
+    <div className="py-5 h-[calc(100vh-60px)] min-h-full w-full flex flex-1 overflow-auto">
       {/* Left Column */}
       <div
-        className="flex flex-col gap-4 flex-shrink min-w-[700px]"
-        style={{ flexBasis: `${leftWidth}%`, flexGrow: 0, flexShrink: 1 }}
+        className="pl-5 flex flex-col min-w-[710px] gap-4"
+        style={{ flexBasis: `${leftWidth}%`, flexGrow: 1, flexShrink: 1 }}
       >
         <ActiveDeck
           deck={deck}
@@ -444,13 +445,14 @@ export default function Page() {
 
       {/* Divider */}
       <div
-        className="flex-shrink-0 w-2 cursor-col-resize bg-gray-300 hover:bg-gray-400"
+        className="mx-5 flex-shrink-0 w-2 min-h-[865px]
+                   cursor-col-resize bg-gray-300 hover:bg-gray-400"
         onMouseDown={handleMouseDown}
       />
 
       {/* Right Column */}
       <div
-        className="flex flex-col flex-shrink min-w-[420px]"
+        className="pr-5 flex flex-col flex-shrink min-w-[420px]"
         style={{ flexBasis: `${100 - leftWidth}%`, flexGrow: 1, flexShrink: 1 }}
       >
         <DetailsPanel
@@ -465,4 +467,5 @@ export default function Page() {
     </div>
 
   );
+  // #endregion
 }

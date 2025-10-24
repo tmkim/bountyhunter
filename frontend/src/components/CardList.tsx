@@ -37,7 +37,7 @@ export default function CardList({ allCards, search, filters,
 
     return (
         <section className="basis-[65%] rounded-lg bg-lapis min-h-[500px]
-                            overflow-x-auto shadow p-4 flex flex-col">
+                            overflow-auto shadow p-4 flex flex-col">
             {/* <h2 className="mb-2 font-semibold text-tangerine">Card List</h2> */}
             <div className="flex items-center gap-6 overflow-x-auto pb-2">
                 <div className="min-w-[436px]">
@@ -113,7 +113,7 @@ export default function CardList({ allCards, search, filters,
 
             {/* 2a Filter + Search */}
             <form
-                className="mb-4 flex items-center gap-2"
+                className="flex gap-2 flex-shrink-0 py-4"
                 onSubmit={(e) => {
                 e.preventDefault();
                 applySearch();
@@ -124,13 +124,13 @@ export default function CardList({ allCards, search, filters,
                     placeholder="Search cards by name or card id..."
                     value={draftSearch}
                     onChange={(e) => setDraftSearch(e.target.value)}
-                    className="flex-grow bg-white text-black rounded border px-2 py-1 min-w-[420px]"
+                    className="flex-grow bg-white text-black rounded border px-2 py-1"
                 />
                 <button
                     type="button"
                     onClick={() => setShowMoreFilters((prev) => !prev)}
                     className="rounded bg-rosso text-white px-3 py-1 font-medium 
-                                hover:text-tangerine hover:cursor-pointer min-w-[115px]"
+                                hover:text-tangerine hover:cursor-pointer min-w-[120px]"
                     >
                     {showMoreFilters ? "Hide Filters" : "More Filters"}
                 </button>
@@ -138,7 +138,7 @@ export default function CardList({ allCards, search, filters,
                     type="button"
                     onClick={clearFilter}
                     className="rounded bg-rosso text-white px-3 py-1 font-medium 
-                                hover:text-tangerine hover:cursor-pointer min-w-[115px]"
+                                hover:text-tangerine hover:cursor-pointer min-w-[120px]"
                     >
                     Clear Filters
                 </button>
