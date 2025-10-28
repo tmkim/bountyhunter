@@ -17,9 +17,15 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import include, path
+from .views import auth_views
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
     path('bounty_api/', include('bounty_api.urls')),
     path('api-auth/', include('rest_framework.urls')),
+#   ]
+    path('api/auth/register/', auth_views.register, name='register'),
+    path('api/auth/login/', auth_views.login, name='login'),
+    path('api/auth/logout/', auth_views.logout, name='logout'),
+    path('api/auth/user/', auth_views.user_info, name='user-info'),
 ]
