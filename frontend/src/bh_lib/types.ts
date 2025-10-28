@@ -48,3 +48,5 @@ export interface HistoryData{
 }
 
 export type FilterValue = Set<string> | [number, number]
+
+export type Filters = Record<string, FilterValue>;

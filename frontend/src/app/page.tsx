@@ -4,8 +4,9 @@ import CardList from "@/components/CardList";
 import DetailsPanel from "@/components/DetailsPanel";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useCards } from "@/hooks/useCards";
-import { OnePieceCard, OnePieceCardHistory, FilterValue } from "@/bh_lib/types";
+import { OnePieceCard, OnePieceCardHistory, FilterValue, Filters } from "@/bh_lib/types";
 import { OnePieceDeck } from "@/bh_lib/types";
+import { serialize } from "v8";
 
 const BASE_COST_MAP = new Map([
   ['0', 0],
@@ -36,9 +37,38 @@ const BASE_COUNTER_MAP =  new Map([
   ['2000', 0]
 ])
 
+function serializeFilters(filters: Filters): Record<string, any>{
+  const obj: Record<string, any> = {};
+  for (const key in filters) {
+    const value = filters[key];
+    if (value instanceof Set) {
+      obj[key] = Array.from(value);
+    } else {
+      obj[key] = value;
+    }
+  }
+  return obj;
+}
+
+function deserializeFilters(obj: Record<string, any>): Filters {
+  const filters: Filters = {};
+  for (const key in obj) {
+    const value = obj[key];
+    // heuristic: arrays of numbers are [number, number], arrays of strings are Sets
+    if (Array.isArray(value)) {
+      if (value.length === 2 && typeof value[0] === "number" && typeof value[1] === "number") {
+        filters[key] = value as [number, number];
+      } else {
+        filters[key] = new Set(value as string[]);
+      }
+    }
+  }
+  return filters;
+}
+
 export default function Page() {
 
-  // #region -- resizable column layout
+  // #region -- Resizable column layout
   const isDragging = useRef(false);
   const [leftWidth, setLeftWidth] = useState(60);
 
@@ -91,7 +121,6 @@ export default function Page() {
 
   // #region -- Set up card/deck management state
   const { cards: allCards, loading } = useCards();
-  const [search, setSearch] = useState("");
 
   // const [deck, setDeck] = useState<OnePieceCard[]>([]);
   const [deck, setDeck] = useState<OnePieceDeck>({ 
@@ -115,28 +144,28 @@ export default function Page() {
       };
 
       localStorage.setItem("activeDeck", JSON.stringify(deckToSave));
-      }, 1000); // 500 ms debounce
+      }, 1000);
 
     return () => clearTimeout(handler); // cancel timeout on re-render
   }, [deck]);
 
-useEffect(() => {
-  const saved = localStorage.getItem("activeDeck");
-  if (saved) {
-    try {
-      const parsed = JSON.parse(saved);
+  useEffect(() => {
+    const saved = localStorage.getItem("activeDeck");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
 
-      parsed.cost_map = new Map(parsed.cost_map || []);
-      parsed.rarity_map = new Map(parsed.rarity_map || []);
-      parsed.counter_map = new Map(parsed.counter_map || []);
+        parsed.cost_map = new Map(parsed.cost_map ?? []);
+        parsed.rarity_map = new Map(parsed.rarity_map ?? []);
+        parsed.counter_map = new Map(parsed.counter_map ?? []);
 
-      setDeck(parsed);
-    } catch {
-      console.warn("Failed to parse saved deck, clearing storage");
-      localStorage.removeItem("activeDeck");
+        setDeck(parsed);
+      } catch {
+        console.warn("Failed to parse saved deck, clearing storage");
+        localStorage.removeItem("activeDeck");
+      }
     }
-  }
-}, []);
+  }, []);
 
   const [previewCard, setPreviewCard] = useState<OnePieceCard | null>(null);
 
@@ -152,10 +181,10 @@ useEffect(() => {
 
   // The active search string that actually filters cards
   const [activeSearch, setActiveSearch] = useState<string>("");
-
   const [filters, setFilters] = useState<Record<string, FilterValue>>({});
 
   const clearAllFilters = () => {
+    localStorage.removeItem("activeFilters");
     setFilters({});
   };
 
@@ -294,13 +323,30 @@ useEffect(() => {
     else return 1;
   });
 
-  useEffect(() => {
-    console.log("Filtered Cards: ", filteredCards.length)
-  }, [filteredCards]);
+  // useEffect(() => {
+  //   console.log("Filtered Cards: ", filteredCards.length)
+  // }, [filteredCards]);
 
   useEffect(() => {
     console.log("Filters updated:", filters);
+    const handler = setTimeout(() => {
+      localStorage.setItem("activeFilters", JSON.stringify(serializeFilters(filters)));
+      }, 1000); 
+
+    return () => clearTimeout(handler); // cancel timeout on re-render
   }, [filters]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("activeFilters");
+    if (saved) {
+      try {
+        setFilters(deserializeFilters(JSON.parse(saved)));
+      } catch {
+        console.warn("Failed to parse saved filters, clearing storage");
+        localStorage.removeItem("activeFilters");
+      }
+    }
+  }, []);
   // #endregion
 
   // #region Deck Actions
