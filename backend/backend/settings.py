@@ -39,12 +39,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework_simplejwt.token_blacklist',
-    "rest_framework",
-    "corsheaders",
-    "bounty_api",
+    'rest_framework',
+    'corsheaders',
+    'bounty_api',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -52,7 +53,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     
 ]
 
@@ -68,18 +68,16 @@ REST_FRAMEWORK = {
     # ]
 }
 
-CORS_ALLOW_ALL_ORIGINS = True  # (TODO: restrict to frontend URL)
+# CORS_ALLOW_ALL_ORIGINS = True  # (TODO: restrict to frontend URL)
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:8000"
+    "http://localhost:3000", # Frontend
     # "https://tmkim.bio",
     # "https://your-vercel-app.vercel.app",
 ]
 
 CORS_ALLOW_CREDENTIALS = True  # allow cookies
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:8000"
+    "http://localhost:3000", # Frontend
     # "https://tmkim.bio",
     # "https://your-vercel-app.vercel.app",
 ]

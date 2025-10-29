@@ -25,7 +25,8 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),
 #   ]
     path('api/auth/register/', auth_views.register, name='register'),
-    path('api/auth/login/', auth_views.login, name='login'),
-    path('api/auth/logout/', auth_views.logout, name='logout'),
+    path('api/auth/login/', auth_views.cookie_login_view, name='cookie_login'),
+    path('api/auth/logout/', auth_views.cookie_logout_view, name='cookie_logout'),
+    path('api/auth/refresh/', auth_views.cookie_refresh_view, name='cookie_refresh'),
     path('api/auth/user/', auth_views.user_info, name='user-info'),
 ]

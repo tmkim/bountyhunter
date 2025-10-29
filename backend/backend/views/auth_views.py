@@ -71,3 +71,70 @@ def logout(request):
 def user_info(request):
     user = request.user
     return Response({'username': user.username})
+
+# Cookie-based auth below 
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def cookie_login_view(request):
+    from django.contrib.auth import authenticate
+
+    username = request.data.get("username")
+    password = request.data.get("password")
+    user = authenticate(username=username, password=password)
+
+    if user is None:
+        return Response({"detail": "Invalid credentials"}, status=400)
+
+    refresh = RefreshToken.for_user(user)
+    res = Response({"detail": "Login successful"})
+    res.set_cookie(
+        key="access",
+        value=str(refresh.access_token),
+        httponly=True,
+        secure=False,  # change to True in production (HTTPS only)
+        samesite="Lax",
+        max_age=60 * 5,  # access token lifetime
+    )
+    res.set_cookie(
+        key="refresh",
+        value=str(refresh),
+        httponly=True,
+        secure=False,
+        samesite="Lax",
+        max_age=60 * 60 * 24,  # refresh token lifetime
+    )
+    return res
+
+@api_view(["POST"])
+def cookie_logout_view(request):
+    res = Response({"detail": "Logout successful"})
+    res.delete_cookie("access")
+    res.delete_cookie("refresh")
+    return res
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def cookie_refresh_view(request):
+    from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+    from rest_framework_simplejwt.exceptions import TokenError
+
+    refresh_token = request.COOKIES.get("refresh")
+    if not refresh_token:
+        return Response({"detail": "No refresh token"}, status=400)
+
+    try:
+        refresh = RefreshToken(refresh_token)
+        new_access = refresh.access_token
+        res = Response({"detail": "Token refreshed"})
+        res.set_cookie(
+            key="access",
+            value=str(new_access),
+            httponly=True,
+            secure=False,
+            samesite="Lax",
+            max_age=60 * 5,
+        )
+        return res
+    except TokenError:
+        return Response({"detail": "Invalid refresh token"}, status=401)
