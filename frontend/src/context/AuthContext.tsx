@@ -30,11 +30,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const isRefreshing = useRef(false);
-  const router = useRouter(); // ✅ Add this
+  const router = useRouter();
 
   const fetchUser = useCallback(async () => {
     try {
-      const res = await fetch("/api/user/", { credentials: "include" });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/user/`, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch user");
       const data = await res.json();
       setUser(data);
@@ -51,7 +51,7 @@ const refreshUser = useCallback(async () => {
   isRefreshing.current = true;
 
   try {
-    const res = await fetch("/api/token/refresh/", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/token/refresh/`, {
       method: "POST",
       credentials: "include",
     });
@@ -63,10 +63,10 @@ const refreshUser = useCallback(async () => {
   } catch (err) {
     console.error("Refresh failed, logging out:", err);
 
-    const wasLoggedIn = !!user; // ✅ only redirect if they *were* logged in
+    const wasLoggedIn = !!user;
     setUser(null);
 
-    await fetch("/api/logout/", {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout/`, {
       method: "POST",
       credentials: "include",
     });
@@ -82,7 +82,7 @@ const refreshUser = useCallback(async () => {
 
 
   const login = async (username: string, password: string) => {
-    const res = await fetch("/api/login/", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
@@ -97,7 +97,7 @@ const refreshUser = useCallback(async () => {
   };
 
   const register = async (username: string, email: string, password: string) => {
-    const res = await fetch("/api/register/", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, email, password }),
@@ -112,25 +112,25 @@ const refreshUser = useCallback(async () => {
   };
 
   const logout = async () => {
-    await fetch("/api/logout/", {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout/`, {
       method: "POST",
       credentials: "include",
     });
     setUser(null);
   };
 
-  // 🔹 Try to fetch user on initial mount
+  // Try to fetch user on initial mount
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
 
-  // 🔹 Auto-refresh every 4 minutes
+  // Auto-refresh every 4 minutes
   useEffect(() => {
     const interval = setInterval(() => refreshUser(), 4 * 60 * 1000);
     return () => clearInterval(interval);
   }, [refreshUser]);
 
-  // 🔹 Refresh when tab regains focus
+  // Refresh when tab regains focus
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") refreshUser();

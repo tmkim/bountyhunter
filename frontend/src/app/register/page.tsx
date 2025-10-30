@@ -12,9 +12,9 @@ export default function RegisterPage() {
     e.preventDefault();
     try {
       await register(username, email, password);
-      alert("Logged in!");
+      alert("User Registered!");
     } catch {
-      alert("Login failed");
+      alert("Registration Failed");
     }
   };
 
@@ -35,7 +35,7 @@ export default function RegisterPage() {
         className="border p-2 rounded"
       />
       <button type="submit" className="bg-blue-500 text-white rounded p-2">
-        Login
+        Register
       </button>
     </form>
   );
