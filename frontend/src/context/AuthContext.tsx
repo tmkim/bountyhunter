@@ -33,6 +33,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
 
   const fetchUser = useCallback(async () => {
+    if (!user) return
+    
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/user/`, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch user");
@@ -47,7 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
 const refreshUser = useCallback(async () => {
-  if (isRefreshing.current) return;
+  if (isRefreshing.current || !user) return;
   isRefreshing.current = true;
 
   try {
@@ -126,6 +128,8 @@ const refreshUser = useCallback(async () => {
 
   // Auto-refresh every 4 minutes
   useEffect(() => {
+    if (!user) return
+
     const interval = setInterval(() => refreshUser(), 4 * 60 * 1000);
     return () => clearInterval(interval);
   }, [refreshUser]);
