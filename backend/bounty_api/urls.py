@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 # from .views import CustomTokenObtainPairView, ItemViewSet, ImageViewSet, SelectOptionViewSet
 from .views import OnePieceSetViewSet, OnePieceCardViewSet, OnePieceCardHistoryViewSet, OnePieceDeckViewSet, OnePieceDeckCardViewSet
-
+from .views import RegisterView, VerifyEmailView
 
 # Create a router and register our ViewSets with it.
 router = DefaultRouter()
@@ -15,7 +15,7 @@ router.register(r'onepiece_deckcard', OnePieceDeckCardViewSet, basename='onepiec
 
 # The API URLs are now determined automatically by the router.
 urlpatterns = [
-    # path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    # path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('', include(router.urls)),
+    path("register/", RegisterView.as_view(), name="register"),
+    path("verify-email/", VerifyEmailView.as_view(), name="verify-email"),
 ]

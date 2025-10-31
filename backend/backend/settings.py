@@ -189,3 +189,8 @@ SIMPLE_JWT = {
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     "TOKEN_BLACKLIST_ENABLED": True,
 }
+
+AUTH_USER_MODEL = "bounty_api.User"
+FRONTEND_URL = "http://localhost:3000"
+DEFAULT_FROM_EMAIL = "no-reply@tmkim.bio"
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend" 
