@@ -25,14 +25,14 @@ export default function RegisterPage() {
         placeholder="Username"
         value={username}
         onChange={e => setUsername(e.target.value)}
-        className="border p-2 rounded"
+        className="border p-2 rounded bg-white"
       />
       <input
         type="password"
         placeholder="Password"
         value={password}
         onChange={e => setPassword(e.target.value)}
-        className="border p-2 rounded"
+        className="border p-2 rounded bg-white"
       />
       <button type="submit" className="bg-blue-500 text-white rounded p-2">
         Register

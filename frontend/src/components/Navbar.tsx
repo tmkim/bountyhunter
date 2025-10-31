@@ -15,15 +15,23 @@ export default function Navbar() {
                     </button> */}
                 {user ? (
                     <div className="flex gap-4 items-center">
-                        <span>Hello, {user.username}</span>
+                        <span>{user.username}</span>
                         <button onClick={logout} className="bg-red-500 px-3 py-1 rounded">
                             Logout
                         </button>
                     </div>
                 ) : (
                     <div className="flex gap-4">
-                        <Link href="/login">Login</Link>
-                        <Link href="/register">Register</Link>
+                        <Link href="/login"
+                        className="px-2 py-1 font-medium bg-rosso text-white rounded 
+                        hover:text-tangerine hover:cursor-pointer">
+                            Login
+                        </Link>    
+                        <Link href="/register"
+                        className="px-2 py-1 font-medium bg-rosso text-white rounded 
+                        hover:text-tangerine hover:cursor-pointer">
+                            Register
+                        </Link>
                     </div>
                 )}
             </nav>
