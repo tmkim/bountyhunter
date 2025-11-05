@@ -65,12 +65,11 @@ export default function RegisterPage() {
       <div className="w-full max-w-md bg-lapis p-6 rounded-2xl shadow">
         <h1 className="text-2xl text-tangerine font-semibold text-center mb-4">Create Account</h1>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-white">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Username</label>
             <input
               {...register("username")}
-              className="w-full border rounded p-2"
+              className="w-full border rounded p-2 bg-white"
               placeholder="Enter username"
             />
             {errors.username && (
@@ -79,10 +78,9 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
             <input
               {...register("email")}
-              className="w-full border rounded p-2"
+              className="w-full border rounded p-2 bg-white"
               placeholder="Enter email"
             />
             {errors.email && (
@@ -91,11 +89,10 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Password</label>
             <input
               type="password"
               {...register("password")}
-              className="w-full border rounded p-2"
+              className="w-full border rounded p-2 bg-white"
               placeholder="Enter password"
             />
             {errors.password && (
@@ -104,11 +101,10 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Confirm Password</label>
             <input
               type="password"
               {...register("confirm_password")}
-              className="w-full border rounded p-2"
+              className="w-full border rounded p-2 bg-white"
               placeholder="Re-enter password"
             />
             {errors.confirm_password && (
@@ -124,7 +120,8 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-maya text-white py-2 rounded hover:bg-blue-300 transition"
+            className="w-full bg-maya text-white py-2 rounded 
+            hover:bg-rosso hover:cursor-pointer transition"
           >
             {isSubmitting ? "Registering..." : "Register"}
           </button>
