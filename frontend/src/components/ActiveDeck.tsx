@@ -53,7 +53,7 @@ export default function ActiveDeck({ deck, onRename, onRightClick, onClear, onRe
                 <button
                     // onClick={onClear}
                     className="px-2 py-1 font-medium bg-rosso text-white rounded 
-                    hover:text-tangerine hover:cursor-pointer"
+                    hover:bg-rosso-700 hover:cursor-pointer"
                 >
                     Save
                 </button>
@@ -81,7 +81,7 @@ export default function ActiveDeck({ deck, onRename, onRightClick, onClear, onRe
                 <button
                     onClick={onClear}
                     className="px-2 py-1 font-medium bg-rosso text-white rounded 
-                    hover:text-tangerine hover:cursor-pointer"
+                    hover:bg-rosso-700 hover:cursor-pointer"
                 >
                     Clear
                 </button>

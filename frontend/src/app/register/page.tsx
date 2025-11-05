@@ -65,7 +65,8 @@ export default function RegisterPage() {
       <div className="w-full max-w-md bg-lapis p-6 rounded-2xl shadow">
         <h1 className="text-2xl text-tangerine font-semibold text-center mb-4">Create Account</h1>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} 
+        className="space-y-4 bg-maya rounded-2xl p-6 shadow">
           <div>
             <input
               {...register("username")}
@@ -73,7 +74,7 @@ export default function RegisterPage() {
               placeholder="Enter username"
             />
             {errors.username && (
-              <p className="text-red-500 text-sm mt-1">{errors.username.message}</p>
+              <p className="text-rosso text-lg mt-1">{errors.username.message}</p>
             )}
           </div>
 
@@ -84,7 +85,7 @@ export default function RegisterPage() {
               placeholder="Enter email"
             />
             {errors.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+              <p className="text-rosso text-lg mt-1">{errors.email.message}</p>
             )}
           </div>
 
@@ -96,7 +97,7 @@ export default function RegisterPage() {
               placeholder="Enter password"
             />
             {errors.password && (
-              <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+              <p className="text-rosso text-lg mt-1">{errors.password.message}</p>
             )}
           </div>
 
@@ -108,20 +109,20 @@ export default function RegisterPage() {
               placeholder="Re-enter password"
             />
             {errors.confirm_password && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="text-rosso text-lg mt-1">
                 {errors.confirm_password.message}
               </p>
             )}
           </div>
 
-          {serverError && <p className="text-rosso text-center">{serverError}</p>}
-          {successMessage && <p className="text-tangerine text-center">{successMessage}</p>}
+          {serverError && <p className="text-rosso text-lg text-center">{serverError}</p>}
+          {successMessage && <p className="text-tangerine text-lg text-center">{successMessage}</p>}
 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-maya text-white py-2 rounded 
-            hover:bg-rosso hover:cursor-pointer transition"
+            className="w-full bg-rosso text-white py-2 rounded text-lg
+            hover:bg-rosso-700 hover:cursor-pointer transition"
           >
             {isSubmitting ? "Registering..." : "Register"}
           </button>

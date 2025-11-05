@@ -130,7 +130,7 @@ export default function CardList({ allCards, search, filters,
                     type="button"
                     onClick={() => setShowMoreFilters((prev) => !prev)}
                     className="rounded bg-rosso text-white px-3 py-1 font-medium 
-                                hover:text-tangerine hover:cursor-pointer min-w-[120px]"
+                                hover:bg-rosso-700 hover:cursor-pointer min-w-[120px]"
                     >
                     {showMoreFilters ? "Hide Filters" : "More Filters"}
                 </button>
@@ -138,7 +138,7 @@ export default function CardList({ allCards, search, filters,
                     type="button"
                     onClick={clearFilter}
                     className="rounded bg-rosso text-white px-3 py-1 font-medium 
-                                hover:text-tangerine hover:cursor-pointer min-w-[120px]"
+                                hover:bg-rosso-700 hover:cursor-pointer min-w-[120px]"
                     >
                     Clear Filters
                 </button>

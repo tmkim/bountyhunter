@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function VerifyEmailPage() {
@@ -38,16 +39,27 @@ export default function VerifyEmailPage() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen text-center px-6">
-      <h1 className="text-3xl font-semibold mb-4">Email Verification</h1>
-      <p className={`text-lg ${status === "success" ? "text-green-600" : status === "error" ? "text-red-600" : ""}`}>
-        {message}
-      </p>
-      {status === "success" && (
-        <a href="/login" className="mt-6 text-blue-600 hover:underline">
-          Go to Login
-        </a>
-      )}
+    <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      <div className="w-full max-w-md bg-lapis p-6 rounded-2xl shadow">
+          <h1 className={`text-2xl pb-6 ${status === "success" ? "text-tangerine" : status === "error" ? "text-rosso" : ""}`}>
+            {message}
+          </h1>
+          {status === "success" && (
+            <div className="flex justify-between">
+            <Link href="/"
+                className="px-6 py-1 font-medium bg-rosso text-white rounded 
+                hover:text-tangerine hover:cursor-pointer">
+                    Home
+            </Link> 
+            <Link href="/login"
+                className="px-6 py-1 font-medium bg-rosso text-white rounded 
+                hover:text-tangerine hover:cursor-pointer">
+                    Login
+            </Link> 
+            </div>
+          )}
+      </div>
     </div>
+
   );
 }
