@@ -1,14 +1,18 @@
 from rest_framework import viewsets, generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from .models import OnePieceSet, OnePieceCard, OnePieceCardHistory, OnePieceDeck, OnePieceDeckCard
 from .serializers import RegisterSerializer, OnePieceSetSerializer, OnePieceCardSerializer, \
                          OnePieceCardHistorySerializer, OnePieceDeckSerializer, OnePieceDeckCardSerializer
-from .utils import generate_verification_link, signer
+from .utils import generate_verification_link
+
 from django.conf import settings
 from django.core.mail import send_mail
-from django.core.signing import BadSignature
+from django.core.signing import BadSignature, SignatureExpired, loads
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+
 
 User = get_user_model()
 
@@ -42,17 +46,23 @@ class RegisterView(generics.CreateAPIView):
     
 class VerifyEmailView(APIView):
     def get(self, request):
-        token = request.query_params.get("token")
+        token = request.GET.get('token')
+        if not token:
+            return Response({'detail': 'Missing token.'}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            user_id = signer.unsign(token)
-            user = User.objects.get(pk=user_id)
-            if user.is_active:
-                return Response({"message": "Account already verified."})
+            data = loads(token, max_age=60*60*24)  # 24-hour expiry
+            user_id = data.get('user_id')
+            user = User.objects.get(id=user_id)
             user.is_active = True
+            user.email_verified_at = timezone.now()
             user.save()
-            return Response({"message": "Account verified successfully!"})
+            return Response({'detail': 'Email verified successfully!'}, status=status.HTTP_200_OK)
+
+        except SignatureExpired:
+            return Response({'detail': 'Token has expired.'}, status=status.HTTP_400_BAD_REQUEST)
         except (BadSignature, User.DoesNotExist):
-            return Response({"error": "Invalid or expired token."}, status=400)
+            return Response({'detail': 'Invalid token.'}, status=status.HTTP_400_BAD_REQUEST)
 
 class OnePieceSetViewSet(viewsets.ModelViewSet):
     queryset = OnePieceSet.objects.all()
@@ -80,4 +90,3 @@ class OnePieceDeckViewSet(viewsets.ModelViewSet):
 class OnePieceDeckCardViewSet(viewsets.ModelViewSet):
     queryset = OnePieceDeckCard.objects.all()
     serializer_class = OnePieceDeckCardSerializer
-
