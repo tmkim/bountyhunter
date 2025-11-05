@@ -5,24 +5,61 @@ from django.contrib.auth.password_validation import validate_password
 
 User = get_user_model()
 
+
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, validators=[validate_password])
-    confirm_password = serializers.CharField(write_only=True)
+    password = serializers.CharField(
+        write_only=True,
+        validators=[validate_password],
+        error_messages={
+            "blank": "Password cannot be blank.",
+            "required": "Password is required.",
+        },
+    )
+    confirm_password = serializers.CharField(
+        write_only=True,
+        error_messages={
+            "blank": "Please confirm your password.",
+            "required": "Password confirmation is required.",
+        },
+    )
+    email = serializers.EmailField(
+        error_messages={
+            "invalid": "Please enter a valid email address.",
+            "blank": "Email cannot be blank.",
+            "required": "Email is required.",
+        }
+    )
+    username = serializers.CharField(
+        error_messages={
+            "blank": "Username cannot be blank.",
+            "required": "Username is required.",
+        }
+    )
 
     class Meta:
         model = User
         fields = ("username", "email", "password", "confirm_password")
 
+    def validate_username(self, value):
+        if User.objects.filter(username__iexact=value).exists():
+            raise serializers.ValidationError("That username is already taken.")
+        return value
+
+    def validate_email(self, value):
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("That email is already in use.")
+        return value
+
     def validate(self, data):
         if data["password"] != data["confirm_password"]:
-            raise serializers.ValidationError({"password": "Passwords do not match"})
+            raise serializers.ValidationError({"password": "Passwords do not match."})
         return data
 
     def create(self, validated_data):
         validated_data.pop("confirm_password")
         user = User.objects.create_user(
-            username=validated_data["username"],
-            email=validated_data["email"],
+            username=validated_data["username"].strip(),
+            email=validated_data["email"].strip().lower(),
             password=validated_data["password"],
             is_active=False,  # 🔒 inactive until verified
         )
