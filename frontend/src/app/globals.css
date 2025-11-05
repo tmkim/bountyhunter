@@ -10,13 +10,75 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --color-maya: #60BFF5;
-  --color-lapis: #2E63A4;
-  --color-brown: #AF6528;
-  --color-tangerine: #FFCE00;
-  --color-rosso: #D70000;
+  /* Maya */
+  --color-maya-50: #EAF8FF;
+  --color-maya-100: #CCEDFE;
+  --color-maya-200: #AEE3FC;
+  --color-maya-300: #8FD9FB;
+  --color-maya-400: #75CBF7;
+  --color-maya-500: #60BFF5; /* Your original */
+  --color-maya-600: #3FA4E1;
+  --color-maya-700: #2C83BE;
+  --color-maya-800: #1C6290;
+  --color-maya-900: #0E3F5C;
+  --color-maya: var(--color-maya-500);
+
+  /* Lapis */
+  --color-lapis-50: #EBF1FA;
+  --color-lapis-100: #D3E0F4;
+  --color-lapis-200: #A7C2E8;
+  --color-lapis-300: #7AA3DC;
+  --color-lapis-400: #4E85CF;
+  --color-lapis-500: #2E63A4; /* Original */
+  --color-lapis-600: #244E83;
+  --color-lapis-700: #1A3963;
+  --color-lapis-800: #112442;
+  --color-lapis-900: #081221;
+  --color-lapis: var(--color-lapis-500);
+
+  /* Brown */
+  --color-brown-50: #F9EFE7;
+  --color-brown-100: #F1DCC5;
+  --color-brown-200: #E7C5A1;
+  --color-brown-300: #DDAE7C;
+  --color-brown-400: #D39758;
+  --color-brown-500: #AF6528; /* Original */
+  --color-brown-600: #8C4E1F;
+  --color-brown-700: #693816;
+  --color-brown-800: #46220D;
+  --color-brown-900: #231106;
+  --color-brown: var(--color-brown-500);
+
+  /* Tangerine */
+  --color-tangerine-50: #FFF9E6;
+  --color-tangerine-100: #FFF1BF;
+  --color-tangerine-200: #FFE799;
+  --color-tangerine-300: #FFDC73;
+  --color-tangerine-400: #FFD14D;
+  --color-tangerine-500: #FFCE00; /* Original */
+  --color-tangerine-600: #E6B800;
+  --color-tangerine-700: #B38A00;
+  --color-tangerine-800: #806300;
+  --color-tangerine-900: #4D3C00;
+  --color-tangerine: var(--color-tangerine-500);
+
+  /* Rosso */
+  --color-rosso-50: #FFE8E8;
+  --color-rosso-100: #FFC4C4;
+  --color-rosso-200: #FF9F9F;
+  --color-rosso-300: #FF7A7A;
+  --color-rosso-400: #FF5555;
+  --color-rosso-500: #D70000; /* Original */
+  --color-rosso-600: #B00000;
+  --color-rosso-700: #8A0000;
+  --color-rosso-800: #640000;
+  --color-rosso-900: #3E0000;
+  --color-rosso: var(--color-rosso-500);
+
+  /* Black */
   --color-black: #000000;
 }
+
 
 @theme inline {
   --color-background: var(--background);
