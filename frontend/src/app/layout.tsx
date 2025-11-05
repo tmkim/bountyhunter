@@ -23,14 +23,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main className="flex-1 bg-brown">
             {children}
           </main>
-          {/* ✅ Toasts render globally at the root level */}
-          {/* <Toaster
-            position="top-center"
-            toastOptions={{
-              duration: 4000,
-              style: { background: "#333", color: "#fff" },
-            }}
-          /> */}
           <Toaster
             position="top-center"
             toastOptions={{

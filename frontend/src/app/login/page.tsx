@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -11,9 +12,8 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       await login(username, password);
-      alert("Logged in!");
     } catch {
-      alert("Login failed");
+      toast.error("Login failed");
     }
   };
 

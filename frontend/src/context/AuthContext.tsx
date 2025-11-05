@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
 
   const fetchUser = useCallback(async () => {
-    if (!user) return
+    // if (!user) return
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/user/`, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch user");
@@ -94,6 +94,7 @@ const refreshUser = useCallback(async () => {
         throw new Error("Login failed");
     }
     await fetchUser();
+    router.push("/"); 
     toast.success("Welcome back!");
   };
 
