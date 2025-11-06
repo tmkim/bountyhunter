@@ -7,6 +7,8 @@ import { useCards } from "@/hooks/useCards";
 import { OnePieceCard, OnePieceCardHistory, FilterValue, Filters } from "@/bh_lib/types";
 import { OnePieceDeck } from "@/bh_lib/types";
 import { serialize } from "v8";
+import { useAuth } from "@/context/AuthContext";
+import toast from "react-hot-toast";
 
 const BASE_COST_MAP = new Map([
   ['0', 0],
@@ -67,7 +69,6 @@ function deserializeFilters(obj: Record<string, any>): Filters {
 }
 
 export default function Page() {
-
   // #region -- Resizable column layout
   const isDragging = useRef(false);
   const [leftWidth, setLeftWidth] = useState(60);
@@ -120,11 +121,10 @@ export default function Page() {
   // #endregion
 
   // #region -- Set up card/deck management state
+  const { user } = useAuth();
   const { cards: allCards, loading } = useCards();
-
-  // const [deck, setDeck] = useState<OnePieceCard[]>([]);
   const [deck, setDeck] = useState<OnePieceDeck>({ 
-    name: "", 
+    name: "Untitled Deck", 
     leader: null, 
     cards: [],
     total_price: 0,
@@ -132,6 +132,13 @@ export default function Page() {
     rarity_map: new Map(BASE_RARITY_MAP),
     counter_map: new Map(BASE_COUNTER_MAP)
   });
+  const [deckList, setDeckList] = useState<String[]>([]);
+
+  useEffect(() => {
+    if (user){
+      setDeckList([]) // fetch deck list from database
+    }
+  }, [user])
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -488,6 +495,47 @@ export default function Page() {
     }));
   };
 
+const saveDeck = async () => {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/bounty_api/onepiece_deck/`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: deck.name,
+        leader: deck.leader,
+        cards: deck.cards,
+      }),
+    }); 
+
+    const text = await res.text(); // ✅ read as text first
+    console.log("Raw response:", text);
+
+    if (!res.ok) {
+      console.error("Failed to save deck. Status:", res.status);
+      try {
+        const errorData = JSON.parse(text);
+        console.error("Error JSON:", errorData);
+      } catch {
+        console.error("Error response was not JSON:", text);
+      }
+      toast.error("Failed to save deck");
+      return;
+    }
+
+    const data = JSON.parse(text);
+    console.log("Deck saved successfully:", data);
+    toast.success(`Saved "${deck.name}"!`);
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    toast.error("Error saving deck");
+  }
+};
+
+
+
   const costData = useMemo(() => {
     return Array.from(deck.cost_map.entries())
       .map(([cost, count]) => ({ cost, count }))
@@ -520,8 +568,10 @@ export default function Page() {
       >
         <ActiveDeck
           deck={deck}
+          deckList={deckList}
           onRename={renameDeck}
           onClear={clearDeck}
+          onSave={saveDeck}
           onRemove={removeFromDeck}
           onRightClick={handleRightClick}
         />
