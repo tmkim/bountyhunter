@@ -2,9 +2,11 @@ from rest_framework import viewsets, generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import OnePieceSet, OnePieceCard, OnePieceCardHistory, OnePieceDeck, OnePieceDeckCard
+from .models import OnePieceSet, OnePieceCard, OnePieceCardHistory, OnePieceDeck
+# , OnePieceDeckCard
 from .serializers import RegisterSerializer, OnePieceSetSerializer, OnePieceCardSerializer, \
-                         OnePieceCardHistorySerializer, OnePieceDeckSerializer, OnePieceDeckCardSerializer
+                         OnePieceCardHistorySerializer, OnePieceDeckSerializer
+# , OnePieceDeckCardSerializer
 from .utils import generate_verification_link
 
 from django.conf import settings
@@ -95,6 +97,6 @@ class OnePieceDeckViewSet(viewsets.ModelViewSet):
         # Automatically associate the deck with the logged-in user
         serializer.save(user=self.request.user)
 
-class OnePieceDeckCardViewSet(viewsets.ModelViewSet):
-    queryset = OnePieceDeckCard.objects.all()
-    serializer_class = OnePieceDeckCardSerializer
+# class OnePieceDeckCardViewSet(viewsets.ModelViewSet):
+#     queryset = OnePieceDeckCard.objects.all()
+#     serializer_class = OnePieceDeckCardSerializer

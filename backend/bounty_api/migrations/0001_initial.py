@@ -108,18 +108,4 @@ class Migration(migrations.Migration):
                 'indexes': [models.Index(fields=['user'], name='ix_deck_user'), models.Index(fields=['leader'], name='ix_deck_leader')],
             },
         ),
-        migrations.CreateModel(
-            name='OnePieceDeckCard',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('card_foil', models.CharField(max_length=50)),
-                ('quantity', models.IntegerField(default=1)),
-                ('card', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='decks', to='bounty_api.onepiececard')),
-                ('deck', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='cards', to='bounty_api.onepiecedeck')),
-            ],
-            options={
-                'db_table': 'one_piece_deck_card',
-                'unique_together': {('deck', 'card')},
-            },
-        ),
     ]

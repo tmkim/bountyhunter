@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import OnePieceSet, OnePieceCard, OnePieceCardHistory, OnePieceDeck, OnePieceDeckCard
+from .models import OnePieceSet, OnePieceCard, OnePieceCardHistory, OnePieceDeck
+# , OnePieceDeckCard
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 
@@ -86,7 +87,7 @@ class OnePieceDeckSerializer(serializers.ModelSerializer):
         model = OnePieceDeck
         fields = '__all__'
         
-class OnePieceDeckCardSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OnePieceDeckCard
-        fields = '__all__'
+# class OnePieceDeckCardSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = OnePieceDeckCard
+#         fields = '__all__'

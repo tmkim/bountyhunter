@@ -71,6 +71,7 @@ class OnePieceDeck(models.Model):
     )
     name = models.CharField(max_length=255)
     leader = models.CharField(max_length=255)
+    
 
     class Meta:
         db_table = "one_piece_deck"
@@ -82,16 +83,16 @@ class OnePieceDeck(models.Model):
     def __str__(self):
         return f"{self.name} ({self.user.username})"
 
-class OnePieceDeckCard(models.Model):
-    deck = models.ForeignKey(
-        OnePieceDeck, on_delete=models.CASCADE, related_name="cards"
-    )
-    card = models.ForeignKey(
-        OnePieceCard, on_delete=models.CASCADE, related_name="decks"
-    )
-    card_foil = models.CharField(max_length=50)
-    quantity = models.IntegerField(default=1)
+# class OnePieceDeckCard(models.Model):
+#     deck = models.ForeignKey(
+#         OnePieceDeck, on_delete=models.CASCADE, related_name="cards"
+#     )
+#     card = models.ForeignKey(
+#         OnePieceCard, on_delete=models.CASCADE, related_name="decks"
+#     )
+#     card_foil = models.CharField(max_length=50)
+#     quantity = models.IntegerField(default=1)
 
-    class Meta:
-        db_table = "one_piece_deck_card"
-        unique_together = ("deck", "card")  # composite PK equivalent
+#     class Meta:
+#         db_table = "one_piece_deck_card"
+#         unique_together = ("deck", "card")  # composite PK equivalent
