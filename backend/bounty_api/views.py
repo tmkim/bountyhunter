@@ -1,4 +1,4 @@
-from rest_framework import viewsets, generics, status
+from rest_framework import viewsets, generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -84,8 +84,16 @@ class OnePieceCardHistoryViewSet(viewsets.ReadOnlyModelViewSet):
         # return self.queryset.all() //for debug
 
 class OnePieceDeckViewSet(viewsets.ModelViewSet):
-    queryset = OnePieceDeck.objects.all()
     serializer_class = OnePieceDeckSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Only return decks belonging to the current user
+        return OnePieceDeck.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        # Automatically associate the deck with the logged-in user
+        serializer.save(user=self.request.user)
 
 class OnePieceDeckCardViewSet(viewsets.ModelViewSet):
     queryset = OnePieceDeckCard.objects.all()

@@ -5,7 +5,6 @@ from django.contrib.auth.password_validation import validate_password
 
 User = get_user_model()
 
-
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True,
@@ -81,6 +80,8 @@ class OnePieceCardHistorySerializer(serializers.ModelSerializer):
         fields = '__all__'
         
 class OnePieceDeckSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source="user.username")
+    
     class Meta:
         model = OnePieceDeck
         fields = '__all__'

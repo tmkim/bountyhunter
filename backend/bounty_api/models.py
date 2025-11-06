@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
@@ -63,17 +64,23 @@ class OnePieceCardHistory(models.Model):
 
 class OnePieceDeck(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="one_piece_decks"
+    )
     name = models.CharField(max_length=255)
     leader = models.CharField(max_length=255)
-    user = models.CharField(max_length=255)
 
     class Meta:
         db_table = "one_piece_deck"
         indexes = [
             models.Index(fields=["user"], name="ix_deck_user"),
-            models.Index(fields=["leader"], name="ix_deck_leader"),
+            # models.Index(fields=["leader"], name="ix_deck_leader"),
         ]
 
+    def __str__(self):
+        return f"{self.name} ({self.user.username})"
 
 class OnePieceDeckCard(models.Model):
     deck = models.ForeignKey(
