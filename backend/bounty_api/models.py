@@ -70,8 +70,8 @@ class OnePieceDeck(models.Model):
         related_name="one_piece_decks"
     )
     name = models.CharField(max_length=255)
-    leader = models.CharField(max_length=255)
-    
+    leader = models.JSONField(null=True, blank=True)
+    cards = models.JSONField(default=list, blank=True)
 
     class Meta:
         db_table = "one_piece_deck"
