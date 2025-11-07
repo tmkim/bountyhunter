@@ -132,22 +132,16 @@ export default function Page() {
     rarity_map: new Map(BASE_RARITY_MAP),
     counter_map: new Map(BASE_COUNTER_MAP)
   });
-  const [deckList, setDeckList] = useState<String[]>([]);
-
-  useEffect(() => {
-    if (user){
-      setDeckList([]) // fetch deck list from database
-    }
-  }, [user])
 
   useEffect(() => {
     const handler = setTimeout(() => {
       // Convert Maps to arrays
       const deckToSave = {
         ...deck,
-        cost_map: Array.from(deck.cost_map.entries?.() || []),
-        rarity_map: Array.from(deck.rarity_map.entries?.() || []),
-        counter_map: Array.from(deck.counter_map.entries?.() || []),
+        total_price: 0,
+        cost_map: [],
+        rarity_map: [],
+        counter_map: [],
       };
 
       localStorage.setItem("activeDeck", JSON.stringify(deckToSave));
@@ -161,10 +155,13 @@ export default function Page() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-
-        parsed.cost_map = new Map(parsed.cost_map ?? []);
-        parsed.rarity_map = new Map(parsed.rarity_map ?? []);
-        parsed.counter_map = new Map(parsed.counter_map ?? []);
+        // parsed.cost_map = new Map(parsed.cost_map ?? []);
+        // parsed.rarity_map = new Map(parsed.rarity_map ?? []);
+        // parsed.counter_map = new Map(parsed.counter_map ?? []);
+        parsed.cost_map = new Map(BASE_COST_MAP); // calculate
+        parsed.rarity_map = new Map(BASE_RARITY_MAP); // calculate
+        parsed.counter_map = new Map(BASE_COUNTER_MAP); // calculate
+        parsed.total_price = 0;
 
         setDeck(parsed);
       } catch {
@@ -495,49 +492,47 @@ export default function Page() {
     }));
   };
 
-const saveDeck = async () => {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/bounty_api/onepiece_deck/`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: deck.name,
-        leader: deck.leader,
-        cards: deck.cards,
-      }),
-    }); 
+  const saveDeck = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/bounty_api/onepiece_deck/`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: deck.name,
+          leader: deck.leader,
+          cards: deck.cards,
+        }),
+      }); 
 
-    const text = await res.text(); // ✅ read as text first
-    console.log("Raw response:", text);
+      const text = await res.text(); // ✅ read as text first
+      console.log("Raw response:", text);
 
-    if (!res.ok) {
-      console.error("Failed to save deck. Status:", res.status);
-      try {
-        const errorData = JSON.parse(text);
-        console.error("Error JSON:", errorData);
-      } catch {
-        console.error("Error response was not JSON:", text);
+      if (!res.ok) {
+        console.error("Failed to save deck. Status:", res.status);
+        try {
+          const errorData = JSON.parse(text);
+          console.error("Error JSON:", errorData);
+        } catch {
+          console.error("Error response was not JSON:", text);
+        }
+        toast.error("Failed to save deck");
+        return;
       }
-      toast.error("Failed to save deck");
-      return;
+
+      const data = JSON.parse(text);
+      console.log("Deck saved successfully:", data);
+      toast.success(`Saved "${deck.name}"!`);
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      toast.error("Error saving deck");
     }
-
-    const data = JSON.parse(text);
-    console.log("Deck saved successfully:", data);
-    toast.success(`Saved "${deck.name}"!`);
-  } catch (err) {
-    console.error("Unexpected error:", err);
-    toast.error("Error saving deck");
-  }
-};
-
-
+  };
 
   const costData = useMemo(() => {
-    return Array.from(deck.cost_map.entries())
+    return Array.from(deck.cost_map?.entries() ?? new Map(BASE_COST_MAP).entries())
       .map(([cost, count]) => ({ cost, count }))
       .sort((a, b) =>
         (a.cost === "none" ? 999 : +a.cost) -
@@ -546,12 +541,12 @@ const saveDeck = async () => {
   }, [deck.cost_map]);
 
   const rarityData = useMemo(() => {
-    return Array.from(deck.rarity_map.entries())
+    return Array.from(deck.rarity_map?.entries() ?? new Map(BASE_RARITY_MAP).entries())
       .map(([rarity, count]) => ({ rarity, count }));
   }, [deck.rarity_map]);
 
   const counterData = useMemo(() => {
-    return Array.from(deck.counter_map.entries())
+    return Array.from(deck.counter_map?.entries() ?? new Map(BASE_COUNTER_MAP).entries())
       .map(([counter, count]) => ({ counter, count }));
   }, [deck.counter_map]);
   // #endregion
@@ -568,7 +563,7 @@ const saveDeck = async () => {
       >
         <ActiveDeck
           deck={deck}
-          deckList={deckList}
+          setDeck={setDeck}
           onRename={renameDeck}
           onClear={clearDeck}
           onSave={saveDeck}
