@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`flex flex-col ${inter.className} h-screen bg-lapis text-black`}>
         <AuthProvider>
           <Navbar />
-          <main className="flex-1 bg-brown">
+          <main className="flex-1 bg-opbrown">
             {children}
           </main>
           <Toaster
