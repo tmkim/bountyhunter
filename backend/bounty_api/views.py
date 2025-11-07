@@ -1,6 +1,7 @@
 from rest_framework import viewsets, generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.decorators import action
 
 from .models import OnePieceSet, OnePieceCard, OnePieceCardHistory, OnePieceDeck
 # , OnePieceDeckCard
@@ -73,6 +74,27 @@ class OnePieceSetViewSet(viewsets.ModelViewSet):
 class OnePieceCardViewSet(viewsets.ModelViewSet):
     queryset = OnePieceCard.objects.all()
     serializer_class = OnePieceCardSerializer
+
+    @action(detail=False, methods=["get"], url_path="latest-prices")
+    def latest_prices(self, request):
+        """
+        Custom endpoint to fetch latest prices for a list of card IDs.
+        Example: /bounty_api/onepiece_card/latest-prices/?ids=1,2,3,4
+        """
+        ids = request.query_params.get("ids", "")
+        id_list = [int(i) for i in ids.split(",") if i.isdigit()]
+
+        if not id_list:
+            return Response({"error": "No valid card IDs provided"}, status=400)
+
+        cards = (
+            OnePieceCard.objects
+            .filter(id__in=id_list)
+            .values("id", "market_price")
+        )
+
+        price_map = {card["id"]: card["market_price"] for card in cards}
+        return Response(price_map)
 
 class OnePieceCardHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = OnePieceCardHistory.objects.all()

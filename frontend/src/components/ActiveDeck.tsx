@@ -59,27 +59,35 @@ function groupDeck(deck: OnePieceDeck): GroupedDeck[] {
     return Array.from(map.values());
 }
 
-function recalcDeckStats(deck: OnePieceDeck, setDeck: React.Dispatch<React.SetStateAction<OnePieceDeck>>) {
+async function recalcDeckStats(deck: OnePieceDeck, setDeck: React.Dispatch<React.SetStateAction<OnePieceDeck>>) {
   const costMap = new Map(BASE_COST_MAP);
   const rarityMap = new Map(BASE_RARITY_MAP);
   const counterMap = new Map(BASE_COUNTER_MAP);
-  
   let totalPrice = 0;
 
-  for (const card of deck.cards) {
-      const costKey = String(card.cost ?? "0");
-      costMap.set(costKey, (costMap.get(costKey) ?? 0) + 1);
+  const cardIds = deck.cards.map(c => c.id);
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/bounty_api/onepiece_card/latest-prices/?ids=${cardIds.join(",")}`);
+  const latestPrices: Record<number, number> = await res.json(); // { [cardId]: latestPrice }
 
-      const counterKey = String(card.counter ?? "0");
-      counterMap.set(counterKey, (counterMap.get(counterKey) ?? 0) + 1);
+  const updatedCards = deck.cards.map(card => {
+    const latestPrice = latestPrices[card.id] ?? card.market_price ?? 0;
+    totalPrice += Number(latestPrice);
 
-      const rarityKey = card.rarity === "DON!!" ? "DON" : String(card.rarity ?? "0");
-      rarityMap.set(rarityKey, (rarityMap.get(rarityKey) ?? 0) + 1);
-    totalPrice += Number(card.market_price ?? 0);
-  }
+    const costKey = String(card.cost ?? "0");
+    costMap.set(costKey, (costMap.get(costKey) ?? 0) + 1);
+
+    const counterKey = String(card.counter ?? "0");
+    counterMap.set(counterKey, (counterMap.get(counterKey) ?? 0) + 1);
+
+    const rarityKey = card.rarity === "DON!!" ? "DON" : String(card.rarity ?? "0");
+    rarityMap.set(rarityKey, (rarityMap.get(rarityKey) ?? 0) + 1);
+
+    return { ...card, market_price: latestPrice };
+  });
 
   setDeck({
     ...deck,
+    cards: updatedCards,
     cost_map: costMap,
     rarity_map: rarityMap,
     counter_map: counterMap,
@@ -128,14 +136,8 @@ export default function ActiveDeck({ deck, setDeck, onRename,
         }
     };
 
-    const handleSelectDeck = (newDeck: OnePieceDeck) => {
-        recalcDeckStats(newDeck, setDeck);
-        // setDeck({...newDeck,        
-        //     cost_map: new Map(),
-        //     rarity_map: new Map(),
-        //     counter_map: new Map(),
-        //     total_price: 0
-        // });
+    const handleSelectDeck = async (newDeck: OnePieceDeck) => {
+        await recalcDeckStats(newDeck, setDeck);
         setShowDropdown(false);
         toast.success(`Loaded "${newDeck.name}"`);
     };
@@ -197,9 +199,13 @@ export default function ActiveDeck({ deck, setDeck, onRename,
                             style={{
                                 top: tooltipPos.y + 15,
                                 left: tooltipPos.x + 15,
+                                zIndex: 9999
                             }}
                             >
-                            {deckList.find((d) => d.id?.toString() === deckHovered)?.name}
+                            {(() => {
+                                const d = deckList.find((d) => d.id?.toString() === deckHovered);
+                                return d ? `${d.name} (${d.leader?.color ?? ""} ${d.leader?.name ?? ""})` : "";
+                            })()}
                             </div>
                         )}
                     </div>
