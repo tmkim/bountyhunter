@@ -3,10 +3,11 @@ import { OnePieceCard, OnePieceDeck } from "@/bh_lib/types";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 type Props = {
     deck: OnePieceDeck;
-    deckList: String[];
+    setDeck: React.Dispatch<React.SetStateAction<OnePieceDeck>>;
     onRename: (name: string) => void;
     onClear: () => void;
     onSave: () => void;
@@ -30,11 +31,15 @@ function groupDeck(deck: OnePieceDeck): GroupedDeck[] {
     return Array.from(map.values());
 }
 
-export default function ActiveDeck({ deck, deckList, onRename, 
+export default function ActiveDeck({ deck, setDeck, onRename, 
     onRightClick, onClear, onSave, onRemove }: Props) {
     const { user } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const [tempName, setTempName] = useState(deck.name || "");
+    const [deckList, setDeckList] = useState<OnePieceDeck[]>([]);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [deckHovered, setDeckHovered] = useState<string | null>(null);
+    const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
     const handleBlur = () => {
         setIsEditing(false);
@@ -50,21 +55,92 @@ export default function ActiveDeck({ deck, deckList, onRename,
         }
     };
 
+    const fetchDecks = async () => {
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/bounty_api/onepiece_deck/`, {
+            method: "GET",
+            credentials: "include",
+            });
+
+            if (!res.ok) throw new Error("Failed to fetch decks");
+            const data = await res.json();
+            setDeckList(data);
+        } catch (err) {
+            console.error(err);
+            toast.error("Error loading decks");
+        }
+    };
+
+    const handleSelectDeck = (newDeck: OnePieceDeck) => {
+        setDeck(newDeck);
+        setShowDropdown(false);
+        toast.success(`Loaded "${newDeck.name}"`);
+    };
+
     return (
         <section className="basis-[35%] flex flex-col rounded-lg 
                             overflow-auto bg-lapis shadow p-4 min-h-[350px]">
             <div className="relative mb-2 flex items-center justify-between px-4 py-2 bg-charcoal rounded-md shadow-sm">
                 {/* Left: Dropdown */}
-                <div className="flex items-center">
+                <div className="flex items-center relative">
                     <button
                         disabled={!user}
-                        className={`px-3 py-1 rounded border ${user
-                                ? "border-tangerine text-tangerine hover:bg-tangerine/10"
-                                : "border-white text-white cursor-not-allowed"
-                            } transition`}
+                        onClick={() => {
+                        if (!user) return;
+                        if (!showDropdown) fetchDecks();
+                        setShowDropdown((prev) => !prev);
+                        }}
+                        className={`px-3 py-1 rounded border ${
+                        user
+                            ? "border-tangerine text-tangerine hover:bg-tangerine/10"
+                            : "border-white text-white cursor-not-allowed"
+                        } transition`}
                     >
                         {user ? "Load Deck ▼" : "Log in to save/load decks"}
                     </button>
+
+                    {/* Dropdown list */}
+                    {showDropdown && (
+                    <div>
+                        <ul
+                            className="absolute left-0 top-full mt-1 w-69 bg-charcoal border border-tangerine 
+                                    rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto"
+                        >
+                            {deckList.length === 0 ? (
+                            <li className="px-3 py-2 text-sm text-white/70">
+                                No decks found
+                            </li>
+                            ) : (
+                                deckList.map((d) => (
+                                    <li
+                                    key={d.id}
+                                    onClick={() => handleSelectDeck(d)}
+                                    onMouseEnter={() => setDeckHovered(d.id?.toString() || "")}
+                                    onMouseLeave={() => setDeckHovered(null)}
+                                    onMouseMove={(e) => {
+                                        setTooltipPos({ x: e.clientX, y: e.clientY });
+                                    }}
+                                    className="px-3 py-2 text-sm text-white bg-opbrown hover:bg-opbrown-700
+                                    cursor-pointer whitespace-nowrap overflow-hidden text-ellipsis"
+                                    >
+                                    {d.name} ({d.leader?.color} {d.leader?.name})
+                                    </li>
+                                ))
+                            )}
+                        </ul>
+                        {deckHovered && (
+                            <div
+                            className="fixed px-2 py-1 bg-black text-white text-xs rounded shadow-lg whitespace-nowrap pointer-events-none transition-opacity duration-150"
+                            style={{
+                                top: tooltipPos.y + 15,
+                                left: tooltipPos.x + 15,
+                            }}
+                            >
+                            {deckList.find((d) => d.id?.toString() === deckHovered)?.name}
+                            </div>
+                        )}
+                    </div>
+                    )}
                 </div>
 
                 {/* Center: Editable Title */}
