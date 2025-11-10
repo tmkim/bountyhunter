@@ -1,4 +1,4 @@
-import { OnePieceDeck } from "./types";
+import { OnePieceDeck } from "@/bh_lib/types";
 
 export const BASE_COST_MAP = new Map<string, number>([
   ["0", 0],
