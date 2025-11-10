@@ -6,38 +6,11 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { useCards } from "@/hooks/useCards";
 import { OnePieceCard, OnePieceCardHistory, FilterValue, Filters } from "@/bh_lib/types";
 import { OnePieceDeck } from "@/bh_lib/types";
+import { BASE_COST_MAP, BASE_RARITY_MAP, BASE_COUNTER_MAP } from "@/bh_lib/constants";
 import { serialize } from "v8";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
-
-const BASE_COST_MAP = new Map([
-  ['0', 0],
-  ['1', 0],
-  ['2', 0],
-  ['3', 0],
-  ['4', 0],
-  ['5', 0],
-  ['6', 0],
-  ['7', 0],
-  ['8', 0],
-  ['9', 0],
-  ['10', 0],
-]);
-const BASE_RARITY_MAP = new Map([
-  ['C', 0],
-  ['UC', 0],
-  ['R', 0],
-  ['SR', 0],
-  ['SEC', 0],
-  ['PR', 0],
-  ['TR', 0],
-  ['DON', 0],
-]);
-const BASE_COUNTER_MAP =  new Map([
-  ['0', 0],
-  ['1000', 0],
-  ['2000', 0]
-])
+import { restoreDeck } from "@/hooks/restoreDeck";
 
 function serializeFilters(filters: Filters): Record<string, any>{
   const obj: Record<string, any> = {};
@@ -79,11 +52,6 @@ export default function Page() {
     if (savedWidth) {
       setLeftWidth(parseFloat(savedWidth));
     }
-
-    // const savedDeck = localStorage.getItem("activeDeck");
-    // if (savedDeck) {
-    //   setDeck(JSON.parse(savedDeck));
-    // }
   }, []);
 
   // Save to localStorage whenever leftWidth changes
@@ -124,6 +92,8 @@ export default function Page() {
   const { user } = useAuth();
   const { cards: allCards, loading } = useCards();
   const [deck, setDeck] = useState<OnePieceDeck>({ 
+    id: "",
+    user: "",
     name: "Untitled Deck", 
     leader: null, 
     cards: [],
@@ -150,26 +120,75 @@ export default function Page() {
     return () => clearTimeout(handler); // cancel timeout on re-render
   }, [deck]);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("activeDeck");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        // parsed.cost_map = new Map(parsed.cost_map ?? []);
-        // parsed.rarity_map = new Map(parsed.rarity_map ?? []);
-        // parsed.counter_map = new Map(parsed.counter_map ?? []);
-        parsed.cost_map = new Map(BASE_COST_MAP); // calculate
-        parsed.rarity_map = new Map(BASE_RARITY_MAP); // calculate
-        parsed.counter_map = new Map(BASE_COUNTER_MAP); // calculate
-        parsed.total_price = 0;
+  // useEffect(() => {
+  //   const loadDeck = async () => {
+  //     const saved = localStorage.getItem("activeDeck");
+  //     if (!saved) return;
 
-        setDeck(parsed);
-      } catch {
-        console.warn("Failed to parse saved deck, clearing storage");
-        localStorage.removeItem("activeDeck");
-      }
-    }
+  //     try {
+  //       const parsed = JSON.parse(saved);
+
+  //       // Recreate maps
+  //       const costMap = new Map(BASE_COST_MAP);
+  //       const rarityMap = new Map(BASE_RARITY_MAP);
+  //       const counterMap = new Map(BASE_COUNTER_MAP);
+
+  //       // fetch prices
+  //       const cardIds = parsed.cards.map((c: OnePieceCard) => c.id);
+  //       if (!cardIds) return;
+  //       const res = await fetch(
+  //         `${process.env.NEXT_PUBLIC_API_URL}/bounty_api/onepiece_card/latest-prices/?ids=${cardIds.join(',')}`
+  //       );
+  //       const latestPrices: Record<number, number> = await res.json();
+  //       console.log(saved)
+
+  //       let total_price = 0;
+
+  //       // build new cards + maps from scratch
+  //       const updatedCards = parsed.cards.map((card: OnePieceCard) => {
+  //         const latestPrice = latestPrices[card.id] ?? card.market_price ?? 0;
+  //         total_price += Number(latestPrice);
+
+  //         const costKey = String(card.cost ?? "0");
+  //         costMap.set(costKey, (costMap.get(costKey) ?? 0) + 1);
+
+  //         const counterKey = String(card.counter ?? "0");
+  //         counterMap.set(counterKey, (counterMap.get(counterKey) ?? 0) + 1);
+
+  //         const rarityKey = card.rarity === "DON!!" ? "DON" : String(card.rarity ?? "0");
+  //         rarityMap.set(rarityKey, (rarityMap.get(rarityKey) ?? 0) + 1);
+
+  //         return { ...card, market_price: latestPrice };
+  //       });
+
+  //       // build final deck object
+  //       const newDeck = {
+  //         ...parsed,
+  //         cards: updatedCards,
+  //         total_price,
+  //         cost_map: costMap,
+  //         counter_map: counterMap,
+  //         rarity_map: rarityMap,
+  //       };
+
+  //       setDeck(newDeck);
+
+  //     } catch (err) {
+  //       console.warn("Failed to parse saved deck, clearing storage");
+  //       localStorage.removeItem("activeDeck");
+  //     }
+  //   };
+
+  //   loadDeck();
+  // }, []);
+
+  useEffect(() => {
+    (async () => {
+      const deck = await restoreDeck();
+      if (deck) setDeck(deck);
+    })();
   }, []);
+
 
   const [previewCard, setPreviewCard] = useState<OnePieceCard | null>(null);
 
@@ -482,6 +501,8 @@ export default function Page() {
   const clearDeck = () => {
     localStorage.removeItem("activeDeck");
     setDeck(prev => ({
+      id: "",
+      user: "",
       name: prev.name,
       leader: null,
       cards: [],
@@ -490,6 +511,7 @@ export default function Page() {
       rarity_map: new Map(BASE_RARITY_MAP),
       counter_map: new Map(BASE_COUNTER_MAP),
     }));
+    console.log(deck)
   };
 
   const saveDeck = async () => {

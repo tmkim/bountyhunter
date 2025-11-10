@@ -1,5 +1,6 @@
 "use client";
 import { OnePieceCard, OnePieceDeck } from "@/bh_lib/types";
+import { BASE_COST_MAP, BASE_RARITY_MAP, BASE_COUNTER_MAP } from "@/bh_lib/constants";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
 import { useState } from "react";
@@ -18,34 +19,6 @@ type GroupedDeck = {
     card: OnePieceCard;
     count: number;
 };
-const BASE_COST_MAP = new Map([
-  ['0', 0],
-  ['1', 0],
-  ['2', 0],
-  ['3', 0],
-  ['4', 0],
-  ['5', 0],
-  ['6', 0],
-  ['7', 0],
-  ['8', 0],
-  ['9', 0],
-  ['10', 0],
-]);
-const BASE_RARITY_MAP = new Map([
-  ['C', 0],
-  ['UC', 0],
-  ['R', 0],
-  ['SR', 0],
-  ['SEC', 0],
-  ['PR', 0],
-  ['TR', 0],
-  ['DON', 0],
-]);
-const BASE_COUNTER_MAP =  new Map([
-  ['0', 0],
-  ['1000', 0],
-  ['2000', 0]
-])
 
 function groupDeck(deck: OnePieceDeck): GroupedDeck[] {
     const map = new Map<string, GroupedDeck>();
@@ -138,6 +111,7 @@ export default function ActiveDeck({ deck, setDeck, onRename,
 
     const handleSelectDeck = async (newDeck: OnePieceDeck) => {
         await recalcDeckStats(newDeck, setDeck);
+        // console.log(newDeck)
         setShowDropdown(false);
         toast.success(`Loaded "${newDeck.name}"`);
     };

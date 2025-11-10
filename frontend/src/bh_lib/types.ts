@@ -24,7 +24,8 @@ export type OnePieceCard = {
 };
 
 export type OnePieceDeck = {
-  id?: number;
+  id?: string;
+  user?: string;
   name: string;
   leader: OnePieceCard | null;
   cards: OnePieceCard[];
