@@ -6,7 +6,9 @@ import {
   BASE_COST_MAP,
   BASE_RARITY_MAP,
   BASE_COUNTER_MAP,
+  EMPTY_DECK,
 } from "@/bh_lib/constants";
+import toast from "react-hot-toast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -25,21 +27,8 @@ async function fetchLatestPrices(cardIds: number[]): Promise<Record<number, numb
 }
 
 export function useDeck() {
-  const [deck, setDeck] = useState<OnePieceDeck>({
-    id: "",
-    user: "",
-    name: "Untitled Deck",
-    leader: null,
-    cards: [],
-    total_price: 0,
-    cost_map: new Map(BASE_COST_MAP),
-    rarity_map: new Map(BASE_RARITY_MAP),
-    counter_map: new Map(BASE_COUNTER_MAP),
-  });
+  const [deck, setDeck] = useState<OnePieceDeck>(EMPTY_DECK);
 
-  // ---------------------------------------------------------------------------
-  // ✅ Internal helper: recompute deck derived values
-  // ---------------------------------------------------------------------------
   const recalcDeck = useCallback(
     async (cards: OnePieceCard[], leader: OnePieceCard | null, name: string, id: string, user: string) => {
       const costMap = new Map(BASE_COST_MAP);
@@ -86,63 +75,80 @@ export function useDeck() {
   );
 
   // ---------------------------------------------------------------------------
-  // ✅ Restore deck from localStorage
+  // ✅ Load a deck
   // ---------------------------------------------------------------------------
-  const loadDeck = useCallback(async () => {
-    const saved = localStorage.getItem("activeDeck");
-    if (!saved) return;
+  const loadDeck = useCallback(
+    async (deck: OnePieceDeck) => {
+      if (!deck) return;
 
-    try {
-      const parsed = JSON.parse(saved);
+      // Normalize missing arrays
+      const cards = deck.cards ?? [];
+      const leader = deck.leader ?? null;
 
-      const restored = await recalcDeck(
-        parsed.cards ?? [],
-        parsed.leader ?? null,
-        parsed.name ?? "Untitled Deck",
-        parsed.id ?? "",
-        parsed.user ?? ""
+      const updated = await recalcDeck(
+        cards,
+        leader,
+        deck.name,
+        deck.id,
+        deck.user
       );
-
-      setDeck(restored);
-    } catch (err) {
-      console.warn("Failed to restore deck:", err);
-      localStorage.removeItem("activeDeck");
-    }
-  }, [recalcDeck]);
-
-  // Load saved deck on first mount
-  useEffect(() => {
-    loadDeck();
-  }, [loadDeck]);
+      setDeck(updated);
+    },
+  []
+);
 
   // ---------------------------------------------------------------------------
   // ✅ Save deck to localStorage
   // ---------------------------------------------------------------------------
-  const saveDeck = useCallback(() => {
+  const saveDeck = useCallback(async () => {
     try {
-      const minimized = {
-        ...deck,
-        cost_map: Array.from(deck.cost_map.entries()),
-        rarity_map: Array.from(deck.rarity_map.entries()),
-        counter_map: Array.from(deck.counter_map.entries()),
-      };
+      const res = await fetch(`${API_URL}/bounty_api/onepiece_deck/`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: deck.name,
+          leader: deck.leader?.id ?? null,
+          cards: deck.cards.map(c => c.id),
+        }),
+      });
 
-      localStorage.setItem("activeDeck", JSON.stringify(minimized));
+      const text = await res.text();
+      console.log("Raw response:", text);
+
+      if (!res.ok) {
+        console.error("Failed to save deck:", res.status);
+        try {
+          console.error("Error JSON:", JSON.parse(text));
+        } catch {
+          console.error("Non-JSON error:", text);
+        }
+        toast.error("Failed to save deck");
+        return;
+      }
+
+      const data = JSON.parse(text);
+
+      setDeck(prev => ({
+        ...prev,
+        id: data.id,
+        user: data.user,
+      }));
+
+      console.log("Deck saved successfully:", data);
+      toast.success(`Saved "${deck.name}"!`);
     } catch (err) {
-      console.error("Failed to save deck:", err);
+      console.error("Unexpected error:", err);
+      toast.error("Error saving deck");
     }
   }, [deck]);
 
-  // ---------------------------------------------------------------------------
-  // ✅ Rename deck
-  // ---------------------------------------------------------------------------
   const renameDeck = useCallback((newName: string) => {
     setDeck((prev) => ({ ...prev, name: newName }));
   }, []);
 
-  // ---------------------------------------------------------------------------
-  // ✅ Add card
-  // ---------------------------------------------------------------------------
   const addCard = useCallback(
     async (card: OnePieceCard) => {
       const card_count = deck.cards.filter(c => c.product_id === card.product_id).length;
@@ -174,10 +180,7 @@ export function useDeck() {
     },
     [deck, recalcDeck]
   );
-
-  // ---------------------------------------------------------------------------
-  // ✅ Remove card
-  // ---------------------------------------------------------------------------
+  
   const removeCard = useCallback(
     async (card: OnePieceCard) => {
       let newLeader = deck.leader;
@@ -203,9 +206,6 @@ export function useDeck() {
     [deck, recalcDeck]
   );
 
-  // ---------------------------------------------------------------------------
-  // ✅ Clear deck (keeps name/id but wipes everything else)
-  // ---------------------------------------------------------------------------
   const clearDeck = useCallback(() => {
     setDeck((prev) => ({
       ...prev,
