@@ -43,7 +43,8 @@ function deserializeFilters(obj: Record<string, any>): Filters {
 }
 
 export default function Page() {
-  // #region -- Resizable column layout
+
+// #region -- variable layout
   const isDragging = useRef(false);
   const [leftWidth, setLeftWidth] = useState(60);
 
@@ -87,9 +88,9 @@ export default function Page() {
       window.removeEventListener("mouseup", handleMouseUp);
     };
   }, []);
-  // #endregion
+// #endregion
 
-  // #region -- Set up card/deck management state
+// #region -- Set up card/deck management state
   const { user } = useAuth();
   const { cards: allCards, loading } = useCards();
   const {
@@ -100,6 +101,9 @@ export default function Page() {
     saveDeck,
     clearDeck,
     loadDeck,
+    costData,
+    rarityData,
+    counterData
   } = useDeck();
 
   const [previewCard, setPreviewCard] = useState<OnePieceCard | null>(null);
@@ -110,9 +114,9 @@ export default function Page() {
     setPreviewCard((prev) => (prev?.id === card.id ? null : card));
   };
 
-  // #endregion
+// #endregion
 
-  // #region -- Filters
+// #region -- Filters
 
   // The active search string that actually filters cards
   const [activeSearch, setActiveSearch] = useState<string>("");
@@ -258,10 +262,6 @@ export default function Page() {
     else return 1;
   });
 
-  // useEffect(() => {
-  //   console.log("Filtered Cards: ", filteredCards.length)
-  // }, [filteredCards]);
-
   useEffect(() => {
     console.log("Filters updated:", filters);
     const handler = setTimeout(() => {
@@ -282,37 +282,9 @@ export default function Page() {
       }
     }
   }, []);
-  // #endregion
+// #endregion
 
-  // #region Deck Actions
-  const handleAddCard = (card: OnePieceCard) => {
-    addCard(card);
-  };
-  const handleRemoveCard = (card: OnePieceCard) => {
-    removeCard(card);
-  };
-  
-  const costData = useMemo(() => {
-    return Array.from(deck.cost_map?.entries() ?? new Map(BASE_COST_MAP).entries())
-      .map(([cost, count]) => ({ cost, count }))
-      .sort((a, b) =>
-        (a.cost === "none" ? 999 : +a.cost) -
-        (b.cost === "none" ? 999 : +b.cost)
-      );
-  }, [deck.cost_map]);
-
-  const rarityData = useMemo(() => {
-    return Array.from(deck.rarity_map?.entries() ?? new Map(BASE_RARITY_MAP).entries())
-      .map(([rarity, count]) => ({ rarity, count }));
-  }, [deck.rarity_map]);
-
-  const counterData = useMemo(() => {
-    return Array.from(deck.counter_map?.entries() ?? new Map(BASE_COUNTER_MAP).entries())
-      .map(([counter, count]) => ({ counter, count }));
-  }, [deck.counter_map]);
-  // #endregion
-
-  // #region -- Render
+// #region -- Render
   if (loading) return <p>Loading cards…</p>;
 
   return (
@@ -327,7 +299,7 @@ export default function Page() {
           onRename={renameDeck}
           onClear={clearDeck}
           onSave={saveDeck}
-          onRemove={handleRemoveCard}
+          onRemove={removeCard}
           onRightClick={handleRightClick}
           onLoadDeck={loadDeck}
         />
@@ -338,7 +310,7 @@ export default function Page() {
           filters={filters}
           clearFilter={clearAllFilters}
           updateFilter={updateFilter}
-          onAdd={handleAddCard}
+          onAdd={addCard}
           onRightClick={handleRightClick}
         />
       </div>
@@ -367,5 +339,5 @@ export default function Page() {
     </div>
 
   );
-  // #endregion
+// #endregion
 }

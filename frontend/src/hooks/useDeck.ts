@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { OnePieceCard, OnePieceDeck } from "@/bh_lib/types"; // adjust import paths
 import {
   BASE_COST_MAP,
@@ -74,9 +74,6 @@ export function useDeck() {
     []
   );
 
-  // ---------------------------------------------------------------------------
-  // ✅ Load a deck
-  // ---------------------------------------------------------------------------
   const loadDeck = useCallback(
     async (deck: OnePieceDeck) => {
       if (!deck) return;
@@ -97,9 +94,6 @@ export function useDeck() {
   []
 );
 
-  // ---------------------------------------------------------------------------
-  // ✅ Save deck to localStorage
-  // ---------------------------------------------------------------------------
   const saveDeck = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/bounty_api/onepiece_deck/`, {
@@ -149,62 +143,66 @@ export function useDeck() {
     setDeck((prev) => ({ ...prev, name: newName }));
   }, []);
 
-  const addCard = useCallback(
-    async (card: OnePieceCard) => {
-      const card_count = deck.cards.filter(c => c.product_id === card.product_id).length;
-      if (card_count >= 4){
-        return
-      }
+const addCard = useCallback((card: OnePieceCard) => {
+  setDeck(prev => {
+    const newCostMap = new Map(prev.cost_map);
+    const newRarityMap = new Map(prev.rarity_map);
+    const newCounterMap = new Map(prev.counter_map);
 
-      // Leader logic — only 1 allowed
-      let newLeader = deck.leader;
-      let newCards = deck.cards;
+    // Update maps
+    const costKey = String(card.cost ?? "0");
+    newCostMap.set(costKey, (newCostMap.get(costKey) ?? 0) + 1);
 
-      if (card.card_type === "Leader") {
-        if (deck.leader){
-          newCards.splice(deck.cards.findLastIndex(c => c.id === card.id), 1);
-        }
-        newLeader = card;
-      }
-      newCards = [...newCards, card]
+    const counterKey = String(card.counter ?? "0");
+    newCounterMap.set(counterKey, (newCounterMap.get(counterKey) ?? 0) + 1);
 
-      const updated = await recalcDeck(
-        newCards,
-        newLeader,
-        deck.name,
-        deck.id,
-        deck.user
-      );
+    const rarityKey = card.rarity === "DON!!" ? "DON" : String(card.rarity ?? "0");
+    newRarityMap.set(rarityKey, (newRarityMap.get(rarityKey) ?? 0) + 1);
 
-      setDeck(updated);
-    },
-    [deck, recalcDeck]
-  );
+    return {
+      ...prev,
+      cards: [...prev.cards, card],
+      cost_map: newCostMap,
+      rarity_map: newRarityMap,
+      counter_map: newCounterMap,
+      total_price: Math.round((prev.total_price + Number(card.market_price ?? 0)) * 100) / 100,
+    };
+  });
+}, []);
+
   
-  const removeCard = useCallback(
-    async (card: OnePieceCard) => {
-      let newLeader = deck.leader;
-      let newCards = deck.cards;
+const removeCard = useCallback((card: OnePieceCard) => {
+  setDeck(prev => {
+    const idx = prev.cards.findLastIndex(c => c.id === card.id);
+    if (idx === -1) return prev;
 
-      if (card.card_type === "Leader") {
-        newLeader = null;
-      }
-      // newCards = deck.cards.filter((c) => c.id !== card.id);
-      newCards.splice(deck.cards.findLastIndex(c => c.id === card.id), 1);
-      
+    const newCards = [...prev.cards];
+    newCards.splice(idx, 1);
 
-      const updated = await recalcDeck(
-        newCards,
-        newLeader,
-        deck.name,
-        deck.id,
-        deck.user
-      );
+    const newCostMap = new Map(prev.cost_map);
+    const newRarityMap = new Map(prev.rarity_map);
+    const newCounterMap = new Map(prev.counter_map);
 
-      setDeck(updated);
-    },
-    [deck, recalcDeck]
-  );
+    // decrement maps
+    const costKey = String(card.cost ?? "0");
+    newCostMap.set(costKey, (newCostMap.get(costKey) ?? 0) - 1);
+
+    const counterKey = String(card.counter ?? "0");
+    newCounterMap.set(counterKey, (newCounterMap.get(counterKey) ?? 0) - 1);
+
+    const rarityKey = card.rarity === "DON!!" ? "DON" : String(card.rarity ?? "0");
+    newRarityMap.set(rarityKey, (newRarityMap.get(rarityKey) ?? 0) - 1);
+    
+    return {
+      ...prev,
+      cards: newCards,
+      cost_map: newCostMap,
+      rarity_map: newRarityMap,
+      counter_map: newCounterMap,
+      total_price: Math.round((prev.total_price - Number(card.market_price ?? 0)) * 100) / 100,
+    };
+  });
+}, []);
 
   const clearDeck = useCallback(() => {
     setDeck((prev) => ({
@@ -217,7 +215,26 @@ export function useDeck() {
       counter_map: new Map(BASE_COUNTER_MAP),
     }));
   }, []);
+  
+  const costData = useMemo(() => {
+    return Array.from(deck.cost_map?.entries() ?? new Map(BASE_COST_MAP).entries())
+      .map(([cost, count]) => ({ cost, count }))
+      .sort((a, b) =>
+        (a.cost === "none" ? 999 : +a.cost) -
+        (b.cost === "none" ? 999 : +b.cost)
+      );
+  }, [deck.cost_map]);
 
+  const rarityData = useMemo(() => {
+    return Array.from(deck.rarity_map?.entries() ?? new Map(BASE_RARITY_MAP).entries())
+      .map(([rarity, count]) => ({ rarity, count }));
+  }, [deck.rarity_map]);
+
+  const counterData = useMemo(() => {
+    return Array.from(deck.counter_map?.entries() ?? new Map(BASE_COUNTER_MAP).entries())
+      .map(([counter, count]) => ({ counter, count }));
+  }, [deck.counter_map]);
+  
   return {
     deck,
     loadDeck,
@@ -226,5 +243,8 @@ export function useDeck() {
     addCard,
     removeCard,
     clearDeck,
+    costData,
+    rarityData,
+    counterData
   };
 }
