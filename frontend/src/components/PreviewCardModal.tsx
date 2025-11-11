@@ -60,7 +60,7 @@ const PreviewCardModal: React.FC<PreviewCardModalProps> = ({ card, onClose }) =>
         <div className="relative w-[70%] aspect-[2/3] mb-4">
           {card ? (
             <Image
-              src={card.image_url || ""}
+              src={card.image_url?.replace("200w","in_1000x1000") || ""}
               onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src = "/CardFallback.png";
               }}
