@@ -54,7 +54,7 @@ export default function DetailsPanel({ card, deck, costData, counterData, rarity
         <div className="flex-1 rounded text-black">
           <h2 className="font-bold mb-2">Deck Details</h2>
           <p>Leader: {deck.leader?.color} {deck.leader?.name}</p>
-          <p>Total cards: {deck.cards.length}</p>
+          <p>Total cards: {deck.cards.length + (deck.leader ? 1 : 0)}</p>
           <p>Total price: ${deck.total_price.toFixed(2)}</p>
           <div className="w-full h-64 py-4">
             <ResponsiveContainer>

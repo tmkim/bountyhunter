@@ -143,66 +143,104 @@ export function useDeck() {
     setDeck((prev) => ({ ...prev, name: newName }));
   }, []);
 
-const addCard = useCallback((card: OnePieceCard) => {
-  setDeck(prev => {
-    const newCostMap = new Map(prev.cost_map);
-    const newRarityMap = new Map(prev.rarity_map);
-    const newCounterMap = new Map(prev.counter_map);
+  type Delta = {
+    add?: OnePieceCard[];
+    remove?: OnePieceCard[];
+    leader?: OnePieceCard | null; // direct leader replacement
+  };
 
-    // Update maps
-    const costKey = String(card.cost ?? "0");
-    newCostMap.set(costKey, (newCostMap.get(costKey) ?? 0) + 1);
+  const applyDelta = useCallback((delta: Delta) => {
+    setDeck(prev => {
+      let next = { ...prev };
 
-    const counterKey = String(card.counter ?? "0");
-    newCounterMap.set(counterKey, (newCounterMap.get(counterKey) ?? 0) + 1);
+      // ----- LEADER UPDATE ----------------------------------------------------
+      if (delta.leader !== undefined) {
+        const newLeader = delta.leader;
 
-    const rarityKey = card.rarity === "DON!!" ? "DON" : String(card.rarity ?? "0");
-    newRarityMap.set(rarityKey, (newRarityMap.get(rarityKey) ?? 0) + 1);
+        if (prev.leader && !newLeader) {
+          // removing leader
+          next.total_price -= Number(prev.leader.market_price ?? 0);
+          next.leader = null;
+        } 
+        else if (!prev.leader && newLeader) {
+          // adding leader
+          next.total_price += Number(newLeader.market_price ?? 0);
+          next.leader = newLeader;
+        }
+        else if (prev.leader && newLeader && prev.leader.id !== newLeader.id) {
+          // replacing leader
+          next.total_price -= Number(prev.leader.market_price ?? 0);
+          next.total_price += Number(newLeader.market_price ?? 0);
+          next.leader = newLeader;
+        }
+      }
 
-    return {
-      ...prev,
-      cards: [...prev.cards, card],
-      cost_map: newCostMap,
-      rarity_map: newRarityMap,
-      counter_map: newCounterMap,
-      total_price: Math.round((prev.total_price + Number(card.market_price ?? 0)) * 100) / 100,
-    };
-  });
-}, []);
+      // ----- NORMAL CARD ADD/REMOVE -----------------------------------------
+      const costMap = new Map(next.cost_map);
+      const rarityMap = new Map(next.rarity_map);
+      const counterMap = new Map(next.counter_map);
+      let price = next.total_price;
 
-  
-const removeCard = useCallback((card: OnePieceCard) => {
-  setDeck(prev => {
-    const idx = prev.cards.findLastIndex(c => c.id === card.id);
-    if (idx === -1) return prev;
+      // REMOVE
+      delta.remove?.forEach(card => {
+        const idx = next.cards.findLastIndex(c => c.id === card.id);
+        if (idx !== -1) next.cards.splice(idx, 1);
 
-    const newCards = [...prev.cards];
-    newCards.splice(idx, 1);
+        // decrement maps
+        const costKey = String(card.cost ?? "0");
+        costMap.set(costKey, (costMap.get(costKey) ?? 0) - 1);
 
-    const newCostMap = new Map(prev.cost_map);
-    const newRarityMap = new Map(prev.rarity_map);
-    const newCounterMap = new Map(prev.counter_map);
+        const counterKey = String(card.counter ?? "0");
+        counterMap.set(counterKey, (counterMap.get(counterKey) ?? 0) - 1);
 
-    // decrement maps
-    const costKey = String(card.cost ?? "0");
-    newCostMap.set(costKey, (newCostMap.get(costKey) ?? 0) - 1);
+        const rarityKey = card.rarity === "DON!!" ? "DON" : String(card.rarity ?? "0");
+        rarityMap.set(rarityKey, (rarityMap.get(rarityKey) ?? 0) - 1);
 
-    const counterKey = String(card.counter ?? "0");
-    newCounterMap.set(counterKey, (newCounterMap.get(counterKey) ?? 0) - 1);
+        price -= Number(card.market_price ?? 0);
+      });
 
-    const rarityKey = card.rarity === "DON!!" ? "DON" : String(card.rarity ?? "0");
-    newRarityMap.set(rarityKey, (newRarityMap.get(rarityKey) ?? 0) - 1);
-    
-    return {
-      ...prev,
-      cards: newCards,
-      cost_map: newCostMap,
-      rarity_map: newRarityMap,
-      counter_map: newCounterMap,
-      total_price: Math.round((prev.total_price - Number(card.market_price ?? 0)) * 100) / 100,
-    };
-  });
-}, []);
+      // ADD
+      delta.add?.forEach(card => {
+        next.cards.push(card);
+
+        const costKey = String(card.cost ?? "0");
+        costMap.set(costKey, (costMap.get(costKey) ?? 0) + 1);
+
+        const counterKey = String(card.counter ?? "0");
+        counterMap.set(counterKey, (counterMap.get(counterKey) ?? 0) + 1);
+
+        const rarityKey = card.rarity === "DON!!" ? "DON" : String(card.rarity ?? "0");
+        rarityMap.set(rarityKey, (rarityMap.get(rarityKey) ?? 0) + 1);
+
+        price += Number(card.market_price ?? 0);
+      });
+
+      return {
+        ...next,
+        cost_map: costMap,
+        rarity_map: rarityMap,
+        counter_map: counterMap,
+        total_price: Math.round(price * 100) / 100,
+      };
+    });
+  }, []);
+
+  const addCard = useCallback((card: OnePieceCard) => {
+    applyDelta(
+    (card.card_type === "Leader")
+      ? { leader: card }
+      : { add: [card] }
+  );
+  }, [applyDelta]);
+
+  const removeCard = useCallback((card: OnePieceCard) => {
+    applyDelta(
+    (card.card_type === "Leader")
+      ? { leader: null }
+      : { remove: [card] }
+  );
+  }, [applyDelta]);
+
 
   const clearDeck = useCallback(() => {
     setDeck((prev) => ({

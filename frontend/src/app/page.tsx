@@ -147,8 +147,10 @@ export default function Page() {
     const matchesID =
       (card.card_id?.toLowerCase() || "")
         .includes(activeSearch.toLowerCase());
-
-
+    const matchesSubtype = 
+      (card.subtype?.toLowerCase() || "")
+      .includes(activeSearch.toLowerCase());
+      
     // Read filter values into locals (so narrowing works reliably)
     const colorVal = filters.color;
     const typeVal = filters.type;
@@ -236,7 +238,7 @@ export default function Page() {
       matchesCounter &&
       matchesPower &&
       matchesPrice &&
-      (matchesName || matchesID)
+      (matchesName || matchesID || matchesSubtype)
       // && matchesID
     );
   }).sort((a, b) => {

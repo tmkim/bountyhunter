@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
@@ -89,6 +89,11 @@ export default function ActiveDeck({
     setShowDropdown(false);
     toast.success(`Loaded "${newDeck.name}"`);
   };
+
+  const displayCards = useMemo(() => {
+    return deck.leader ? [deck.leader, ...deck.cards] : deck.cards;
+    }, [deck.leader, deck.cards]);
+
 
   return (
     <section className="basis-[35%] flex flex-col rounded-lg 
@@ -225,12 +230,12 @@ export default function ActiveDeck({
       {/* Deck Grid */}
       {/* ---------------------------------------- */}
       <div
-        className={`flex-1 rounded-lg overflow-y-auto bg-maya shadow pt-4 pb-8 px-4 ${deck.cards.length === 0
+        className={`flex-1 rounded-lg overflow-y-auto bg-maya shadow pt-4 pb-8 px-4 ${displayCards.length === 0
           ? "flex items-center justify-center"
           : ""
           }`}
       >
-        {deck.cards.length === 0 ? (
+        {displayCards.length === 0 ? (
           <span className="text-2xl text-black text-center">
             Left-Click card to add to active deck
           </span>
@@ -242,7 +247,7 @@ export default function ActiveDeck({
             lg:grid-cols-[repeat(auto-fill,minmax(130px,1fr))]
             xl:grid-cols-[repeat(auto-fill,minmax(150px,1fr))]"
           >
-            {groupDeck(deck.cards).map(({ card, count }) => {
+            {groupDeck(displayCards).map(({ card, count }) => {
               const stagger = 3;
 
               return (
