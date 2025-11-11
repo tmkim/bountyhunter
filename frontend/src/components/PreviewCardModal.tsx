@@ -4,6 +4,7 @@ import Image from "next/image";
 import { XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, LineChart, Line } from "recharts";
 import { useCardHistory } from "@/hooks/useCardHistory";
 import DOMPurify from "dompurify";
+import Link from 'next/link';
 
 interface PreviewCardModalProps {
   onClose: () => void;
@@ -82,7 +83,7 @@ const PreviewCardModal: React.FC<PreviewCardModalProps> = ({ card, onClose }) =>
             <>
               {/* Header */}
               <div className="mb-4 text-center">
-                <h2 className="text-2xl font-semibold">{card.name}</h2>
+                <Link href={card.tcgplayer_url || ""} className="text-2xl font-semibold">{card.name}</Link>
                 {infoChunks.map((chunk, i) => (
                   <p key={i} className="text-sm">
                     {chunk.map(d => d.value).join(" • ")}
@@ -123,7 +124,7 @@ const PreviewCardModal: React.FC<PreviewCardModalProps> = ({ card, onClose }) =>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                       data={priceHistory}
-                      margin={{ top: 10, right: 0, left: getLeftMargin(priceHistory), bottom: 0 }}
+                      margin={{ top: 10, right: 10, left: getLeftMargin(priceHistory), bottom: 0 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                       <XAxis
@@ -134,7 +135,7 @@ const PreviewCardModal: React.FC<PreviewCardModalProps> = ({ card, onClose }) =>
                           const date = new Date(d);
                           return date.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit" });
                         }}
-                        tick={{ fill: "#000", fontSize: 12 }}
+                        tick={{ fill: "#000", fontSize: 14 }}
                         ticks={priceHistory
                               .map(d => d.date)
                               .filter((_, i) => i % Math.ceil(priceHistory.length / 7) === 0)
@@ -143,7 +144,7 @@ const PreviewCardModal: React.FC<PreviewCardModalProps> = ({ card, onClose }) =>
                       <YAxis
                         domain={["auto", "auto"]}
                         padding={{ top: 10, bottom: 10 }}
-                        tick={{ fill: "#000", fontSize: 12 }}
+                        tick={{ fill: "#000", fontSize: 14 }}
                         tickFormatter={(val) => "$" + val.toFixed(2)}
                         tickMargin={5}
                       />
