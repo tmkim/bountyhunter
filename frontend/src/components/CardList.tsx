@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import CheckboxFilter from "./CheckboxFilter";
 import RangeFilter from "./RangeFilter";
+import { usePreloadImages } from "@/hooks/usePreloadImages";
 
 type Props = {
   allCards: OnePieceCard[];
@@ -34,6 +35,8 @@ export default function CardList({ allCards, search, filters,
 
     const [showMoreFilters, setShowMoreFilters] = useState(false);
 
+    const urls = allCards.map((c) => c.image_url || "");
+    usePreloadImages(urls);
 
     return (
         <section className="basis-[65%] rounded-lg bg-lapis min-h-[500px]
@@ -147,37 +150,37 @@ export default function CardList({ allCards, search, filters,
 
             {/* Card pool goes here */}
             <div className="flex-1 rounded-lg overflow-auto bg-maya shadow p-4">
-            {allCards.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-2xl">
-                Right-click a card to preview 
-                </div>
-            ) : (
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
-                {allCards.map((card) => (
-                    <div key={card.id} className="relative w-[150px] h-[210px]">
-                    <Image
-                        src={card.image_url || ""}
-                        onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).src = "/CardFallback.png";
-                        }}
-                        alt={card.name}
-                        fill
-                        sizes="150px"
-                        style={{ objectFit: "contain" }}
-                        className="cursor-pointer rounded hover:ring-2 hover:ring-green-400"
-                        onClick={() => onAdd(card)}
-                        onContextMenu={(e) => {
-                        e.preventDefault();
-                        onRightClick(card);
-                        }}
-                        loading="lazy"
-                        unoptimized
-                    />
-                    </div>
-                ))}
-                </div>
-            )}
+      {allCards.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-full text-2xl">
+          Right-click a card to preview
+        </div>
+      ) : (
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
+          {allCards.map((card) => (
+            <div key={card.id} className="relative w-[150px] h-[210px]">
+              <Image
+                src={card.image_url || ""}
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = "/CardFallback.png";
+                }}
+                alt={card.name}
+                fill
+                sizes="150px"
+                style={{ objectFit: "contain" }}
+                className="cursor-pointer rounded hover:ring-2 hover:ring-green-400"
+                onClick={() => onAdd(card)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  onRightClick(card);
+                }}
+                loading="lazy"
+                unoptimized
+              />
             </div>
+          ))}
+        </div>
+      )}
+    </div>
 
         </section>
     );
