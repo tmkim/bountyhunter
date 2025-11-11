@@ -95,6 +95,8 @@ export default function Page() {
   const { cards: allCards, loading } = useCards();
   const {
     deck,
+    newDeck,
+    deleteDeck,
     addCard,
     removeCard,
     renameDeck,
@@ -298,6 +300,8 @@ export default function Page() {
       >
         <ActiveDeck
           deck={deck}
+          onNew={newDeck}
+          onDelete={deleteDeck}
           onRename={renameDeck}
           onClear={clearDeck}
           onSave={saveDeck}

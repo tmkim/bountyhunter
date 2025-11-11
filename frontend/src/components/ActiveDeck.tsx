@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
@@ -9,6 +9,8 @@ import { OnePieceCard, OnePieceDeck } from "@/bh_lib/types";
 type Props = {
   deck: OnePieceDeck;
   onRename: (name: string) => void;
+  onNew: () => void;
+  onDelete: () => void;
   onClear: () => void;
   onSave: () => void;
   onRemove: (card: OnePieceCard) => void;
@@ -34,6 +36,8 @@ function groupDeck(cards: OnePieceCard[]): GroupedDeck[] {
 
 export default function ActiveDeck({
   deck,
+  onNew,
+  onDelete,
   onRename,
   onClear,
   onSave,
@@ -51,6 +55,27 @@ export default function ActiveDeck({
 
   const [deckHovered, setDeckHovered] = useState<string | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showDropdown) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current && 
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDropdown]);
 
   /** When user finishes renaming */
   const handleBlur = () => {
@@ -90,20 +115,36 @@ export default function ActiveDeck({
     toast.success(`Loaded "${newDeck.name}"`);
   };
 
+  const handleDelete = () => {
+    onDelete();
+    fetchDecks();
+  };
+
+
   const displayCards = useMemo(() => {
     return deck.leader ? [deck.leader, ...deck.cards] : deck.cards;
-    }, [deck.leader, deck.cards]);
+  }, [deck.leader, deck.cards]);
 
 
   return (
     <section className="basis-[35%] flex flex-col rounded-lg 
     overflow-auto bg-lapis shadow p-4 min-h-[350px]">
 
-      <div className="relative mb-2 flex items-center justify-between px-4 py-2 
-      bg-charcoal rounded-md shadow-sm">
+      <div className="relative mb-2 flex items-center justify-between px-4 py-2 bg-charcoal">
 
         {/* Load Button & Dropdown */}
         <div className="flex items-center relative">
+          <button
+            disabled={!user}
+            onClick={onNew}
+            className={`px-3 py-1 font-medium rounded transition ${user
+              ? "bg-rosso text-white hover:bg-rosso-700"
+              : "bg-rosso-300 text-white cursor-not-allowed"
+              }`}
+          >
+            New
+          </button>
+          <div className="w-px bg-tangerine h-6 mx-2" />
           <button
             disabled={!user}
             onClick={() => {
@@ -120,10 +161,10 @@ export default function ActiveDeck({
           </button>
 
           {showDropdown && (
-            <div>
+            <div ref={dropdownRef}>
               <ul
                 className="absolute left-0 top-full mt-1 w-69 bg-charcoal border border-tangerine 
-                rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto"
+                rounded-lg shadow-lg z-8888 max-h-60 overflow-y-auto"
               >
                 {deckList.length === 0 ? (
                   <li className="px-3 py-2 text-sm text-white/70">
@@ -205,6 +246,17 @@ export default function ActiveDeck({
 
         {/* Save / Clear Buttons */}
         <div className="flex items-center gap-2">
+          <button
+            disabled={!user}
+            onClick={handleDelete}
+            className={`px-3 py-1 font-medium rounded transition ${user
+              ? "bg-rosso text-white hover:bg-rosso-700"
+              : "bg-rosso-300 text-white cursor-not-allowed"
+              }`}
+          >
+            Delete
+          </button>
+          <div className="w-px bg-tangerine h-6 mx-2" />
           <button
             disabled={!user}
             onClick={onSave}

@@ -104,8 +104,9 @@ export function useDeck() {
         },
         body: JSON.stringify({
           name: deck.name,
-          leader: deck.leader?.id ?? null,
-          cards: deck.cards.map(c => c.id),
+          leader: deck.leader,//?.id ?? null,
+          cards: deck.cards,
+          // cards: deck.cards.map(c => c.id),
         }),
       });
 
@@ -151,7 +152,10 @@ export function useDeck() {
 
   const applyDelta = useCallback((delta: Delta) => {
     setDeck(prev => {
-      let next = { ...prev };
+      let next = {
+        ...prev,
+        cards: [...prev.cards],   // ✅ deep clone the cards array
+      };
 
       // ----- LEADER UPDATE ----------------------------------------------------
       if (delta.leader !== undefined) {
@@ -253,6 +257,41 @@ export function useDeck() {
       counter_map: new Map(BASE_COUNTER_MAP),
     }));
   }, []);
+
+  const newDeck = useCallback(() => {
+    setDeck(EMPTY_DECK)
+  }, []);
+
+const deleteDeck = useCallback(async () => {
+  if (!deck.id) {
+    toast.error("No deck selected");
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `${API_URL}/bounty_api/onepiece_deck/${deck.id}/`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
+    );
+
+    if (!res.ok) {
+      toast.error("Failed to delete deck");
+      return;
+    }
+
+    toast.success(`Deleted "${deck.name}"`);
+
+    setDeck(EMPTY_DECK);
+
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    toast.error("Error deleting deck");
+  }
+}, [deck.id, deck.name, setDeck]);
+
   
   const costData = useMemo(() => {
     return Array.from(deck.cost_map?.entries() ?? new Map(BASE_COST_MAP).entries())
@@ -275,6 +314,8 @@ export function useDeck() {
   
   return {
     deck,
+    newDeck,
+    deleteDeck,
     loadDeck,
     saveDeck,
     renameDeck,
