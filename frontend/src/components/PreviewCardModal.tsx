@@ -60,6 +60,9 @@ const PreviewCardModal: React.FC<PreviewCardModalProps> = ({ card, onClose }) =>
           {card ? (
             <Image
               src={card.image_url || ""}
+              onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = "/CardFallback.png";
+              }}
               alt={card.name}
               fill
               className="object-contain rounded-md shadow-md"

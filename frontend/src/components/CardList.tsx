@@ -157,6 +157,9 @@ export default function CardList({ allCards, search, filters,
                     <div key={card.id} className="relative w-[150px] h-[210px]">
                     <Image
                         src={card.image_url || ""}
+                        onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = "/CardFallback.png";
+                        }}
                         alt={card.name}
                         fill
                         sizes="150px"

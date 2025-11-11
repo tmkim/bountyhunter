@@ -328,6 +328,9 @@ export default function ActiveDeck({
                       <Image
                         key={i}
                         src={card.image_url || ""}
+                        onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = "/CardFallback.png";
+                        }}
                         alt={card.name}
                         fill
                         className="absolute rounded hover:ring-2 hover:ring-rosso"
