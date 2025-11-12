@@ -8,6 +8,10 @@ __pycache__/
 prices/
 logs/
 
+# Image files
+small/
+small_60/
+
 # C extensions
 *.so
 

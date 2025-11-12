@@ -34,6 +34,15 @@ function groupDeck(cards: OnePieceCard[]): GroupedDeck[] {
   return Array.from(map.values());
 }
 
+function getFilenameFromUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return parsed.pathname.split("/").pop() || "";
+  } catch {
+    return "";
+  }
+}
+
 export default function ActiveDeck({
   deck,
   onNew,
@@ -327,7 +336,11 @@ export default function ActiveDeck({
                     (_, i) => (
                       <Image
                         key={i}
-                        src={card.image_url || ""}
+                        src={
+                            card.image_url
+                            ? `/cards/small_60/${getFilenameFromUrl(card.image_url)}`
+                            : "/cards/fallback.png"
+                        }
                         onError={(e) => {
                             (e.currentTarget as HTMLImageElement).src = "/CardFallback.png";
                         }}

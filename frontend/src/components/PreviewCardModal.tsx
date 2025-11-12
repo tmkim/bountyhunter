@@ -11,6 +11,14 @@ interface PreviewCardModalProps {
   card: OnePieceCard | null;
 }
 
+function getImgUrl(img_url: string){
+  if (!img_url || img_url.includes('fallback')) return "/cards/fallback.png"
+
+  const img_name = img_url.split('/').pop()
+  if (img_name === 'fallback') return "/cards/fallback.png"
+  return `https://tcgplayer-cdn.tcgplayer.com/product/${img_name?.replace("200w","in_1000x1000")}`
+}
+
 const PreviewCardModal: React.FC<PreviewCardModalProps> = ({ card, onClose }) => {
   const { priceHistory, isLoading } = useCardHistory(card?.id);
   const prices = priceHistory?.map(p => p.price) ?? [];
@@ -60,10 +68,10 @@ const PreviewCardModal: React.FC<PreviewCardModalProps> = ({ card, onClose }) =>
         <div className="relative w-[70%] aspect-[2/3] mb-4">
           {card ? (
             <Image
-              src={card.image_url?.replace("200w","in_1000x1000") || ""}
-              onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = "/CardFallback.png";
-              }}
+              src={getImgUrl(card.image_url || "")}
+              // onError={(e) => {
+              //     (e.currentTarget as HTMLImageElement).src = "/cards/fallback.png";
+              // }}
               alt={card.name}
               fill
               className="object-contain rounded-md shadow-md"
