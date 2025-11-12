@@ -336,11 +336,7 @@ export default function ActiveDeck({
                     (_, i) => (
                       <Image
                         key={i}
-                        src={
-                            card.image_url
-                            ? `/cards/small_60/${getFilenameFromUrl(card.image_url)}`
-                            : "/cards/fallback.png"
-                        }
+                        src={card.image_url || ""}
                         onError={(e) => {
                             (e.currentTarget as HTMLImageElement).src = "/CardFallback.png";
                         }}
