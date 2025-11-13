@@ -327,7 +327,7 @@ const handleHeightMouseDown = () => {
     <div className="py-5 h-[calc(100vh-60px)] min-h-full w-full flex flex-1 overflow-auto">
       {/* Left Column */}
       <div
-        className="pl-5 flex flex-col min-w-[710px] gap-4"
+        className="pl-5 flex flex-col min-w-[710px] min-h-[865px]"
         style={{ flexBasis: `${leftWidth}%`, flexGrow: 1, flexShrink: 1 }}
       >
         <div
@@ -348,28 +348,28 @@ const handleHeightMouseDown = () => {
         </div>
         {/* Divider */}
         <div
-        className="w-full h-1 flex-shrink-0 cursor-row-resize bg-gray-300 hover:bg-gray-400"
+        className="w-full h-1 my-3 flex-shrink-0 cursor-row-resize bg-gray-300 hover:bg-gray-400"
         onMouseDown={handleHeightMouseDown}
       />
       <div className="flex flex-col flex-1 overflow-hidden"
       >
           <CardList
-  allCards={memoizedFilteredCards}
-  search={activeSearch}
-  setSearch={setActiveSearch}
-  filters={memoizedFilters}
-  clearFilter={memoizedClearAllFilters}
-  updateFilter={memoizedUpdateFilter}
-  onAdd={addCard}
-  onRightClick={handleRightClick}
-/>
+            allCards={memoizedFilteredCards}
+            search={activeSearch}
+            setSearch={setActiveSearch}
+            filters={memoizedFilters}
+            clearFilter={memoizedClearAllFilters}
+            updateFilter={memoizedUpdateFilter}
+            onAdd={addCard}
+            onRightClick={handleRightClick}
+          />
 
       </div>
       </div>
 
       {/* Divider */}
       <div
-        className="mx-5 flex-shrink-0 w-1 min-h-[865px]
+        className="mx-3 flex-shrink-0 w-1 min-h-[865px]
                    cursor-col-resize bg-gray-300 hover:bg-gray-400"
         onMouseDown={handleWidthMouseDown}
       />
