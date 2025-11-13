@@ -136,8 +136,8 @@ export default function ActiveDeck({
 
 
   return (
-    <section className="basis-[35%] flex flex-col rounded-lg 
-    overflow-auto bg-lapis shadow p-4 min-h-[350px]">
+    <section className="flex flex-col rounded-lg h-full
+    overflow-auto bg-lapis shadow p-4">
 
       <div className="relative mb-2 flex items-center justify-between px-4 py-2 bg-charcoal">
 

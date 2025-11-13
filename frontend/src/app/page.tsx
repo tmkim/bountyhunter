@@ -2,7 +2,7 @@
 import ActiveDeck from "@/components/ActiveDeck";
 import CardList from "@/components/CardList";
 import DetailsPanel from "@/components/DetailsPanel";
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useCards } from "@/hooks/useCards";
 import { OnePieceCard, OnePieceCardHistory, FilterValue, Filters } from "@/bh_lib/types";
 import { OnePieceDeck } from "@/bh_lib/types";
@@ -45,49 +45,75 @@ function deserializeFilters(obj: Record<string, any>): Filters {
 export default function Page() {
 
 // #region -- variable layout
-  const isDragging = useRef(false);
-  const [leftWidth, setLeftWidth] = useState(60);
+const [leftWidth, setLeftWidth] = useState(60);
+const [leftHeight, setLeftHeight] = useState(30);
 
-  // Load from localStorage on mount
+// Refs to track which resizer is active
+const isResizingWidth = useRef(false);
+const isResizingHeight = useRef(false);
+
+// Load from localStorage
+useEffect(() => {
+  const savedWidth = localStorage.getItem("leftPanelWidth");
+  const savedHeight = localStorage.getItem("leftPanelHeight");
+  if (savedWidth) setLeftWidth(parseFloat(savedWidth));
+  if (savedHeight) setLeftHeight(parseFloat(savedHeight));
+}, []);
+
+// Save changes
+useEffect(() => {
+  localStorage.setItem("leftPanelWidth", leftWidth.toString());
+}, [leftWidth]);
+useEffect(() => {
+  localStorage.setItem("leftPanelHeight", leftHeight.toString());
+}, [leftHeight]);
+
+// Mouse down handlers
+const handleWidthMouseDown = () => {
+  isResizingWidth.current = true;
+  document.body.style.userSelect = "none";
+  document.body.style.cursor = "row-resize"; 
+};
+const handleHeightMouseDown = () => {
+  isResizingHeight.current = true;
+  document.body.style.userSelect = "none";
+  document.body.style.cursor = "col-resize"; 
+};
+
+// Global listeners
   useEffect(() => {
-    const savedWidth = localStorage.getItem("leftPanelWidth");
-    if (savedWidth) {
-      setLeftWidth(parseFloat(savedWidth));
-    }
-  }, []);
-
-  // Save to localStorage whenever leftWidth changes
-  useEffect(() => {
-    localStorage.setItem("leftPanelWidth", leftWidth.toString());
-  }, [leftWidth]);
-
-  const handleMouseDown = () => {
-    isDragging.current = true;
-  };
-
   const handleMouseUp = () => {
-    isDragging.current = false;
+    isResizingWidth.current = false;
+    isResizingHeight.current = false;
+    document.body.style.userSelect = ""; // ✅ re-enable text selection
+    document.body.style.cursor = "";
   };
 
   const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging.current) return;
-    const containerWidth = window.innerWidth;
-    let newLeftWidth = (e.clientX / containerWidth) * 100;
+    // Resize width
+    if (isResizingWidth.current) {
+      const containerWidth = window.innerWidth;
+      let newLeftWidth = (e.clientX / containerWidth) * 100;
+      newLeftWidth = Math.max(20, Math.min(newLeftWidth, 80));
+      setLeftWidth(newLeftWidth);
+    }
 
-    // clamp values
-    newLeftWidth = Math.max(20, Math.min(newLeftWidth, 80));
-    setLeftWidth(newLeftWidth);
+    // Resize height
+    if (isResizingHeight.current) {
+      const containerHeight = window.innerHeight;
+      let newLeftHeight = (e.clientY / containerHeight) * 100;
+      newLeftHeight = Math.max(20, Math.min(newLeftHeight, 70));
+      setLeftHeight(newLeftHeight);
+    }
   };
 
-  // Attach global listeners once
-  useEffect(() => {
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, []);
+  window.addEventListener("mousemove", handleMouseMove);
+  window.addEventListener("mouseup", handleMouseUp);
+  return () => {
+    window.removeEventListener("mousemove", handleMouseMove);
+    window.removeEventListener("mouseup", handleMouseUp);
+  };
+}, []);
 // #endregion
 
 // #region -- Set up card/deck management state
@@ -286,6 +312,12 @@ export default function Page() {
       }
     }
   }, []);
+
+  const memoizedFilteredCards = useMemo(() => filteredCards, [filteredCards]);
+  const memoizedFilters = useMemo(() => filters, [filters]);
+  const memoizedUpdateFilter = useCallback(updateFilter, [updateFilter]);
+  const memoizedClearAllFilters = useCallback(clearAllFilters, [clearAllFilters]);
+
 // #endregion
 
 // #region -- Render
@@ -298,34 +330,48 @@ export default function Page() {
         className="pl-5 flex flex-col min-w-[710px] gap-4"
         style={{ flexBasis: `${leftWidth}%`, flexGrow: 1, flexShrink: 1 }}
       >
-        <ActiveDeck
-          deck={deck}
-          onNew={newDeck}
-          onDelete={deleteDeck}
-          onRename={renameDeck}
-          onClear={clearDeck}
-          onSave={saveDeck}
-          onRemove={removeCard}
-          onRightClick={handleRightClick}
-          onLoadDeck={loadDeck}
-        />
-        <CardList
-          allCards={filteredCards}
-          search={activeSearch}
-          setSearch={setActiveSearch}
-          filters={filters}
-          clearFilter={clearAllFilters}
-          updateFilter={updateFilter}
-          onAdd={addCard}
-          onRightClick={handleRightClick}
-        />
+        <div
+          className="flex flex-col overflow-hidden" 
+          style={{ height: `${leftHeight}%` }}
+        >
+            <ActiveDeck
+              deck={deck}
+              onNew={newDeck}
+              onDelete={deleteDeck}
+              onRename={renameDeck}
+              onClear={clearDeck}
+              onSave={saveDeck}
+              onRemove={removeCard}
+              onRightClick={handleRightClick}
+              onLoadDeck={loadDeck}
+            />
+        </div>
+        {/* Divider */}
+        <div
+        className="w-full h-1 flex-shrink-0 cursor-row-resize bg-gray-300 hover:bg-gray-400"
+        onMouseDown={handleHeightMouseDown}
+      />
+      <div className="flex flex-col flex-1 overflow-hidden"
+      >
+          <CardList
+  allCards={memoizedFilteredCards}
+  search={activeSearch}
+  setSearch={setActiveSearch}
+  filters={memoizedFilters}
+  clearFilter={memoizedClearAllFilters}
+  updateFilter={memoizedUpdateFilter}
+  onAdd={addCard}
+  onRightClick={handleRightClick}
+/>
+
+      </div>
       </div>
 
       {/* Divider */}
       <div
-        className="mx-5 flex-shrink-0 w-2 min-h-[865px]
+        className="mx-5 flex-shrink-0 w-1 min-h-[865px]
                    cursor-col-resize bg-gray-300 hover:bg-gray-400"
-        onMouseDown={handleMouseDown}
+        onMouseDown={handleWidthMouseDown}
       />
 
       {/* Right Column */}
