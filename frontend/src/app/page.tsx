@@ -77,16 +77,11 @@ const handleWidthMouseDown = () => {
 const handleHeightMouseDown = (e: React.MouseEvent) => {
   if (!containerRef.current) return;
 
-  isResizingHeight.current = true;
-
   const rect = containerRef.current.getBoundingClientRect();
-
-  // Height of top panel in px
   const topPanelPx = (leftHeight / 100) * rect.height;
-
-  // Mouse offset from the exact divider line
   heightOffset.current = e.clientY - (rect.top + topPanelPx);
 
+  isResizingHeight.current = true;
   document.body.style.userSelect = "none";
   document.body.style.cursor = "row-resize";
 };
@@ -100,7 +95,7 @@ const heightOffset = useRef(0);
   const handleMouseUp = () => {
     isResizingWidth.current = false;
     isResizingHeight.current = false;
-    document.body.style.userSelect = ""; // ✅ re-enable text selection
+    document.body.style.userSelect = "";
     document.body.style.cursor = "";
   };
 
@@ -117,17 +112,12 @@ const heightOffset = useRef(0);
     // Resize height
     if (isResizingHeight.current && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
-
-      // Apply the stored offset!
       const relativeY = e.clientY - rect.top - heightOffset.current;
-
       let newHeight = (relativeY / rect.height) * 100;
       newHeight = Math.max(20, Math.min(newHeight, 70));
-
       setLeftHeight(newHeight);
     }
   }
-
 
   window.addEventListener("mousemove", handleMouseMove);
   window.addEventListener("mouseup", handleMouseUp);

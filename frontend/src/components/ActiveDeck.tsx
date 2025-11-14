@@ -57,7 +57,7 @@ export default function ActiveDeck({
   const { user } = useAuth();
 
   const [isEditing, setIsEditing] = useState(false);
-  const [tempName, setTempName] = useState(deck.name || "");
+  const [tempName, setTempName] = useState(deck.name === "Untitled Deck" ? "" : deck.name);
 
   const [deckList, setDeckList] = useState<OnePieceDeck[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -183,7 +183,7 @@ export default function ActiveDeck({
                 rounded-lg shadow-lg z-8888 max-h-60 overflow-y-auto"
               >
                 {deckList.length === 0 ? (
-                  <li className="px-3 py-2 text-sm text-white/70">
+                  <li className="px-3 py-2 text-sm text-white bg-opbrown">
                     No decks found
                   </li>
                 ) : (
