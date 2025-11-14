@@ -39,6 +39,7 @@ export function useDeck() {
       const latestPrices = await fetchLatestPrices(cardIds);
 
       let total = 0;
+      total += Number(leader?.market_price)
 
       const updatedCards = cards.map((card) => {
         const latestPrice = latestPrices[card.id] ?? card.market_price ?? 0;
