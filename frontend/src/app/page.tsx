@@ -45,7 +45,7 @@ function deserializeFilters(obj: Record<string, any>): Filters {
 export default function Page() {
 
 // #region -- variable layout
-const [leftWidth, setLeftWidth] = useState(60);
+const [leftWidth, setLeftWidth] = useState(70);
 const [leftHeight, setLeftHeight] = useState(30);
 
 // Refs to track which resizer is active
@@ -72,13 +72,28 @@ useEffect(() => {
 const handleWidthMouseDown = () => {
   isResizingWidth.current = true;
   document.body.style.userSelect = "none";
-  document.body.style.cursor = "row-resize"; 
-};
-const handleHeightMouseDown = () => {
-  isResizingHeight.current = true;
-  document.body.style.userSelect = "none";
   document.body.style.cursor = "col-resize"; 
 };
+const handleHeightMouseDown = (e: React.MouseEvent) => {
+  if (!containerRef.current) return;
+
+  isResizingHeight.current = true;
+
+  const rect = containerRef.current.getBoundingClientRect();
+
+  // Height of top panel in px
+  const topPanelPx = (leftHeight / 100) * rect.height;
+
+  // Mouse offset from the exact divider line
+  heightOffset.current = e.clientY - (rect.top + topPanelPx);
+
+  document.body.style.userSelect = "none";
+  document.body.style.cursor = "row-resize";
+};
+
+  
+const containerRef = useRef<HTMLDivElement>(null);
+const heightOffset = useRef(0);
 
 // Global listeners
   useEffect(() => {
@@ -88,6 +103,7 @@ const handleHeightMouseDown = () => {
     document.body.style.userSelect = ""; // ✅ re-enable text selection
     document.body.style.cursor = "";
   };
+
 
   const handleMouseMove = (e: MouseEvent) => {
     // Resize width
@@ -99,13 +115,19 @@ const handleHeightMouseDown = () => {
     }
 
     // Resize height
-    if (isResizingHeight.current) {
-      const containerHeight = window.innerHeight;
-      let newLeftHeight = (e.clientY / containerHeight) * 100;
-      newLeftHeight = Math.max(20, Math.min(newLeftHeight, 70));
-      setLeftHeight(newLeftHeight);
+    if (isResizingHeight.current && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+
+      // Apply the stored offset!
+      const relativeY = e.clientY - rect.top - heightOffset.current;
+
+      let newHeight = (relativeY / rect.height) * 100;
+      newHeight = Math.max(20, Math.min(newHeight, 70));
+
+      setLeftHeight(newHeight);
     }
-  };
+  }
+
 
   window.addEventListener("mousemove", handleMouseMove);
   window.addEventListener("mouseup", handleMouseUp);
@@ -324,7 +346,7 @@ const handleHeightMouseDown = () => {
   if (loading) return <p>Loading cards…</p>;
 
   return (
-    <div className="py-5 h-[calc(100vh-60px)] min-h-full w-full flex flex-1 overflow-auto">
+    <div ref={containerRef} className="py-5 h-[calc(100vh-60px)] min-h-full w-full flex flex-1 overflow-auto">
       {/* Left Column */}
       <div
         className="pl-5 flex flex-col min-w-[710px] min-h-[865px]"
@@ -352,6 +374,7 @@ const handleHeightMouseDown = () => {
         onMouseDown={handleHeightMouseDown}
       />
       <div className="flex flex-col flex-1 overflow-hidden"
+          style={{ height: `calc(100% - ${leftHeight}%)` }}
       >
           <CardList
             allCards={memoizedFilteredCards}
