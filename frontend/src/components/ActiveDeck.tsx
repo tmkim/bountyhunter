@@ -120,12 +120,19 @@ export default function ActiveDeck({
   /** Load deck (delegate to deck manager) */
   const handleSelectDeck = async (newDeck: OnePieceDeck) => {
     onLoadDeck(newDeck);
+    setTempName(newDeck.name);
     setShowDropdown(false);
     toast.success(`Loaded "${newDeck.name}"`);
   };
 
+  const handleNew = () => {
+    onNew();
+    setTempName("");
+  }
+
   const handleDelete = () => {
     onDelete();
+    setTempName("");
     fetchDecks();
   };
 
@@ -145,7 +152,7 @@ export default function ActiveDeck({
         <div className="flex items-center relative">
           <button
             disabled={!user}
-            onClick={onNew}
+            onClick={handleNew}
             className={`px-3 py-1 font-medium rounded transition ${user
               ? "bg-rosso text-white hover:bg-rosso-700"
               : "bg-rosso-300 text-white cursor-not-allowed"
