@@ -325,11 +325,6 @@ const heightOffset = useRef(0);
     }
   }, []);
 
-  const memoizedFilteredCards = useMemo(() => filteredCards, [filteredCards]);
-  const memoizedFilters = useMemo(() => filters, [filters]);
-  const memoizedUpdateFilter = useCallback(updateFilter, [updateFilter]);
-  const memoizedClearAllFilters = useCallback(clearAllFilters, [clearAllFilters]);
-
 // #endregion
 
 // #region -- Render
@@ -363,21 +358,21 @@ const heightOffset = useRef(0);
         className="w-full h-1 my-3 flex-shrink-0 cursor-row-resize bg-gray-300 hover:bg-gray-400"
         onMouseDown={handleHeightMouseDown}
       />
-      <div className="flex flex-col flex-1 overflow-hidden"
-          style={{ height: `calc(100% - ${leftHeight}%)` }}
-      >
+        <div className="flex flex-col flex-1 overflow-hidden"
+            style={{ height: `calc(100% - ${leftHeight}%)` }}
+        >
           <CardList
-            allCards={memoizedFilteredCards}
+            allCards={filteredCards}
             search={activeSearch}
             setSearch={setActiveSearch}
-            filters={memoizedFilters}
-            clearFilter={memoizedClearAllFilters}
-            updateFilter={memoizedUpdateFilter}
+            filters={filters}
+            clearFilter={clearAllFilters}
+            updateFilter={updateFilter}
             onAdd={addCard}
             onRightClick={handleRightClick}
           />
 
-      </div>
+        </div>
       </div>
 
       {/* Divider */}
