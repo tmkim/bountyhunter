@@ -91,23 +91,32 @@ export function useDeck() {
         deck.user
       );
       setDeck(updated);
+      console.log(deck)
     },
   []
 );
 
   const saveDeck = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/bounty_api/onepiece_deck/`, {
-        method: "POST",
+      // if deck.id exists → update, else → create
+      const isUpdate = !!deck.id;
+
+      const url = isUpdate
+        ? `${API_URL}/bounty_api/onepiece_deck/${deck.id}/`
+        : `${API_URL}/bounty_api/onepiece_deck/`;
+
+      const method = isUpdate ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           name: deck.name,
-          leader: deck.leader,//?.id ?? null,
+          leader: deck.leader,
           cards: deck.cards,
-          // cards: deck.cards.map(c => c.id),
         }),
       });
 
@@ -127,19 +136,21 @@ export function useDeck() {
 
       const data = JSON.parse(text);
 
+      // Always update your frontend deck state with server truth
       setDeck(prev => ({
         ...prev,
         id: data.id,
         user: data.user,
       }));
 
-      console.log("Deck saved successfully:", data);
-      toast.success(`Saved "${deck.name}"!`);
+      toast.success(isUpdate ? `Updated "${deck.name}"!` : `Saved "${deck.name}"!`);
+      
     } catch (err) {
       console.error("Unexpected error:", err);
       toast.error("Error saving deck");
     }
   }, [deck]);
+
 
   const renameDeck = useCallback((newName: string) => {
     setDeck((prev) => ({ ...prev, name: newName }));
