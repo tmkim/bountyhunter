@@ -5,6 +5,7 @@ import Image from "next/image";
 import toast from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 import { OnePieceCard, OnePieceDeck } from "@/bh_lib/types";
+import { useConfirm } from "@/context/ConfirmContext";
 
 type Props = {
   deck: OnePieceDeck;
@@ -66,6 +67,7 @@ export default function ActiveDeck({
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const confirm = useConfirm();
 
   useEffect(() => {
     if (!showDropdown) return;
@@ -125,17 +127,31 @@ export default function ActiveDeck({
     toast.success(`Loaded "${newDeck.name}"`);
   };
 
-  const handleNew = () => {
+  const handleSave = async() => {
+    const ok = await confirm({ message: `Save deck "${deck.name}"?` });
+    if (!ok) return;
+    onSave();
+  }
+
+  const handleNew = async () => {
+    const ok = await confirm({ message: "Create a new deck?" });
+    if (!ok) return;
+
     onNew();
     setTempName("");
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
+    const ok = await confirm({
+      message: `Delete deck "${deck.name}"?`,
+      confirmText: "Delete",
+    })
+    if (!ok) return;
+
     onDelete();
     setTempName("");
     fetchDecks();
   };
-
 
   const displayCards = useMemo(() => {
     return deck.leader ? [deck.leader, ...deck.cards] : deck.cards;
@@ -146,14 +162,14 @@ export default function ActiveDeck({
     <section className="flex flex-col rounded-lg h-full
     overflow-auto bg-lapis shadow p-4">
 
-      <div className="relative mb-2 flex items-center justify-between px-4 py-2 bg-charcoal">
+      <div className="relative mb-2 flex items-center justify-between py-2 bg-charcoal">
 
         {/* Load Button & Dropdown */}
         <div className="flex items-center relative">
           <button
             disabled={!user}
             onClick={handleNew}
-            className={`px-3 py-1 font-medium rounded transition ${user
+            className={`px-3 py-1 font-medium rounded transition hover:cursor-pointer ${user
               ? "bg-rosso text-white hover:bg-rosso-700"
               : "bg-rosso-300 text-white cursor-not-allowed"
               }`}
@@ -168,7 +184,7 @@ export default function ActiveDeck({
               if (!showDropdown) fetchDecks();
               setShowDropdown((prev) => !prev);
             }}
-            className={`px-3 py-1 rounded border ${user
+            className={`px-3 py-1 rounded border hover:cursor-pointer ${user
               ? "border-tangerine text-tangerine hover:bg-tangerine/10"
               : "border-white text-white cursor-not-allowed"
               } transition`}
@@ -265,7 +281,7 @@ export default function ActiveDeck({
           <button
             disabled={!user}
             onClick={handleDelete}
-            className={`px-3 py-1 font-medium rounded transition ${user
+            className={`px-3 py-1 font-medium rounded transition hover:cursor-pointer ${user
               ? "bg-rosso text-white hover:bg-rosso-700"
               : "bg-rosso-300 text-white cursor-not-allowed"
               }`}
@@ -275,8 +291,8 @@ export default function ActiveDeck({
           <div className="w-px bg-tangerine h-6 mx-2" />
           <button
             disabled={!user}
-            onClick={onSave}
-            className={`px-3 py-1 font-medium rounded transition ${user
+            onClick={handleSave}
+            className={`px-3 py-1 font-medium rounded transition hover:cursor-pointer ${user
               ? "bg-rosso text-white hover:bg-rosso-700"
               : "bg-rosso-300 text-white cursor-not-allowed"
               }`}
@@ -286,7 +302,7 @@ export default function ActiveDeck({
           <div className="w-px bg-tangerine h-6 mx-2" />
           <button
             onClick={onClear}
-            className="px-3 py-1 font-medium bg-rosso text-white rounded 
+            className="px-3 py-1 font-medium bg-rosso text-white rounded  hover:cursor-pointer
             hover:bg-rosso-700 transition"
           >
             Clear

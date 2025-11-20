@@ -6,6 +6,7 @@ import "@/app/globals.css";
 import Navbar from "@/components/Navbar";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "react-hot-toast";
+import { ConfirmProvider } from "@/context/ConfirmContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,9 +21,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`flex flex-col ${inter.className} h-screen bg-lapis text-black`}>
         <AuthProvider>
           <Navbar />
-          <main className="flex-1 bg-opbrown">
-            {children}
-          </main>
+          <ConfirmProvider>
+            <main className="flex-1 bg-opbrown">
+              {children}
+            </main>
+          </ConfirmProvider>
+         
           <Toaster
             position="top-center"
             toastOptions={{
