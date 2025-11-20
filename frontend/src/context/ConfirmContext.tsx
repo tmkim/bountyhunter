@@ -46,7 +46,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       {options && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-lapis dark:bg-neutral-900 p-6 rounded-xl shadow-xl w-[320px] text-center">
-            <p className="mb-6 text-lg text-tangerine font-bold">{options.message}</p>
+            <p className="mb-6 text-lg text-tangerine font-medium">{options.message}</p>
 
             <div className="flex gap-8 justify-center">
               <button

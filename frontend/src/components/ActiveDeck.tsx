@@ -162,8 +162,7 @@ export default function ActiveDeck({
     <section className="flex flex-col rounded-lg h-full
     overflow-auto bg-lapis shadow p-4">
 
-      <div className="relative mb-2 flex items-center justify-between py-2 bg-charcoal">
-
+      <div className="mb-2 flex items-center justify-between py-2 bg-charcoal gap-4">
         {/* Load Button & Dropdown */}
         <div className="flex items-center relative">
           <button
@@ -254,7 +253,7 @@ export default function ActiveDeck({
         </div>
 
         {/* Deck Title (Editable) */}
-        <div className="absolute left-1/2 transform -translate-x-1/2">
+        <div className="flex-1 text-center min-w-[150px] overflow-hidden text-ellipsis text-tangerine">
           {isEditing ? (
             <input
               type="text"
@@ -264,11 +263,11 @@ export default function ActiveDeck({
               onBlur={handleBlur}
               onKeyDown={handleKeyDown}
               className="border-b-2 border-tangerine bg-transparent text-lg 
-                        font-bold text-tangerine focus:outline-none text-center"
+                        font-bold focus:outline-none text-center"
             />
           ) : (
             <span
-              className="cursor-pointer font-bold text-lg text-tangerine hover:opacity-80"
+              className="cursor-pointer font-bold text-lg hover:opacity-80"
               onClick={() => setIsEditing(true)}
             >
               {deck.name || "Untitled Deck"}
