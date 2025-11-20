@@ -1,10 +1,24 @@
 "use client";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 // src/components/Navbar.tsx
 export default function Navbar() {
     const { user, logout } = useAuth();
+    const router = useRouter();
+
+    const handleLogout = async () => {
+    await logout();
+
+    toast.success("Logged out successfully");
+
+    setTimeout(() => {
+        router.refresh();  
+        router.push("/");
+    }, 300);
+    };
     return (
         <header className="bg-maya shadow border-b-2 border-black">
             <nav className="w-full mx-auto flex items-center justify-between px-6 py-3">
@@ -16,7 +30,7 @@ export default function Navbar() {
                 {user ? (
                     <div className="flex gap-4 items-center">
                         <span>Welcome, {user.username}!</span>
-                        <button onClick={logout} className="bg-rosso px-6 py-1 rounded text-white
+                        <button onClick={handleLogout} className="bg-rosso px-6 py-1 rounded text-white
                         hover:bg-rosso-700 hover:cursor-pointer">
                             Logout
                         </button>
